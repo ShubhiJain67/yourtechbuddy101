@@ -533,18 +533,12 @@ function runPython(code, stdin) {
   });
 }
 
-/* ---- Wandbox (compiled languages). Uses the /api/run Netlify proxy when deployed, otherwise calls Wandbox directly. ---- */
-let apiMode = 'direct', compilersPromise = null;
+/* ---- Wandbox (compiled languages): called directly from the browser. ---- */
+const WANDBOX = 'https://wandbox.org/api';
+let compilersPromise = null;
 function getCompilers() {
   return compilersPromise ??= (async () => {
-    if (location.protocol.startsWith('http')) {
-      try {
-        const r = await fetch('/api/run');
-        if (r.ok && (r.headers.get('content-type') || '').includes('json')) { apiMode = 'proxy'; return await r.json(); }
-      } catch {}
-    }
-    apiMode = 'direct';
-    const r = await fetch('https://wandbox.org/api/list.json');
+    const r = await fetch(`${WANDBOX}/list.json`);
     if (!r.ok) throw new Error('Wandbox returned ' + r.status);
     return await r.json();
   })().catch((e) => { compilersPromise = null; throw e; });
@@ -569,8 +563,7 @@ async function runWandbox(l, code, stdin) {
   const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 30000);
   let res;
   try {
-    const url = apiMode === 'proxy' ? '/api/run' : 'https://wandbox.org/api/compile.json';
-    const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, signal: ctrl.signal });
+    const r = await fetch(`${WANDBOX}/compile.json`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, signal: ctrl.signal });
     if (!r.ok) throw new Error('Compiler service returned ' + r.status);
     res = await r.json();
   } catch (e) {
@@ -585,8 +578,7 @@ async function runWandbox(l, code, stdin) {
   return ok;
 }
 function networkHelp(e) {
-  return `Couldn't reach the compiler service (${e.message}).\n` +
-    (location.protocol === 'file:' ? 'Tip: run this site with `npx netlify dev` or deploy it, so compiled languages go through the /api/run proxy.\n' : 'Check your connection and try again.\n');
+  return `Couldn't reach the compiler service (${e.message}). Check your connection and try again.\n`;
 }
 
 async function run() {
