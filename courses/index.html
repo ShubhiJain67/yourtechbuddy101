@@ -55,21 +55,25 @@
   const grid = document.getElementById('grid');
 
   for (const c of window.COURSES) {
-    const lessons = c.sections.flatMap((s) => s.lessons);
+    const lessons = (c.sections || []).flatMap((s) => s.lessons);
     const live = lessons.filter((l) => l.youtube);
+    const isPlaylist = !!c.playlist && !lessons.length;
+    const liveCount = isPlaylist ? (read('ytb:count:' + c.slug) || 0) : live.length;
     const done = (read('ytb:progress:' + c.slug) || []).length;
-    const pct = live.length ? Math.round((done / live.length) * 100) : 0;
+    const pct = liveCount ? Math.min(100, Math.round((done / liveCount) * 100)) : 0;
     const last = read('ytb:last:' + c.slug);
     const first = live[0];
     const thumb = first
       ? `<img src="https://i.ytimg.com/vi/${encodeURIComponent(first.youtube)}/hqdefault.jpg" alt="" loading="lazy">`
       : `<span class="big">${esc(c.slug.toUpperCase())}</span>`;
+    const countLabel = isPlaylist ? (liveCount ? `${liveCount} lessons` : 'Full video course')
+                                  : `${live.length} of ${lessons.length} lessons live`;
 
     const a = document.createElement('a');
     a.className = 'card';
     a.href = `watch.html?c=${encodeURIComponent(c.slug)}${last ? '&l=' + last : ''}`;
     a.innerHTML = `
-      <div class="thumb">${thumb}<span class="count">${live.length} of ${lessons.length} lessons live</span></div>
+      <div class="thumb">${thumb}<span class="count">${countLabel}</span></div>
       <div class="body">
         <h2>${esc(c.title)}</h2>
         <p>${esc(c.tagline)}</p>

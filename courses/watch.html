@@ -96,20 +96,28 @@
     get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
   };
+  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 
   const params = new URLSearchParams(location.search);
   const course = window.COURSES.find((c) => c.slug === params.get('c')) || window.COURSES[0];
-  const lessons = course.sections.flatMap((s, si) => s.lessons.map((l) => ({ ...l, section: s.title, si })));
-  const total = lessons.length;
-  const liveCount = lessons.filter((l) => l.youtube).length;
   const progressKey = 'ytb:progress:' + course.slug;
+  const titles = store.get('ytb:titles', {});
   let done = new Set(store.get(progressKey, []));
-  let idx = clamp(parseInt(params.get('l'), 10) || firstUnfinished(), 1, total);
+  let lessons = [], total = 0, liveCount = 0, idx = 1;
 
-  function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
+  function setLessons(list) {
+    lessons = list; total = list.length; liveCount = list.filter((l) => l.youtube).length;
+    store.set('ytb:count:' + course.slug, liveCount);
+  }
   function firstUnfinished() {
     const i = lessons.findIndex((l) => l.youtube && !done.has(l.youtube));
     return i >= 0 ? i + 1 : 1;
+  }
+
+  // Playlist mode: lessons come live from the YouTube playlist (new uploads appear automatically).
+  const playlistMode = !!course.playlist && !(course.sections || []).some((s) => s.lessons.length);
+  if (!playlistMode) {
+    setLessons(course.sections.flatMap((s) => s.lessons.map((l) => ({ ...l, section: s.title }))));
   }
 
   document.title = `${course.title} — YourTechBuddy`;
@@ -118,21 +126,20 @@
 
   /* ---------- Sidebar ---------- */
   function renderList() {
-    let html = '', n = 0;
-    course.sections.forEach((s) => {
-      html += `<div class="sec">${esc(s.title)}</div>`;
-      s.lessons.forEach((l) => {
-        n++;
-        const cls = ['lesson', n === idx ? 'current' : '', l.youtube && done.has(l.youtube) ? 'done' : '', l.youtube ? '' : 'locked'].join(' ');
-        html += `<a class="${cls}" href="?c=${course.slug}&l=${n}" data-l="${n}">
-          <span class="n">${l.youtube && done.has(l.youtube) ? '✓' : n}</span>
-          <span class="t">${esc(l.title)}${l.duration ? `<div class="d">${esc(l.duration)}</div>` : ''}</span>
-          ${l.youtube ? '' : '<span class="soon">soon</span>'}
-        </a>`;
-      });
+    let html = '', lastSec = null;
+    lessons.forEach((l, i) => {
+      const n = i + 1;
+      if (l.section !== lastSec) { html += `<div class="sec">${esc(l.section)}</div>`; lastSec = l.section; }
+      const isDone = l.youtube && done.has(l.youtube);
+      const cls = ['lesson', n === idx ? 'current' : '', isDone ? 'done' : '', l.youtube ? '' : 'locked'].join(' ');
+      html += `<a class="${cls}" href="?c=${course.slug}&l=${n}" data-l="${n}">
+        <span class="n">${isDone ? '✓' : n}</span>
+        <span class="t">${esc(l.title)}${l.duration ? `<div class="d">${esc(l.duration)}</div>` : ''}</span>
+        ${l.youtube ? '' : '<span class="soon">soon</span>'}
+      </a>`;
     });
     $('list').innerHTML = html;
-    const count = [...done].filter((id) => lessons.some((l) => l.youtube === id)).length;
+    const count = lessons.filter((l) => l.youtube && done.has(l.youtube)).length;
     const pct = liveCount ? Math.round((count / liveCount) * 100) : 0;
     $('bar').style.width = pct + '%';
     $('done-count').textContent = `${count} / ${liveCount} completed`;
@@ -144,41 +151,96 @@
     const a = e.target.closest('a[data-l]');
     if (!a) return;
     e.preventDefault();
-    go(parseInt(a.dataset.l, 10), true);
+    go(parseInt(a.dataset.l, 10), true, true);
   });
 
   /* ---------- Player (YouTube IFrame API, privacy-enhanced domain) ---------- */
-  let player = null, apiReady = false, pendingId = null;
+  let player = null, playerReady = false, pendingId = null;
   window.onYouTubeIframeAPIReady = () => {
-    apiReady = true;
+    const vars = { rel: 0, modestbranding: 1, playsinline: 1 };
+    if (playlistMode) { vars.listType = 'playlist'; vars.list = course.playlist; }
     player = new YT.Player('player', {
       host: 'https://www.youtube-nocookie.com',
-      videoId: pendingId || undefined,
-      playerVars: { rel: 0, modestbranding: 1, playsinline: 1 },
-      events: { onStateChange: (e) => { if (e.data === YT.PlayerState.ENDED) onEnded(); } },
+      videoId: playlistMode ? undefined : (pendingId || undefined),
+      playerVars: vars,
+      events: {
+        onReady: () => {
+          playerReady = true;
+          if (playlistMode) waitForPlaylist();
+          else if (pendingId) { player.cueVideoById(pendingId); pendingId = null; }
+        },
+        onStateChange: (e) => {
+          if (e.data === YT.PlayerState.PLAYING) cacheCurrentTitle();
+          if (e.data === YT.PlayerState.ENDED) onEnded();
+        },
+      },
     });
   };
   const s = document.createElement('script');
   s.src = 'https://www.youtube.com/iframe_api';
   document.head.appendChild(s);
 
+  function waitForPlaylist(tries = 0) {
+    const ids = player.getPlaylist && player.getPlaylist();
+    if (ids && ids.length) {
+      setLessons(ids.map((id, i) => ({ title: titles[id] || `Lesson ${i + 1}`, youtube: id, section: course.title })));
+      idx = clamp(parseInt(params.get('l'), 10) || firstUnfinished(), 1, total);
+      history.replaceState({ idx }, '', `?c=${course.slug}&l=${idx}`);
+      render();
+      fetchTitles(ids);
+      return;
+    }
+    if (tries > 40) {
+      $('title').textContent = "Couldn't load the playlist right now.";
+      $('on-yt').style.display = ''; $('on-yt').href = `https://www.youtube.com/playlist?list=${course.playlist}`;
+      return;
+    }
+    setTimeout(() => waitForPlaylist(tries + 1), 250);
+  }
+
+  function cacheCurrentTitle() {
+    const d = player.getVideoData && player.getVideoData();
+    if (d && d.video_id && d.title && titles[d.video_id] !== d.title) {
+      titles[d.video_id] = d.title; store.set('ytb:titles', titles); applyTitles();
+    }
+  }
+  async function fetchTitles(ids) {
+    const missing = ids.filter((id) => !titles[id]);
+    for (let i = 0; i < missing.length; i += 6) {
+      await Promise.all(missing.slice(i, i + 6).map(async (id) => {
+        try {
+          const r = await fetch('https://noembed.com/embed?url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + id));
+          const j = await r.json();
+          if (j && j.title) titles[id] = j.title;
+        } catch {}
+      }));
+      store.set('ytb:titles', titles);
+      applyTitles();
+    }
+  }
+  function applyTitles() {
+    lessons.forEach((l) => { if (l.youtube && titles[l.youtube]) l.title = titles[l.youtube]; });
+    renderText(); renderList();
+  }
+
   function showVideo(id, autoplay) {
     $('placeholder').classList.toggle('show', !id);
     if (!id) { if (player && player.pauseVideo) player.pauseVideo(); return; }
-    if (!apiReady || !player || !player.loadVideoById) { pendingId = id; return; }
+    if (!playerReady) { pendingId = id; return; }
     autoplay ? player.loadVideoById(id) : player.cueVideoById(id);
   }
 
   function onEnded() {
     const l = lessons[idx - 1];
-    if (l.youtube) { done.add(l.youtube); store.set(progressKey, [...done]); }
+    if (l && l.youtube) { done.add(l.youtube); store.set(progressKey, [...done]); }
     const nextLive = lessons.findIndex((x, i) => i >= idx && x.youtube);
-    if (nextLive >= 0) go(nextLive + 1, true, true); else render();
+    if (nextLive >= 0) go(nextLive + 1, true, true); else { renderText(); renderList(); }
   }
 
   /* ---------- Lesson rendering ---------- */
-  function render(autoplay = false) {
+  function renderText() {
     const l = lessons[idx - 1];
+    if (!l) return;
     $('title').textContent = `${idx}. ${l.title}`;
     $('crumb-sec').textContent = l.section;
     $('prev').disabled = idx <= 1;
@@ -188,29 +250,34 @@
     $('mark').textContent = isDone ? '✓ Completed' : '✓ Mark complete';
     $('mark').classList.toggle('done', !!isDone);
     $('on-yt').style.display = l.youtube ? '' : 'none';
-    if (l.youtube) $('on-yt').href = `https://www.youtube.com/watch?v=${encodeURIComponent(l.youtube)}`;
+    if (l.youtube) $('on-yt').href = `https://www.youtube.com/watch?v=${encodeURIComponent(l.youtube)}` + (course.playlist ? `&list=${course.playlist}` : '');
     const lang = l.practice || course.practice;
     $('practice').href = lang ? `../#lang=${encodeURIComponent(lang)}` : '../';
-    showVideo(l.youtube, autoplay);
+  }
+  function render(autoplay = false) {
+    if (!lessons.length) return;
+    renderText();
+    showVideo(lessons[idx - 1].youtube, autoplay);
     renderList();
     store.set('ytb:last:' + course.slug, idx);
   }
 
   function go(n, push, autoplay = false) {
+    if (!lessons.length) return;
     idx = clamp(n, 1, total);
     if (push) history.pushState({ idx }, '', `?c=${course.slug}&l=${idx}`);
     render(autoplay);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  $('prev').addEventListener('click', () => go(idx - 1, true));
-  $('next').addEventListener('click', () => go(idx + 1, true));
+  $('prev').addEventListener('click', () => go(idx - 1, true, true));
+  $('next').addEventListener('click', () => go(idx + 1, true, true));
   $('mark').addEventListener('click', () => {
     const l = lessons[idx - 1];
-    if (!l.youtube) return;
+    if (!l || !l.youtube) return;
     done.has(l.youtube) ? done.delete(l.youtube) : done.add(l.youtube);
     store.set(progressKey, [...done]);
-    render();
+    renderText(); renderList();
   });
   window.addEventListener('popstate', () => {
     idx = clamp(parseInt(new URLSearchParams(location.search).get('l'), 10) || 1, 1, total);
@@ -218,12 +285,19 @@
   });
   document.addEventListener('keydown', (e) => {
     if (e.target.closest('input,textarea')) return;
-    if (e.key === 'ArrowRight' && e.shiftKey) go(idx + 1, true);
-    if (e.key === 'ArrowLeft' && e.shiftKey) go(idx - 1, true);
+    if (e.key === 'ArrowRight' && e.shiftKey) go(idx + 1, true, true);
+    if (e.key === 'ArrowLeft' && e.shiftKey) go(idx - 1, true, true);
   });
 
-  history.replaceState({ idx }, '', `?c=${course.slug}&l=${idx}`);
-  render();
+  if (playlistMode) {
+    $('title').textContent = 'Loading lessons…';
+    ['prev', 'next', 'mark'].forEach((b) => ($(b).disabled = true));
+    $('on-yt').style.display = 'none';
+  } else {
+    idx = clamp(parseInt(params.get('l'), 10) || firstUnfinished(), 1, total);
+    history.replaceState({ idx }, '', `?c=${course.slug}&l=${idx}`);
+    render();
+  }
 </script>
 </body>
 </html>
