@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Courses — YourTechBuddy</title>
+<meta name="description" content="Free, structured video courses by YourTechBuddy: Low Level Design, design patterns and more. Watch here and practice in the browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="courses.css">
+<style>
+  .hero{max-width:1100px;margin:0 auto;padding:48px 20px 24px}
+  .hero h1{font-size:clamp(28px,4vw,40px);margin:0 0 8px;letter-spacing:-.02em}
+  .hero p{color:var(--muted);margin:0;font-size:17px}
+  .grid{max-width:1100px;margin:0 auto;padding:8px 20px 48px;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;text-decoration:none;transition:transform .15s,border-color .15s}
+  .card:hover{transform:translateY(-2px);border-color:#3a4456}
+  .thumb{aspect-ratio:16/9;background:linear-gradient(135deg,#2a1f66,#0e3a44);display:grid;place-items:center;position:relative;overflow:hidden}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .thumb .big{font:700 44px var(--mono);color:rgba(255,255,255,.9);letter-spacing:-.02em}
+  .thumb .count{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.75);font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px}
+  .body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:10px;flex:1}
+  .body h2{font-size:18px;margin:0;letter-spacing:-.01em}
+  .body p{margin:0;color:var(--muted);font-size:14px}
+  .tags{display:flex;flex-wrap:wrap;gap:6px}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;padding-top:6px}
+  .pct{font-size:12px;color:var(--muted)}
+  .row .progress{flex:1}
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="../"><div class="logo">&lt;/&gt;</div><b>YourTechBuddy</b></a>
+  <nav>
+    <a href="../">Playground</a>
+    <a href="./" class="active">Courses</a>
+    <a class="yt" href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <h1>Courses</h1>
+  <p>Free, structured video courses. Watch them here, track your progress, and practise in the Playground.</p>
+</section>
+
+<section class="grid" id="grid"></section>
+
+<footer>Made by <a href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YourTechBuddy</a></footer>
+
+<script src="courses.js"></script>
+<script>
+  const read = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const grid = document.getElementById('grid');
+
+  for (const c of window.COURSES) {
+    const lessons = c.sections.flatMap((s) => s.lessons);
+    const live = lessons.filter((l) => l.youtube);
+    const done = (read('ytb:progress:' + c.slug) || []).length;
+    const pct = live.length ? Math.round((done / live.length) * 100) : 0;
+    const last = read('ytb:last:' + c.slug);
+    const first = live[0];
+    const thumb = first
+      ? `<img src="https://i.ytimg.com/vi/${encodeURIComponent(first.youtube)}/hqdefault.jpg" alt="" loading="lazy">`
+      : `<span class="big">${esc(c.slug.toUpperCase())}</span>`;
+
+    const a = document.createElement('a');
+    a.className = 'card';
+    a.href = `watch.html?c=${encodeURIComponent(c.slug)}${last ? '&l=' + last : ''}`;
+    a.innerHTML = `
+      <div class="thumb">${thumb}<span class="count">${live.length} of ${lessons.length} lessons live</span></div>
+      <div class="body">
+        <h2>${esc(c.title)}</h2>
+        <p>${esc(c.tagline)}</p>
+        <div class="tags">${[c.level, ...(c.tags || [])].filter(Boolean).map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</div>
+        <div class="row">
+          <div class="progress"><i style="width:${pct}%"></i></div>
+          <span class="pct">${done ? pct + '% done' : 'Not started'}</span>
+          <span class="btn primary">${done ? 'Continue' : 'Start'} →</span>
+        </div>
+      </div>`;
+    grid.appendChild(a);
+  }
+</script>
+</body>
+</html>

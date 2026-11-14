@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Course — YourTechBuddy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="courses.css">
+<style>
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:0;flex:1;min-height:0}
+  .stage{padding:24px clamp(16px,3vw,32px) 40px;min-width:0}
+  .player-wrap{position:relative;aspect-ratio:16/9;background:#000;border-radius:12px;overflow:hidden;border:1px solid var(--border)}
+  .player-wrap > div, .player-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .placeholder{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px;background:linear-gradient(135deg,#1b1442,#0b2a31)}
+  .placeholder.show{display:flex}
+  .placeholder h3{margin:0;font-size:20px}
+  .placeholder p{margin:0;color:var(--muted)}
+  .crumb{font-size:13px;color:var(--muted);margin:18px 0 4px}
+  .crumb a{color:var(--muted)}
+  h1{font-size:clamp(20px,2.4vw,26px);margin:0 0 16px;letter-spacing:-.015em}
+  .actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .actions .spacer{flex:1}
+
+  aside{border-left:1px solid var(--border);background:var(--panel);display:flex;flex-direction:column;min-height:0;max-height:calc(100vh - 55px);position:sticky;top:55px}
+  .aside-head{padding:18px 18px 14px;border-bottom:1px solid var(--border)}
+  .aside-head h2{font-size:16px;margin:0 0 10px}
+  .aside-head .meta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px}
+  .list{overflow:auto;flex:1;padding:6px 0 20px}
+  .sec{padding:14px 18px 6px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .lesson{display:flex;gap:10px;align-items:flex-start;padding:9px 18px;text-decoration:none;font-size:14px;border-left:3px solid transparent}
+  .lesson:hover{background:var(--panel2)}
+  .lesson.current{background:var(--panel2);border-left-color:var(--accent)}
+  .lesson .n{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:600 11px var(--mono);border:1px solid var(--border);color:var(--muted);margin-top:1px}
+  .lesson.done .n{background:var(--ok);border-color:var(--ok);color:#06210d}
+  .lesson .t{flex:1;min-width:0}
+  .lesson .d{font-size:12px;color:var(--muted)}
+  .lesson.locked{color:var(--muted)}
+
+  @media (max-width:980px){
+    .layout{grid-template-columns:1fr}
+    aside{border-left:0;border-top:1px solid var(--border);position:static;max-height:none}
+  }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="../"><div class="logo">&lt;/&gt;</div><b>YourTechBuddy</b></a>
+  <nav>
+    <a href="../">Playground</a>
+    <a href="./" class="active">Courses</a>
+    <a class="yt" href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a>
+  </nav>
+</header>
+
+<div class="layout">
+  <main class="stage">
+    <div class="player-wrap">
+      <div id="player"></div>
+      <div class="placeholder" id="placeholder">
+        <h3>🎬 Coming soon</h3>
+        <p>This lesson hasn't been published yet. Subscribe so you don't miss it.</p>
+        <a class="btn primary" href="https://www.youtube.com/@yourtechbuddy101?sub_confirmation=1" target="_blank" rel="noopener">Subscribe on YouTube</a>
+      </div>
+    </div>
+
+    <div class="crumb"><a href="./">Courses</a> / <span id="crumb-course"></span> / <span id="crumb-sec"></span></div>
+    <h1 id="title">Loading…</h1>
+
+    <div class="actions">
+      <button class="btn" id="prev">← Previous</button>
+      <button class="btn" id="mark">✓ Mark complete</button>
+      <button class="btn primary" id="next">Next →</button>
+      <span class="spacer"></span>
+      <a class="btn" id="practice" href="../">⌨️ Practise in Playground</a>
+      <a class="btn" id="on-yt" target="_blank" rel="noopener">Watch on YouTube ↗</a>
+    </div>
+  </main>
+
+  <aside>
+    <div class="aside-head">
+      <h2 id="course-title"></h2>
+      <div class="progress"><i id="bar" style="width:0%"></i></div>
+      <div class="meta"><span id="done-count"></span><span id="pct"></span></div>
+    </div>
+    <div class="list" id="list"></div>
+  </aside>
+</div>
+
+<script src="courses.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const store = {
+    get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  };
+
+  const params = new URLSearchParams(location.search);
+  const course = window.COURSES.find((c) => c.slug === params.get('c')) || window.COURSES[0];
+  const lessons = course.sections.flatMap((s, si) => s.lessons.map((l) => ({ ...l, section: s.title, si })));
+  const total = lessons.length;
+  const liveCount = lessons.filter((l) => l.youtube).length;
+  const progressKey = 'ytb:progress:' + course.slug;
+  let done = new Set(store.get(progressKey, []));
+  let idx = clamp(parseInt(params.get('l'), 10) || firstUnfinished(), 1, total);
+
+  function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
+  function firstUnfinished() {
+    const i = lessons.findIndex((l) => l.youtube && !done.has(l.youtube));
+    return i >= 0 ? i + 1 : 1;
+  }
+
+  document.title = `${course.title} — YourTechBuddy`;
+  $('course-title').textContent = course.title;
+  $('crumb-course').textContent = course.title;
+
+  /* ---------- Sidebar ---------- */
+  function renderList() {
+    let html = '', n = 0;
+    course.sections.forEach((s) => {
+      html += `<div class="sec">${esc(s.title)}</div>`;
+      s.lessons.forEach((l) => {
+        n++;
+        const cls = ['lesson', n === idx ? 'current' : '', l.youtube && done.has(l.youtube) ? 'done' : '', l.youtube ? '' : 'locked'].join(' ');
+        html += `<a class="${cls}" href="?c=${course.slug}&l=${n}" data-l="${n}">
+          <span class="n">${l.youtube && done.has(l.youtube) ? '✓' : n}</span>
+          <span class="t">${esc(l.title)}${l.duration ? `<div class="d">${esc(l.duration)}</div>` : ''}</span>
+          ${l.youtube ? '' : '<span class="soon">soon</span>'}
+        </a>`;
+      });
+    });
+    $('list').innerHTML = html;
+    const count = [...done].filter((id) => lessons.some((l) => l.youtube === id)).length;
+    const pct = liveCount ? Math.round((count / liveCount) * 100) : 0;
+    $('bar').style.width = pct + '%';
+    $('done-count').textContent = `${count} / ${liveCount} completed`;
+    $('pct').textContent = pct + '%';
+    const cur = $('list').querySelector('.current');
+    if (cur) cur.scrollIntoView({ block: 'nearest' });
+  }
+  $('list').addEventListener('click', (e) => {
+    const a = e.target.closest('a[data-l]');
+    if (!a) return;
+    e.preventDefault();
+    go(parseInt(a.dataset.l, 10), true);
+  });
+
+  /* ---------- Player (YouTube IFrame API, privacy-enhanced domain) ---------- */
+  let player = null, apiReady = false, pendingId = null;
+  window.onYouTubeIframeAPIReady = () => {
+    apiReady = true;
+    player = new YT.Player('player', {
+      host: 'https://www.youtube-nocookie.com',
+      videoId: pendingId || undefined,
+      playerVars: { rel: 0, modestbranding: 1, playsinline: 1 },
+      events: { onStateChange: (e) => { if (e.data === YT.PlayerState.ENDED) onEnded(); } },
+    });
+  };
+  const s = document.createElement('script');
+  s.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(s);
+
+  function showVideo(id, autoplay) {
+    $('placeholder').classList.toggle('show', !id);
+    if (!id) { if (player && player.pauseVideo) player.pauseVideo(); return; }
+    if (!apiReady || !player || !player.loadVideoById) { pendingId = id; return; }
+    autoplay ? player.loadVideoById(id) : player.cueVideoById(id);
+  }
+
+  function onEnded() {
+    const l = lessons[idx - 1];
+    if (l.youtube) { done.add(l.youtube); store.set(progressKey, [...done]); }
+    const nextLive = lessons.findIndex((x, i) => i >= idx && x.youtube);
+    if (nextLive >= 0) go(nextLive + 1, true, true); else render();
+  }
+
+  /* ---------- Lesson rendering ---------- */
+  function render(autoplay = false) {
+    const l = lessons[idx - 1];
+    $('title').textContent = `${idx}. ${l.title}`;
+    $('crumb-sec').textContent = l.section;
+    $('prev').disabled = idx <= 1;
+    $('next').disabled = idx >= total;
+    const isDone = l.youtube && done.has(l.youtube);
+    $('mark').disabled = !l.youtube;
+    $('mark').textContent = isDone ? '✓ Completed' : '✓ Mark complete';
+    $('mark').classList.toggle('done', !!isDone);
+    $('on-yt').style.display = l.youtube ? '' : 'none';
+    if (l.youtube) $('on-yt').href = `https://www.youtube.com/watch?v=${encodeURIComponent(l.youtube)}`;
+    const lang = l.practice || course.practice;
+    $('practice').href = lang ? `../#lang=${encodeURIComponent(lang)}` : '../';
+    showVideo(l.youtube, autoplay);
+    renderList();
+    store.set('ytb:last:' + course.slug, idx);
+  }
+
+  function go(n, push, autoplay = false) {
+    idx = clamp(n, 1, total);
+    if (push) history.pushState({ idx }, '', `?c=${course.slug}&l=${idx}`);
+    render(autoplay);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  $('prev').addEventListener('click', () => go(idx - 1, true));
+  $('next').addEventListener('click', () => go(idx + 1, true));
+  $('mark').addEventListener('click', () => {
+    const l = lessons[idx - 1];
+    if (!l.youtube) return;
+    done.has(l.youtube) ? done.delete(l.youtube) : done.add(l.youtube);
+    store.set(progressKey, [...done]);
+    render();
+  });
+  window.addEventListener('popstate', () => {
+    idx = clamp(parseInt(new URLSearchParams(location.search).get('l'), 10) || 1, 1, total);
+    render();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.target.closest('input,textarea')) return;
+    if (e.key === 'ArrowRight' && e.shiftKey) go(idx + 1, true);
+    if (e.key === 'ArrowLeft' && e.shiftKey) go(idx - 1, true);
+  });
+
+  history.replaceState({ idx }, '', `?c=${course.slug}&l=${idx}`);
+  render();
+</script>
+</body>
+</html>

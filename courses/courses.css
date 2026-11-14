@@ -1,0 +1,38 @@
+:root{
+  --bg:#0b0e14; --panel:#11151d; --panel2:#151a24; --border:#232a36;
+  --text:#e6edf3; --muted:#8b95a5; --accent:#7c5cff; --accent-2:#22d3ee; --ok:#3fb950;
+  --mono:'JetBrains Mono', ui-monospace, Menlo, monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.55 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh;display:flex;flex-direction:column}
+a{color:inherit}
+button{font:inherit;color:inherit}
+
+/* Header (shared look with the Playground) */
+header{display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--panel);position:sticky;top:0;z-index:5}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;margin-right:auto}
+.logo{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font:600 14px var(--mono);color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent-2))}
+.brand b{font-weight:700;font-size:16px;letter-spacing:-.01em}
+nav{display:flex;gap:4px}
+nav a{text-decoration:none;color:var(--muted);padding:7px 12px;border-radius:8px;font-size:14px;font-weight:500}
+nav a:hover{color:var(--text);background:var(--panel2)}
+nav a.active{color:var(--text);background:var(--panel2)}
+nav a.yt{color:#ff6b6b}
+
+.btn{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;cursor:pointer;text-decoration:none;white-space:nowrap;font-size:14px}
+.btn:hover{border-color:#3a4456;background:#1a2030}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.btn.primary:hover{background:#6a48ff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.done{border-color:rgba(63,185,80,.5);color:var(--ok)}
+
+.progress{height:6px;border-radius:99px;background:var(--panel2);overflow:hidden}
+.progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:99px;transition:width .3s}
+
+.tag{font-size:12px;color:var(--muted);border:1px solid var(--border);border-radius:99px;padding:2px 9px}
+.soon{font-size:11px;color:var(--muted);border:1px dashed var(--border);border-radius:99px;padding:1px 7px;white-space:nowrap}
+
+footer{margin-top:auto;padding:14px 20px;border-top:1px solid var(--border);color:var(--muted);font-size:13px}
+
+@media (max-width:640px){ .brand b{display:none} nav a{padding:7px 9px} }
