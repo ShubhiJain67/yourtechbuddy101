@@ -187,9 +187,8 @@
   window.onYouTubeIframeAPIReady = () => {
     const vars = { rel: 0, modestbranding: 1, playsinline: 1 };
     if (playlistMode) { vars.listType = 'playlist'; vars.list = course.playlist; }
-    player = new YT.Player('player', {
+    const opts = {
       host: 'https://www.youtube-nocookie.com',
-      videoId: playlistMode ? undefined : (pendingId || undefined),
       playerVars: vars,
       events: {
         onReady: () => {
@@ -197,12 +196,20 @@
           if (playlistMode) waitForPlaylist();
           else if (pendingId) { player.cueVideoById(pendingId); pendingId = null; }
         },
+        onError: (e) => { if (playlistMode && !lessons.length) playlistFailed(`YouTube error ${e.data}`); },
         onStateChange: (e) => {
           if (e.data === YT.PlayerState.PLAYING) cacheCurrentTitle();
           if (e.data === YT.PlayerState.ENDED) onEnded();
         },
       },
-    });
+    };
+    // Only pass videoId when we actually have one (YouTube rejects an empty/undefined id).
+    if (!playlistMode && pendingId) { opts.videoId = pendingId; pendingId = null; }
+    if (playlistMode && !/^(PL|UU|OL|FL|RD|LL)[A-Za-z0-9_-]{10,}$/.test(course.playlist)) {
+      playlistFailed('invalid playlist id'); return;
+    }
+    try { player = new YT.Player('player', opts); }
+    catch (err) { console.warn('[YTB] player error:', err); if (playlistMode) playlistFailed(String(err)); }
   };
   const s = document.createElement('script');
   s.src = 'https://www.youtube.com/iframe_api';
@@ -219,13 +226,22 @@
       fetchTitles(ids);
       return;
     }
-    if (tries > 40) {
-      $('title').textContent = "Couldn't load the playlist right now.";
-      $('on-yt').style.display = ''; $('on-yt').href = `https://www.youtube.com/playlist?list=${course.playlist}`;
-      return;
-    }
+    if (tries > 40) { playlistFailed('timed out'); return; }
     setTimeout(() => waitForPlaylist(tries + 1), 250);
   }
+
+  let failed = false;
+  function playlistFailed(reason) {
+    if (failed || lessons.length) return;
+    failed = true;
+    console.warn('[YTB] playlist load failed:', reason, course.playlist);
+    $('title').textContent = "Couldn't load this course's playlist.";
+    $('crumb-sec').textContent = `Check the playlist ID in courses.js (${course.playlist.length} chars — full IDs are usually 34)`;
+    $('on-yt').style.display = ''; $('on-yt').textContent = 'Open playlist on YouTube ↗';
+    $('on-yt').href = `https://www.youtube.com/playlist?list=${encodeURIComponent(course.playlist)}`;
+  }
+  // Safety net: if the YouTube API never even becomes ready (blocked, offline), don't spin forever.
+  if (playlistMode) setTimeout(() => playlistFailed('player never became ready'), 15000);
 
   function cacheCurrentTitle() {
     const d = player.getVideoData && player.getVideoData();
