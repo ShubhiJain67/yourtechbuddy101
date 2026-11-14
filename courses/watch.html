@@ -103,11 +103,39 @@
   const progressKey = 'ytb:progress:' + course.slug;
   const titles = store.get('ytb:titles', {});
   let done = new Set(store.get(progressKey, []));
-  let lessons = [], total = 0, liveCount = 0, idx = 1;
+  let lessons = [], total = 0, liveCount = 0, idx = 1, playlistIds = [];
 
   function setLessons(list) {
     lessons = list; total = list.length; liveCount = list.filter((l) => l.youtube).length;
     store.set('ytb:count:' + course.slug, liveCount);
+  }
+  const urlFor = (n) => { const l = lessons[n - 1]; return `?c=${course.slug}&` + (l && l.youtube ? `v=${l.youtube}` : `l=${n}`); };
+  function idxFromUrl(p) {
+    const v = p.get('v');
+    if (v) { const i = lessons.findIndex((l) => l.youtube === v); if (i >= 0) return i + 1; }
+    return clamp(parseInt(p.get('l'), 10) || firstUnfinished(), 1, total);
+  }
+  // Groups playlist videos into sections by keywords in their titles (see `groups` in courses.js).
+  function buildPlaylistLessons() {
+    const cur = lessons[idx - 1] && lessons[idx - 1].youtube;
+    const allKnown = playlistIds.every((id) => titles[id]);
+    let list;
+    if (course.groups && allKnown) {
+      const buckets = course.groups.map((g) => ({ title: g.title, items: [] }));
+      const more = { title: course.fallbackGroup || 'More lessons', items: [] };
+      const order = course.groupPriority || course.groups.map((_, i) => i);
+      playlistIds.forEach((id) => {
+        const t = titles[id].toLowerCase();
+        const gi = order.find((i) => course.groups[i].match.some((k) => t.includes(k)));
+        (gi !== undefined ? buckets[gi] : more).items.push(id);
+      });
+      list = [...buckets, more].filter((b) => b.items.length)
+        .flatMap((b) => b.items.map((id) => ({ title: titles[id], youtube: id, section: b.title })));
+    } else {
+      list = playlistIds.map((id, i) => ({ title: titles[id] || `Lesson ${i + 1}`, youtube: id, section: course.title }));
+    }
+    setLessons(list);
+    if (cur) idx = (lessons.findIndex((l) => l.youtube === cur) + 1) || 1;
   }
   function firstUnfinished() {
     const i = lessons.findIndex((l) => l.youtube && !done.has(l.youtube));
@@ -132,7 +160,7 @@
       if (l.section !== lastSec) { html += `<div class="sec">${esc(l.section)}</div>`; lastSec = l.section; }
       const isDone = l.youtube && done.has(l.youtube);
       const cls = ['lesson', n === idx ? 'current' : '', isDone ? 'done' : '', l.youtube ? '' : 'locked'].join(' ');
-      html += `<a class="${cls}" href="?c=${course.slug}&l=${n}" data-l="${n}">
+      html += `<a class="${cls}" href="${urlFor(n)}" data-l="${n}">
         <span class="n">${isDone ? '✓' : n}</span>
         <span class="t">${esc(l.title)}${l.duration ? `<div class="d">${esc(l.duration)}</div>` : ''}</span>
         ${l.youtube ? '' : '<span class="soon">soon</span>'}
@@ -183,9 +211,10 @@
   function waitForPlaylist(tries = 0) {
     const ids = player.getPlaylist && player.getPlaylist();
     if (ids && ids.length) {
-      setLessons(ids.map((id, i) => ({ title: titles[id] || `Lesson ${i + 1}`, youtube: id, section: course.title })));
-      idx = clamp(parseInt(params.get('l'), 10) || firstUnfinished(), 1, total);
-      history.replaceState({ idx }, '', `?c=${course.slug}&l=${idx}`);
+      playlistIds = ids;
+      buildPlaylistLessons();
+      idx = idxFromUrl(params);
+      history.replaceState(null, '', urlFor(idx));
       render();
       fetchTitles(ids);
       return;
@@ -219,7 +248,8 @@
     }
   }
   function applyTitles() {
-    lessons.forEach((l) => { if (l.youtube && titles[l.youtube]) l.title = titles[l.youtube]; });
+    if (playlistMode) { buildPlaylistLessons(); history.replaceState(null, '', urlFor(idx)); }
+    else lessons.forEach((l) => { if (l.youtube && titles[l.youtube]) l.title = titles[l.youtube]; });
     renderText(); renderList();
   }
 
@@ -259,13 +289,13 @@
     renderText();
     showVideo(lessons[idx - 1].youtube, autoplay);
     renderList();
-    store.set('ytb:last:' + course.slug, idx);
+    store.set('ytb:last:' + course.slug, lessons[idx - 1].youtube ? { v: lessons[idx - 1].youtube } : { l: idx });
   }
 
   function go(n, push, autoplay = false) {
     if (!lessons.length) return;
     idx = clamp(n, 1, total);
-    if (push) history.pushState({ idx }, '', `?c=${course.slug}&l=${idx}`);
+    if (push) history.pushState(null, '', urlFor(idx));
     render(autoplay);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -280,7 +310,8 @@
     renderText(); renderList();
   });
   window.addEventListener('popstate', () => {
-    idx = clamp(parseInt(new URLSearchParams(location.search).get('l'), 10) || 1, 1, total);
+    if (!lessons.length) return;
+    idx = idxFromUrl(new URLSearchParams(location.search));
     render();
   });
   document.addEventListener('keydown', (e) => {
@@ -294,8 +325,8 @@
     ['prev', 'next', 'mark'].forEach((b) => ($(b).disabled = true));
     $('on-yt').style.display = 'none';
   } else {
-    idx = clamp(parseInt(params.get('l'), 10) || firstUnfinished(), 1, total);
-    history.replaceState({ idx }, '', `?c=${course.slug}&l=${idx}`);
+    idx = idxFromUrl(params);
+    history.replaceState(null, '', urlFor(idx));
     render();
   }
 </script>

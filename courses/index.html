@@ -71,7 +71,8 @@
 
     const a = document.createElement('a');
     a.className = 'card';
-    a.href = `watch.html?c=${encodeURIComponent(c.slug)}${last ? '&l=' + last : ''}`;
+    const lastQ = last && typeof last === 'object' ? (last.v ? '&v=' + encodeURIComponent(last.v) : '&l=' + last.l) : (last ? '&l=' + last : '');
+    a.href = `watch.html?c=${encodeURIComponent(c.slug)}${lastQ}`;
     a.innerHTML = `
       <div class="thumb">${thumb}<span class="count">${countLabel}</span></div>
       <div class="body">
