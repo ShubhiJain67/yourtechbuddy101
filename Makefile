@@ -9,6 +9,7 @@ ifndef m
 endif
 	git add -A
 	git diff --cached --quiet && echo "Nothing to ship." || git commit -m "$(m)"
+	git pull --rebase origin main
 	git push origin main
 	@echo ""
 	@echo "🚀 Shipped. Live on https://yourtechbuddy101.com in about a minute."
