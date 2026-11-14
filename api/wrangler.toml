@@ -1,12 +1,14 @@
 name = "yourtechbuddy-api"
 main = "src/index.js"
 compatibility_date = "2026-10-01"
+workers_dev = true
+preview_urls = false
 
 [vars]
 # Sites allowed to call this API (comma-separated).
 ALLOWED_ORIGINS = "https://yourtechbuddy101.com,https://www.yourtechbuddy101.com,http://localhost:8000,http://127.0.0.1:8000,http://127.0.0.1:5501"
 # Google OAuth Web Client ID (public, safe to commit). Paste yours here.
-GOOGLE_CLIENT_ID = "PASTE_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+GOOGLE_CLIENT_ID = "191165526401-dd71tv54d0f1pn45ud2jtg22i2b35fvn.apps.googleusercontent.com"
 
 # Secrets (NOT in this file — set with `npx wrangler secret put NAME`):
 #   SESSION_SECRET   random string used to sign login sessions
@@ -16,4 +18,4 @@ GOOGLE_CLIENT_ID = "PASTE_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
 [[d1_databases]]
 binding = "DB"
 database_name = "yourtechbuddy"
-database_id = "PASTE_DATABASE_ID_FROM_d1_create"
+database_id = "b228df7a-bad8-4724-bba3-2cbdc83c5194"

@@ -6,3 +6,4 @@ api/node_modules
 api/.wrangler
 api/.dev.vars
 .dev.vars
+secrets/
