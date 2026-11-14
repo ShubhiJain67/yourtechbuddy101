@@ -2,3 +2,7 @@
 node_modules
 .vscode/
 .DS_Store
+api/node_modules
+api/.wrangler
+api/.dev.vars
+.dev.vars

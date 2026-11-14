@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — YourTechBuddy</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../courses/courses.css">
+<style>
+  .layout{display:grid;grid-template-columns:260px minmax(0,1fr);flex:1;min-height:0}
+  .side{border-right:1px solid var(--border);background:var(--panel);padding:16px 12px;display:flex;flex-direction:column;gap:6px}
+  .side h3{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:4px 8px 8px}
+  .side .c{display:block;width:100%;text-align:left;padding:9px 10px;border-radius:8px;background:none;border:0;cursor:pointer;font-size:14px}
+  .side .c:hover{background:var(--panel2)}
+  .side .c.on{background:var(--panel2);box-shadow:inset 3px 0 0 var(--accent)}
+  .side .c small{display:block;color:var(--muted);font-size:12px}
+  .main{padding:24px clamp(16px,3vw,36px) 80px;min-width:0}
+  .gate{max-width:480px;margin:60px auto;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center;color:var(--muted)}
+  .gate b{color:var(--text);font-size:18px}
+  .head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px;position:sticky;top:55px;background:var(--bg);padding:10px 0;z-index:4;border-bottom:1px solid var(--border)}
+  .head h1{font-size:22px;margin:0;margin-right:auto;letter-spacing:-.01em}
+  .dirty{font-size:12px;color:#f0b429}
+  .fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:28px}
+  label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  label.wide{grid-column:1/-1}
+  input,select{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;color:var(--text);font:inherit;font-size:14px;text-transform:none;letter-spacing:0;font-weight:400;width:100%}
+  input:focus,select:focus{outline:none;border-color:var(--accent)}
+  .check{flex-direction:row;align-items:center;gap:10px;text-transform:none;font-size:14px;color:var(--text);font-weight:500;padding-top:22px}
+  .check input{width:18px;height:18px;accent-color:var(--accent)}
+  h2{font-size:16px;margin:0 0 12px}
+  .sec{background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:16px;overflow:hidden}
+  .sec-head{display:flex;gap:8px;align-items:center;padding:12px;border-bottom:1px solid var(--border);background:var(--panel2)}
+  .sec-head input{font-weight:600}
+  .sec-head .n{font-size:12px;color:var(--muted);white-space:nowrap}
+  .ib{background:none;border:1px solid var(--border);border-radius:7px;width:32px;height:32px;cursor:pointer;color:var(--muted);flex:none;font-size:13px}
+  .ib:hover{color:var(--text);border-color:#3a4456}
+  .ib.del:hover{color:#ff6b6b;border-color:#ff6b6b66}
+  .ls{list-style:none;margin:0;padding:0}
+  .ls li{display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border)}
+  .ls li:last-child{border-bottom:0}
+  .ls .i{width:22px;text-align:right;font:600 12px var(--mono);color:var(--muted);flex:none}
+  .ls img,.ls .noimg{width:80px;aspect-ratio:16/9;border-radius:5px;object-fit:cover;flex:none;background:#0e3a44;display:grid;place-items:center;font-size:10px;color:var(--muted)}
+  .ls .meta{font:12px var(--mono);color:var(--muted);white-space:nowrap}
+  .ls select{width:auto;max-width:150px;padding:6px 8px;font-size:12px}
+  .ls .empty{color:var(--muted);font-size:14px;padding:14px 12px}
+  .add{display:flex;gap:8px;padding:12px;background:rgba(124,92,255,.05);border-top:1px solid var(--border);flex-wrap:wrap}
+  .add input{flex:1;min-width:220px}
+  .btn.danger{color:#ff6b6b;border-color:#ff6b6b55}
+  .hint{color:var(--muted);font-size:13px;margin:-6px 0 18px}
+  @media (max-width:900px){
+    .layout{grid-template-columns:1fr}
+    .side{border-right:0;border-bottom:1px solid var(--border)}
+    .ls li{flex-wrap:wrap}
+  }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="../"><div class="logo">&lt;/&gt;</div><b>YourTechBuddy</b></a>
+  <nav>
+    <a href="../">Playground</a>
+    <a href="../courses/">Courses</a>
+    <a href="./" class="active">Admin</a>
+  </nav>
+  <div id="auth"></div>
+</header>
+
+<div id="app"></div>
+
+<script src="../assets/config.js"></script>
+<script src="../assets/ytb.js"></script>
+<script>
+  const { esc } = YTB;
+  const app = document.getElementById('app');
+  const LANGS = ['', 'javascript', 'python', 'java', 'cpp', 'c', 'go', 'rust'];
+  let courses = [], cur = null, dirty = false, busy = false;
+
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const toEditable = (c) => ({
+    _orig: c.slug, slug: c.slug, title: c.title, tagline: c.tagline || '', level: c.level || '', tags: c.tags || [],
+    practice: c.practice || '', published: !!c.published, position: c.position || 0,
+    sections: (c.sections || []).map((s) => ({ title: s.title, lessons: s.lessons.map((l) => ({ title: l.title, youtube: l.youtube, duration: l.duration || '' })) })),
+  });
+  const blank = () => ({ _orig: null, slug: '', title: '', tagline: '', level: '', tags: [], practice: '', published: false, position: courses.length, sections: [{ title: 'Lessons', lessons: [] }] });
+  const setDirty = (v = true) => { dirty = v; const d = document.getElementById('dirty'); if (d) d.textContent = v ? '● Unsaved changes' : ''; };
+  const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+  window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+  function gate(html) { app.innerHTML = `<div class="gate">${html}</div>`; }
+
+  (async function init() {
+    if (!YTB.apiOn || !YTB.authOn) return gate('<b>Admin needs the API</b><span>Set <code>apiBase</code> and <code>googleClientId</code> in <code>assets/config.js</code> (see README).</span>');
+    if (!YTB.user) { gate('<b>Admin sign-in</b><span>Sign in with your admin Google account.</span><div id="gsi"></div>'); return YTB.renderGoogleButton(document.getElementById('gsi'), { size: 'large' }); }
+    if (!YTB.isAdmin) return gate(`<b>Not authorised</b><span>${esc(YTB.user.email)} isn't an admin. Add it to ADMIN_EMAILS on the API.</span>`);
+    await loadList();
+    const want = new URLSearchParams(location.search).get('c');
+    const first = courses.find((c) => c.slug === want) || courses[0];
+    cur = first ? toEditable(first) : blank();
+    render();
+  })();
+
+  async function loadList() {
+    try {
+      const { courses: list } = await YTB.api('/api/courses?all=1');
+      courses = list;
+    } catch (e) { YTB.toast('Could not load courses: ' + e.message); courses = []; }
+  }
+
+  /* ---------------- rendering ---------------- */
+  function render() {
+    const listHtml = courses.map((c) => `<button class="c ${cur && cur._orig === c.slug ? 'on' : ''}" data-act="open" data-slug="${esc(c.slug)}">
+        ${esc(c.title)}<small>${c.published ? 'Published' : 'Draft'} · ${c.sections.reduce((n, s) => n + s.lessons.length, 0)} lessons</small></button>`).join('');
+
+    const allLessons = cur.sections.reduce((n, s) => n + s.lessons.length, 0);
+    const sectionOptions = (si) => cur.sections.map((s, i) => `<option value="${i}" ${i === si ? 'selected' : ''}>${i === si ? 'Move to…' : esc(s.title)}</option>`).join('');
+
+    const secHtml = cur.sections.map((s, si) => `
+      <div class="sec">
+        <div class="sec-head">
+          <input value="${esc(s.title)}" data-f="sec-title" data-si="${si}" placeholder="Section title">
+          <span class="n">${s.lessons.length} lessons</span>
+          <button class="ib" title="Move section up" data-act="sec-up" data-si="${si}">↑</button>
+          <button class="ib" title="Move section down" data-act="sec-down" data-si="${si}">↓</button>
+          <button class="ib del" title="Delete section" data-act="sec-del" data-si="${si}">✕</button>
+        </div>
+        <ol class="ls">
+          ${s.lessons.length ? s.lessons.map((l, li) => `
+            <li>
+              <span class="i">${li + 1}</span>
+              ${l.youtube ? `<img src="https://i.ytimg.com/vi/${esc(l.youtube)}/mqdefault.jpg" alt="" loading="lazy">` : '<span class="noimg">soon</span>'}
+              <input value="${esc(l.title)}" data-f="les-title" data-si="${si}" data-li="${li}" placeholder="Lesson title">
+              <span class="meta">${esc(l.duration || '')}</span>
+              <input value="${esc(l.youtube)}" data-f="les-yt" data-si="${si}" data-li="${li}" placeholder="video id" style="width:120px;flex:none;font:12px var(--mono)">
+              ${cur.sections.length > 1 ? `<select data-f="les-move" data-si="${si}" data-li="${li}">${sectionOptions(si)}</select>` : ''}
+              <button class="ib" title="Up" data-act="les-up" data-si="${si}" data-li="${li}">↑</button>
+              <button class="ib" title="Down" data-act="les-down" data-si="${si}" data-li="${li}">↓</button>
+              <button class="ib del" title="Remove" data-act="les-del" data-si="${si}" data-li="${li}">✕</button>
+            </li>`).join('') : '<li class="empty">No lessons yet — paste a YouTube video or playlist link below.</li>'}
+        </ol>
+        <div class="add">
+          <input data-add="${si}" placeholder="Paste a YouTube video or playlist link…">
+          <button class="btn primary" data-act="add-yt" data-si="${si}">Add</button>
+          <button class="btn" data-act="add-blank" data-si="${si}">+ Coming-soon lesson</button>
+        </div>
+      </div>`).join('');
+
+    app.innerHTML = `
+      <div class="layout">
+        <aside class="side">
+          <h3>Courses</h3>
+          ${listHtml || '<p style="color:var(--muted);font-size:14px;margin:0 8px">No courses yet.</p>'}
+          <button class="btn" style="margin-top:8px" data-act="new">+ New course</button>
+        </aside>
+        <main class="main">
+          <div class="head">
+            <h1>${esc(cur.title || 'New course')}</h1>
+            <span class="dirty" id="dirty">${dirty ? '● Unsaved changes' : ''}</span>
+            ${cur._orig ? `<a class="btn" href="../courses/watch.html?c=${encodeURIComponent(cur._orig)}" target="_blank">View ↗</a>` : ''}
+            ${cur._orig ? '<button class="btn danger" data-act="delete" id="delbtn">Delete</button>' : ''}
+            <button class="btn primary" data-act="save" ${busy ? 'disabled' : ''}>${busy ? 'Saving…' : 'Save'}</button>
+          </div>
+
+          <div class="fields">
+            <label>Title<input data-f="title" value="${esc(cur.title)}" placeholder="Low Level Design 101"></label>
+            <label>Slug (URL)<input data-f="slug" value="${esc(cur.slug)}" placeholder="lld"></label>
+            <label class="wide">Tagline<input data-f="tagline" value="${esc(cur.tagline)}" placeholder="One line on what learners get"></label>
+            <label>Level<input data-f="level" value="${esc(cur.level)}" placeholder="Beginner → Advanced"></label>
+            <label>Tags (comma separated)<input data-f="tags" value="${esc(cur.tags.join(', '))}" placeholder="LLD, OOP, Interviews"></label>
+            <label>Practice language<select data-f="practice">${LANGS.map((l) => `<option value="${l}" ${l === cur.practice ? 'selected' : ''}>${l || '— none —'}</option>`).join('')}</select></label>
+            <label>Order on courses page<input data-f="position" type="number" value="${cur.position}"></label>
+            <label class="check"><input type="checkbox" data-f="published" ${cur.published ? 'checked' : ''}> Published (visible to everyone)</label>
+          </div>
+
+          <h2>Sections & lessons <span style="color:var(--muted);font-weight:400;font-size:13px">· ${cur.sections.length} sections · ${allLessons} lessons</span></h2>
+          <p class="hint">Paste a playlist link to import every video at once (titles + durations fill in automatically), then move lessons between sections. Learner progress is tied to the video, so rearranging never resets it.</p>
+          ${secHtml}
+          <button class="btn" data-act="sec-add">+ Add section</button>
+        </main>
+      </div>`;
+  }
+
+  /* ---------------- editing ---------------- */
+  const move = (arr, i, d) => { const j = i + d; if (j < 0 || j >= arr.length) return; [arr[i], arr[j]] = [arr[j], arr[i]]; };
+
+  app.addEventListener('input', (e) => {
+    const t = e.target, f = t.dataset.f;
+    if (!f || !cur) return;
+    const si = +t.dataset.si, li = +t.dataset.li;
+    if (f === 'title') { const auto = !cur._orig && (cur.slug === '' || cur.slug === slugify(cur.title)); cur.title = t.value; if (auto) { cur.slug = slugify(t.value); const s = app.querySelector('[data-f="slug"]'); if (s) s.value = cur.slug; } }
+    else if (f === 'slug') cur.slug = t.value.toLowerCase();
+    else if (f === 'tagline' || f === 'level') cur[f] = t.value;
+    else if (f === 'tags') cur.tags = t.value.split(',').map((x) => x.trim()).filter(Boolean);
+    else if (f === 'position') cur.position = parseInt(t.value, 10) || 0;
+    else if (f === 'sec-title') cur.sections[si].title = t.value;
+    else if (f === 'les-title') cur.sections[si].lessons[li].title = t.value;
+    else if (f === 'les-yt') cur.sections[si].lessons[li].youtube = t.value.trim();
+    else return;
+    setDirty();
+  });
+
+  app.addEventListener('change', (e) => {
+    const t = e.target, f = t.dataset.f;
+    if (!f || !cur) return;
+    if (f === 'practice') cur.practice = t.value;
+    else if (f === 'published') cur.published = t.checked;
+    else if (f === 'les-move') {
+      const si = +t.dataset.si, li = +t.dataset.li, to = +t.value;
+      if (to !== si) { const [l] = cur.sections[si].lessons.splice(li, 1); cur.sections[to].lessons.push(l); render(); }
+    } else return;
+    setDirty();
+  });
+
+  app.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.dataset.add !== undefined) { e.preventDefault(); addFromYouTube(+e.target.dataset.add); }
+  });
+
+  app.addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-act]');
+    if (!b) return;
+    const act = b.dataset.act, si = +b.dataset.si, li = +b.dataset.li;
+    const S = cur && cur.sections;
+
+    if (act === 'open' || act === 'new') {
+      if (dirty && !confirmDiscard(b)) return;
+      cur = act === 'new' ? blank() : toEditable(courses.find((c) => c.slug === b.dataset.slug));
+      setDirty(false); render();
+      history.replaceState(null, '', cur._orig ? `?c=${encodeURIComponent(cur._orig)}` : './');
+      return;
+    }
+    if (act === 'save') return save();
+    if (act === 'delete') return del(b);
+    if (act === 'add-yt') return addFromYouTube(si);
+
+    if (act === 'sec-add') S.push({ title: `Section ${S.length + 1}`, lessons: [] });
+    else if (act === 'sec-up') move(S, si, -1);
+    else if (act === 'sec-down') move(S, si, 1);
+    else if (act === 'sec-del') {
+      if (S[si].lessons.length && !armed(b, 'Delete section + lessons?')) return;
+      S.splice(si, 1);
+      if (!S.length) S.push({ title: 'Lessons', lessons: [] });
+    }
+    else if (act === 'les-up') move(S[si].lessons, li, -1);
+    else if (act === 'les-down') move(S[si].lessons, li, 1);
+    else if (act === 'les-del') S[si].lessons.splice(li, 1);
+    else if (act === 'add-blank') S[si].lessons.push({ title: 'New lesson (coming soon)', youtube: '', duration: '' });
+    else return;
+    setDirty(); render();
+  });
+
+  // Two-click confirmation instead of blocking browser dialogs.
+  function armed(btn, label) {
+    if (btn.dataset.armed) return true;
+    btn.dataset.armed = '1'; const old = btn.textContent; btn.textContent = label || 'Click again';
+    setTimeout(() => { delete btn.dataset.armed; btn.textContent = old; }, 2500);
+    return false;
+  }
+  function confirmDiscard(btn) {
+    if (armed(btn, 'Discard changes? Click again')) { setDirty(false); return true; }
+    return false;
+  }
+
+  async function addFromYouTube(si) {
+    const input = app.querySelector(`[data-add="${si}"]`);
+    const url = input.value.trim();
+    if (!url) return input.focus();
+    input.disabled = true;
+    try {
+      const r = await YTB.api('/api/admin/youtube?url=' + encodeURIComponent(url));
+      const existing = new Set(cur.sections.flatMap((s) => s.lessons.map((l) => l.youtube)).filter(Boolean));
+      const items = r.type === 'playlist' ? r.items : [r.item];
+      const fresh = items.filter((i) => !existing.has(i.youtube));
+      fresh.forEach((i) => cur.sections[si].lessons.push({ title: i.title, youtube: i.youtube, duration: i.duration || '' }));
+      if (r.type === 'playlist' && !cur.title) { cur.title = r.title; if (!cur._orig && !cur.slug) cur.slug = slugify(r.title); }
+      const skipped = items.length - fresh.length;
+      YTB.toast(r.type === 'playlist'
+        ? `Imported ${fresh.length} videos from “${r.title}”${skipped ? ` (${skipped} already in course)` : ''}`
+        : fresh.length ? `Added “${r.item.title}”` : 'That video is already in this course');
+      if (r.type === 'video' && r.playlist) YTB.toast('Tip: to import the whole playlist, paste the playlist link (youtube.com/playlist?list=…)');
+      input.value = '';
+      setDirty(); render();
+      const again = app.querySelector(`[data-add="${si}"]`); if (again) again.focus();
+    } catch (e) {
+      YTB.toast(e.message);
+      input.disabled = false;
+    }
+  }
+
+  async function save() {
+    if (busy) return;
+    if (!cur.title.trim()) return YTB.toast('Add a course title first');
+    if (!cur.slug.trim()) cur.slug = slugify(cur.title);
+    busy = true; render();
+    try {
+      const { _orig, ...body } = cur;
+      const { course } = await YTB.api('/api/admin/courses/' + encodeURIComponent(_orig || cur.slug), { method: 'PUT', body });
+      await loadList();
+      cur = toEditable(course);
+      setDirty(false);
+      history.replaceState(null, '', `?c=${encodeURIComponent(cur._orig)}`);
+      YTB.toast(course.published ? 'Saved — live on the site' : 'Saved as draft (not visible to learners yet)');
+    } catch (e) {
+      YTB.toast('Save failed: ' + e.message);
+    } finally {
+      busy = false; render();
+    }
+  }
+
+  async function del(btn) {
+    if (!armed(btn, 'Delete forever? Click again')) return;
+    try {
+      await YTB.api('/api/admin/courses/' + encodeURIComponent(cur._orig), { method: 'DELETE' });
+      await loadList();
+      cur = courses[0] ? toEditable(courses[0]) : blank();
+      setDirty(false); render();
+      YTB.toast('Course deleted');
+    } catch (e) { YTB.toast('Delete failed: ' + e.message); }
+  }
+</script>
+</body>
+</html>

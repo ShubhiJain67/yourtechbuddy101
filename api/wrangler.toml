@@ -1,0 +1,19 @@
+name = "yourtechbuddy-api"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+# Sites allowed to call this API (comma-separated).
+ALLOWED_ORIGINS = "https://yourtechbuddy101.com,https://www.yourtechbuddy101.com,http://localhost:8000,http://127.0.0.1:8000,http://127.0.0.1:5501"
+# Google OAuth Web Client ID (public, safe to commit). Paste yours here.
+GOOGLE_CLIENT_ID = "PASTE_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+
+# Secrets (NOT in this file — set with `npx wrangler secret put NAME`):
+#   SESSION_SECRET   random string used to sign login sessions
+#   ADMIN_EMAILS     comma-separated Google emails that get admin access
+#   YOUTUBE_API_KEY  YouTube Data API v3 key (for playlist import + durations)
+
+[[d1_databases]]
+binding = "DB"
+database_name = "yourtechbuddy"
+database_id = "PASTE_DATABASE_ID_FROM_d1_create"

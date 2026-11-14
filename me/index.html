@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My courses — YourTechBuddy</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../courses/courses.css">
+<style>
+  .wrap{max-width:900px;margin:0 auto;padding:40px 20px 60px;width:100%}
+  h1{font-size:clamp(26px,3.5vw,34px);margin:0 0 6px;letter-spacing:-.02em}
+  .sub{color:var(--muted);margin:0 0 28px}
+  h2{font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:32px 0 12px}
+  .item{display:flex;gap:16px;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;text-decoration:none}
+  .item:hover{border-color:#3a4456}
+  .item .th{width:160px;flex:none;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:linear-gradient(135deg,#2a1f66,#0e3a44);display:grid;place-items:center;font:700 22px var(--mono)}
+  .item .th img{width:100%;height:100%;object-fit:cover}
+  .item .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+  .item h3{margin:0;font-size:17px}
+  .item .meta{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--muted)}
+  .item .meta .progress{flex:1;max-width:260px}
+  .item .next{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .empty,.gate{background:var(--panel);border:1px dashed var(--border);border-radius:12px;padding:28px;text-align:center;color:var(--muted)}
+  .gate{display:flex;flex-direction:column;align-items:center;gap:14px}
+  @media (max-width:600px){ .item{flex-direction:column;align-items:stretch} .item .th{width:100%} }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="../"><div class="logo">&lt;/&gt;</div><b>YourTechBuddy</b></a>
+  <nav>
+    <a href="../">Playground</a>
+    <a href="../courses/">Courses</a>
+    <a class="yt" href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a>
+  </nav>
+  <div id="auth"></div>
+</header>
+
+<main class="wrap">
+  <h1 id="hello">My courses</h1>
+  <p class="sub" id="sub">Your progress across YourTechBuddy courses.</p>
+  <div id="content"></div>
+</main>
+
+<footer>Made by <a href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YourTechBuddy</a></footer>
+
+<script src="../assets/config.js"></script>
+<script src="../courses/courses.js"></script>
+<script src="../assets/ytb.js"></script>
+<script>
+  const esc = YTB.esc;
+  const content = document.getElementById('content');
+
+  (async () => {
+    if (YTB.authOn && !YTB.user) {
+      content.innerHTML = `<div class="gate"><b style="color:var(--text);font-size:17px">Sign in to see your courses</b>
+        <span>Your progress is saved to your account and follows you across devices.</span><div id="gsi"></div></div>`;
+      YTB.renderGoogleButton(document.getElementById('gsi'), { size: 'large' });
+      return;
+    }
+    if (YTB.user) {
+      document.getElementById('hello').textContent = `Hi ${YTB.user.name.split(' ')[0]} 👋`;
+    } else {
+      document.getElementById('sub').textContent = 'Progress is saved in this browser.';
+    }
+
+    content.innerHTML = '<p style="color:var(--muted)">Loading…</p>';
+    const courses = await YTB.getCourses();
+    const prog = await YTB.progress.loadAll(courses);
+
+    const rows = courses.map((c) => {
+      const lessons = (c.sections || []).flatMap((s) => s.lessons).filter((l) => l.youtube);
+      const isPlaylist = !!c.playlist && !lessons.length;
+      const done = prog[c.slug] || new Set();
+      const total = isPlaylist ? (YTB.LS.get('ytb:count:' + c.slug, 0) || 0) : lessons.length;
+      const count = isPlaylist ? done.size : lessons.filter((l) => done.has(l.youtube)).length;
+      const pct = total ? Math.min(100, Math.round((count / total) * 100)) : 0;
+      const next = lessons.find((l) => !done.has(l.youtube));
+      return { c, lessons, count, total, pct, next };
+    });
+
+    const started = rows.filter((r) => r.count > 0).sort((a, b) => (a.pct === 100) - (b.pct === 100) || b.pct - a.pct);
+    const rest = rows.filter((r) => r.count === 0);
+
+    const card = (r) => {
+      const first = r.lessons[0];
+      const th = first ? `<img src="https://i.ytimg.com/vi/${encodeURIComponent(first.youtube)}/mqdefault.jpg" alt="" loading="lazy">` : esc(r.c.slug.toUpperCase());
+      const href = `../courses/watch.html?c=${encodeURIComponent(r.c.slug)}` + (r.next ? `&v=${encodeURIComponent(r.next.youtube)}` : '');
+      const status = r.pct === 100 ? '🎉 Completed' : r.count ? `${r.count} / ${r.total || '?'} lessons · ${r.pct}%` : `${r.total} lessons`;
+      return `<a class="item" href="${href}">
+        <div class="th">${th}</div>
+        <div class="info">
+          <h3>${esc(r.c.title)}</h3>
+          <div class="meta"><div class="progress"><i style="width:${r.pct}%"></i></div><span>${status}</span></div>
+          ${r.next && r.count ? `<div class="next">Up next: ${esc(r.next.title)}</div>` : ''}
+        </div>
+        <span class="btn ${r.count ? 'primary' : ''}">${r.pct === 100 ? 'Review' : r.count ? 'Continue' : 'Start'} →</span>
+      </a>`;
+    };
+
+    content.innerHTML =
+      (started.length ? `<h2>In progress</h2>${started.map(card).join('')}`
+                      : `<div class="empty">You haven't started a course yet. Pick one below 👇</div>`) +
+      (rest.length ? `<h2>${started.length ? 'Explore more' : 'Courses'}</h2>${rest.map(card).join('')}` : '');
+  })();
+</script>
+</body>
+</html>

@@ -37,6 +37,7 @@
     <a href="./" class="active">Courses</a>
     <a class="yt" href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a>
   </nav>
+  <div id="auth"></div>
 </header>
 
 <section class="hero">
@@ -48,45 +49,55 @@
 
 <footer>Made by <a href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YourTechBuddy</a></footer>
 
+<script src="../assets/config.js"></script>
 <script src="courses.js"></script>
+<script src="../assets/ytb.js"></script>
 <script>
-  const read = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
-  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const esc = YTB.esc, read = (k) => YTB.LS.get(k, null);
   const grid = document.getElementById('grid');
 
-  for (const c of window.COURSES) {
-    const lessons = (c.sections || []).flatMap((s) => s.lessons);
-    const live = lessons.filter((l) => l.youtube);
-    const isPlaylist = !!c.playlist && !lessons.length;
-    const liveCount = isPlaylist ? (read('ytb:count:' + c.slug) || 0) : live.length;
-    const done = (read('ytb:progress:' + c.slug) || []).length;
-    const pct = liveCount ? Math.min(100, Math.round((done / liveCount) * 100)) : 0;
-    const last = read('ytb:last:' + c.slug);
-    const first = live[0];
-    const thumb = first
-      ? `<img src="https://i.ytimg.com/vi/${encodeURIComponent(first.youtube)}/hqdefault.jpg" alt="" loading="lazy">`
-      : `<span class="big">${esc(c.slug.toUpperCase())}</span>`;
-    const countLabel = isPlaylist ? (liveCount ? `${liveCount} lessons` : 'Full video course')
-                                  : `${live.length} of ${lessons.length} lessons live`;
+  (async () => {
+    grid.innerHTML = '<p style="color:var(--muted)">Loading courses…</p>';
+    const courses = await YTB.getCourses();
+    const prog = await YTB.progress.loadAll(courses);
+    grid.innerHTML = courses.length ? '' : '<p style="color:var(--muted)">No courses yet — check back soon.</p>';
 
-    const a = document.createElement('a');
-    a.className = 'card';
-    const lastQ = last && typeof last === 'object' ? (last.v ? '&v=' + encodeURIComponent(last.v) : '&l=' + last.l) : (last ? '&l=' + last : '');
-    a.href = `watch.html?c=${encodeURIComponent(c.slug)}${lastQ}`;
-    a.innerHTML = `
-      <div class="thumb">${thumb}<span class="count">${countLabel}</span></div>
-      <div class="body">
-        <h2>${esc(c.title)}</h2>
-        <p>${esc(c.tagline)}</p>
-        <div class="tags">${[c.level, ...(c.tags || [])].filter(Boolean).map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</div>
-        <div class="row">
-          <div class="progress"><i style="width:${pct}%"></i></div>
-          <span class="pct">${done ? pct + '% done' : 'Not started'}</span>
-          <span class="btn primary">${done ? 'Continue' : 'Start'} →</span>
-        </div>
-      </div>`;
-    grid.appendChild(a);
-  }
+    for (const c of courses) {
+      const lessons = (c.sections || []).flatMap((s) => s.lessons);
+      const live = lessons.filter((l) => l.youtube);
+      const isPlaylist = !!c.playlist && !lessons.length;
+      const liveCount = isPlaylist ? (read('ytb:count:' + c.slug) || 0) : live.length;
+      const doneSet = prog[c.slug] || new Set();
+      const done = isPlaylist ? doneSet.size : live.filter((l) => doneSet.has(l.youtube)).length;
+      const pct = liveCount ? Math.min(100, Math.round((done / liveCount) * 100)) : 0;
+      const last = read('ytb:last:' + c.slug);
+      const lastQ = last && typeof last === 'object' ? (last.v ? '&v=' + encodeURIComponent(last.v) : '&l=' + last.l) : '';
+      const first = live[0];
+      const thumb = first
+        ? `<img src="https://i.ytimg.com/vi/${encodeURIComponent(first.youtube)}/hqdefault.jpg" alt="" loading="lazy">`
+        : `<span class="big">${esc(c.slug.toUpperCase())}</span>`;
+      const countLabel = isPlaylist ? (liveCount ? `${liveCount} lessons` : 'Full video course')
+        : (live.length === lessons.length ? `${lessons.length} lessons` : `${live.length} of ${lessons.length} lessons live`);
+      const draft = c.published === false ? '<span class="tag" style="color:#f0b429;border-color:#f0b42955">Draft</span>' : '';
+
+      const a = document.createElement('a');
+      a.className = 'card';
+      a.href = `watch.html?c=${encodeURIComponent(c.slug)}${lastQ}`;
+      a.innerHTML = `
+        <div class="thumb">${thumb}<span class="count">${countLabel}</span></div>
+        <div class="body">
+          <h2>${esc(c.title)}</h2>
+          <p>${esc(c.tagline || '')}</p>
+          <div class="tags">${draft}${[c.level, ...(c.tags || [])].filter(Boolean).map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</div>
+          <div class="row">
+            <div class="progress"><i style="width:${pct}%"></i></div>
+            <span class="pct">${done ? pct + '% done' : 'Not started'}</span>
+            <span class="btn primary">${done ? 'Continue' : 'Start'} →</span>
+          </div>
+        </div>`;
+      grid.appendChild(a);
+    }
+  })();
 </script>
 </body>
 </html>

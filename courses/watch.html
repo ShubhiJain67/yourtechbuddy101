@@ -52,6 +52,7 @@
     <a href="./" class="active">Courses</a>
     <a class="yt" href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a>
   </nav>
+  <div id="auth"></div>
 </header>
 
 <div class="layout">
@@ -88,7 +89,9 @@
   </aside>
 </div>
 
+<script src="../assets/config.js"></script>
 <script src="courses.js"></script>
+<script src="../assets/ytb.js"></script>
 <script>
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -98,11 +101,12 @@
   };
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 
+(async () => {
   const params = new URLSearchParams(location.search);
-  const course = window.COURSES.find((c) => c.slug === params.get('c')) || window.COURSES[0];
-  const progressKey = 'ytb:progress:' + course.slug;
+  const course = (await YTB.getCourse(params.get('c'))) || (await YTB.getCourses())[0];
+  if (!course) { $('title').textContent = 'Course not found.'; return; }
   const titles = store.get('ytb:titles', {});
-  let done = new Set(store.get(progressKey, []));
+  let done = await YTB.progress.load(course);
   let lessons = [], total = 0, liveCount = 0, idx = 1, playlistIds = [];
 
   function setLessons(list) {
@@ -278,7 +282,7 @@
 
   function onEnded() {
     const l = lessons[idx - 1];
-    if (l && l.youtube) { done.add(l.youtube); store.set(progressKey, [...done]); }
+    if (l && l.youtube && !done.has(l.youtube)) { done.add(l.youtube); YTB.progress.set(course, l.youtube, true); }
     const nextLive = lessons.findIndex((x, i) => i >= idx && x.youtube);
     if (nextLive >= 0) go(nextLive + 1, true, true); else { renderText(); renderList(); }
   }
@@ -321,8 +325,9 @@
   $('mark').addEventListener('click', () => {
     const l = lessons[idx - 1];
     if (!l || !l.youtube) return;
-    done.has(l.youtube) ? done.delete(l.youtube) : done.add(l.youtube);
-    store.set(progressKey, [...done]);
+    const nowDone = !done.has(l.youtube);
+    nowDone ? done.add(l.youtube) : done.delete(l.youtube);
+    YTB.progress.set(course, l.youtube, nowDone);
     renderText(); renderList();
   });
   window.addEventListener('popstate', () => {
@@ -345,6 +350,7 @@
     history.replaceState(null, '', urlFor(idx));
     render();
   }
+})();
 </script>
 </body>
 </html>
