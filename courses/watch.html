@@ -48,7 +48,7 @@
 <header>
   <a class="brand" href="../"><div class="logo">&lt;/&gt;</div><b>YourTechBuddy</b></a>
   <nav>
-    <a href="../">Playground</a>
+    <a href="../playground/">Playground</a>
     <a href="./" class="active">Courses</a>
     <a class="yt" href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a>
   </nav>
@@ -74,7 +74,7 @@
       <button class="btn" id="mark">✓ Mark complete</button>
       <button class="btn primary" id="next">Next →</button>
       <span class="spacer"></span>
-      <a class="btn" id="practice" href="../">⌨️ Practise in Playground</a>
+      <a class="btn" id="practice" href="../playground/">⌨️ Practise in Playground</a>
       <a class="btn" id="on-yt" target="_blank" rel="noopener">Watch on YouTube ↗</a>
     </div>
   </main>
@@ -302,7 +302,7 @@
     $('on-yt').style.display = l.youtube ? '' : 'none';
     if (l.youtube) $('on-yt').href = `https://www.youtube.com/watch?v=${encodeURIComponent(l.youtube)}` + (course.playlist ? `&list=${course.playlist}` : '');
     const lang = l.practice || course.practice;
-    $('practice').href = lang ? `../#lang=${encodeURIComponent(lang)}` : '../';
+    $('practice').href = lang ? `../playground/#lang=${encodeURIComponent(lang)}` : '../playground/';
   }
   function render(autoplay = false) {
     if (!lessons.length) return;
