@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script src="../assets/theme.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>YourTechBuddy Playground — write &amp; run code in your browser</title>
 <meta name="description" content="Free online code playground by YourTechBuddy. Write and run JavaScript, Python, C++, C, Java, Go and Rust right in your browser.">
@@ -77,6 +78,19 @@
     .brand span{display:none}
     .hide-sm{display:none}
   }
+
+  a.btn{color:var(--text)}
+  a.btn.yt{color:#ff6b6b}
+  /* Light theme */
+  [data-theme="light"]{
+    --bg:#f6f7fb; --panel:#ffffff; --panel2:#f0f2f7; --border:#e2e6ee;
+    --text:#0f172a; --muted:#5b6475; --accent:#6d4aff; --accent-2:#0e7490;
+    --ok:#15803d; --err:#dc2626; --warn:#b45309; color-scheme:light;
+  }
+  [data-theme="light"] .btn:hover{border-color:#c9d1de;background:#e8ebf3}
+  [data-theme="light"] .btn.primary:hover{background:#5b3ae6}
+  [data-theme="light"] .toast{background:#ffffff;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+  [data-theme="light"] kbd{border-color:rgba(255,255,255,.6)}
 </style>
 </head>
 <body>
@@ -400,12 +414,18 @@ function loadMonaco() {
   s.onload = () => {
     require.config({ paths: { vs: MONACO + '/vs' } });
     require(['vs/editor/editor.main'], () => {
+      monaco.editor.defineTheme('ytb-light', {
+        base: 'vs', inherit: true, rules: [],
+        colors: { 'editor.background': '#ffffff', 'editorLineNumber.foreground': '#b6bfcc', 'editor.lineHighlightBackground': '#f4f6fa' }
+      });
+      const monacoTheme = () => document.documentElement.getAttribute('data-theme') === 'light' ? 'ytb-light' : 'ytb';
+      window.addEventListener('ytb:theme', () => monaco.editor.setTheme(monacoTheme()));
       monaco.editor.defineTheme('ytb', {
         base: 'vs-dark', inherit: true, rules: [],
         colors: { 'editor.background': '#0b0e14', 'editorLineNumber.foreground': '#3b4556', 'editor.lineHighlightBackground': '#11151d' }
       });
       monacoEditor = monaco.editor.create($('editor'), {
-        value: initialCode(), language: LANGS[currentLang].monaco, theme: 'ytb',
+        value: initialCode(), language: LANGS[currentLang].monaco, theme: monacoTheme(),
         fontFamily: "'JetBrains Mono', Menlo, monospace", fontSize: 14, fontLigatures: true,
         minimap: { enabled: false }, automaticLayout: true, scrollBeyondLastLine: false,
         padding: { top: 12 }, tabSize: 4, smoothScrolling: true, cursorBlinking: 'smooth',

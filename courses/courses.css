@@ -36,3 +36,22 @@ nav a.yt{color:#ff6b6b}
 footer{margin-top:auto;padding:14px 20px;border-top:1px solid var(--border);color:var(--muted);font-size:13px}
 
 @media (max-width:640px){ .brand b{display:none} nav a{padding:7px 9px} }
+
+/* ---------------- Light theme ---------------- */
+:root{color-scheme:dark}
+[data-theme="light"]{
+  --bg:#f6f7fb; --panel:#ffffff; --panel2:#f0f2f7; --border:#e2e6ee;
+  --text:#0f172a; --muted:#5b6475; --accent:#6d4aff; --accent-2:#0e7490; --ok:#15803d;
+  color-scheme:light;
+}
+body{transition:background-color .2s,color .2s}
+[data-theme="light"] .btn:hover{background:#e8ebf3;border-color:#c9d1de}
+[data-theme="light"] .btn.primary:hover{background:#5b3ae6;border-color:#5b3ae6}
+[data-theme="light"] .card:hover,[data-theme="light"] .ccard:hover,[data-theme="light"] .feat:hover,
+[data-theme="light"] .item:hover,[data-theme="light"] .ib:hover{border-color:#c9d1de}
+[data-theme="light"] .doc p,[data-theme="light"] .doc li,[data-theme="light"] .about p{color:#334155}
+[data-theme="light"] header{box-shadow:0 1px 0 rgba(15,23,42,.04)}
+/* Always-dark elements keep their dark palette in light mode */
+[data-theme="light"] .code{--panel:#11151d;--border:#232a36;--muted:#8b95a5}
+[data-theme="light"] .placeholder{--muted:#cbd5e1;color:#fff}
+.band{color:#fff}

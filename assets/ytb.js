@@ -176,20 +176,59 @@
   }
 
   /* Styles for the auth bits (so every page gets them, including the Playground). */
-  const css = `
+  let css = `
     .ytb-user{position:relative}
-    .ytb-avatar{width:34px;height:34px;border-radius:50%;border:1px solid #232a36;background:#151a24;padding:0;cursor:pointer;overflow:hidden;display:grid;place-items:center;color:#e6edf3;font-weight:600}
+    .ytb-avatar{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--panel2);padding:0;cursor:pointer;overflow:hidden;display:grid;place-items:center;color:var(--text);font-weight:600}
     .ytb-avatar img{width:100%;height:100%;object-fit:cover}
-    .ytb-menu{position:absolute;right:0;top:42px;min-width:220px;background:#151a24;border:1px solid #232a36;border-radius:10px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:50}
-    .ytb-menu a,.ytb-menu button{display:block;width:100%;text-align:left;padding:8px 10px;border-radius:7px;color:#e6edf3;text-decoration:none;background:none;border:0;font:inherit;font-size:14px;cursor:pointer}
-    .ytb-menu a:hover,.ytb-menu button:hover{background:#1f2633}
-    .ytb-who{padding:8px 10px 10px;border-bottom:1px solid #232a36;margin-bottom:4px}
-    .ytb-who b{display:block;font-size:14px}.ytb-who small{color:#8b95a5;font-size:12px}
+    .ytb-menu{position:absolute;right:0;top:42px;min-width:220px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:50}
+    .ytb-menu a,.ytb-menu button{display:block;width:100%;text-align:left;padding:8px 10px;border-radius:7px;color:var(--text);text-decoration:none;background:none;border:0;font:inherit;font-size:14px;cursor:pointer}
+    .ytb-menu a:hover,.ytb-menu button:hover{background:var(--panel2)}
+    .ytb-who{padding:8px 10px 10px;border-bottom:1px solid var(--border);margin-bottom:4px}
+    .ytb-who b{display:block;font-size:14px}.ytb-who small{color:var(--muted);font-size:12px}
     .ytb-gsi{min-height:32px;display:flex;align-items:center}
-    .ytb-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1f2633;border:1px solid #3a4456;color:#e6edf3;padding:10px 16px;border-radius:8px;z-index:100;font-size:14px}`;
+    .ytb-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--border);color:var(--text);box-shadow:0 8px 24px rgba(0,0,0,.25);padding:10px 16px;border-radius:8px;z-index:100;font-size:14px}`;
+  css += `
+    .theme-toggle{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--panel2);color:var(--text);cursor:pointer;display:grid;place-items:center;padding:0;flex:none}
+    .theme-toggle:hover{border-color:var(--accent)}
+    .theme-toggle svg{width:17px;height:17px}`;
   const style = document.createElement('style');
   style.textContent = css;
   document.head.appendChild(style);
+
+  /* ---------------- Light / dark theme ---------------- */
+  const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+  const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+  const getTheme = () => document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+  function setTheme(t, save = true) {
+    document.documentElement.setAttribute('data-theme', t);
+    if (save) { try { localStorage.setItem('ytb:theme', t); } catch {} }
+    document.querySelectorAll('.theme-toggle').forEach(paintToggle);
+    window.dispatchEvent(new CustomEvent('ytb:theme', { detail: t }));
+  }
+  function paintToggle(btn) {
+    const light = getTheme() === 'light';
+    btn.innerHTML = light ? MOON : SUN;
+    btn.title = light ? 'Switch to dark mode' : 'Switch to light mode';
+    btn.setAttribute('aria-label', btn.title);
+  }
+  function mountThemeToggle() {
+    if (document.querySelector('.theme-toggle')) return;
+    const btn = document.createElement('button');
+    btn.className = 'theme-toggle';
+    paintToggle(btn);
+    btn.addEventListener('click', () => setTheme(getTheme() === 'light' ? 'dark' : 'light'));
+    const auth = document.getElementById('auth');
+    const header = document.querySelector('header');
+    if (auth) auth.parentNode.insertBefore(btn, auth);
+    else if (header) header.appendChild(btn);
+  }
+  // Follow the system setting until the visitor picks a theme themselves.
+  try {
+    matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
+      let saved = null; try { saved = localStorage.getItem('ytb:theme'); } catch {}
+      if (!saved) setTheme(e.matches ? 'light' : 'dark', false);
+    });
+  } catch {}
 
   window.YTB = {
     config: CFG, apiOn, authOn, root: ROOT, api, esc, LS,
@@ -197,7 +236,9 @@
     get user() { return session && session.user; },
     get isAdmin() { return !!(session && session.user && session.user.isAdmin); },
     getCourses, getCourse, progress, renderAuth, renderGoogleButton, signOut, toast: alertBox,
+    get theme() { return getTheme(); }, setTheme,
   };
 
-  document.addEventListener('DOMContentLoaded', () => renderAuth(document.getElementById('auth')));
+  function boot() { mountThemeToggle(); renderAuth(document.getElementById('auth')); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();
