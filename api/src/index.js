@@ -11,6 +11,7 @@
 // Admin:    PUT    /api/admin/courses/:slug   full course tree (create or replace)
 //           DELETE /api/admin/courses/:slug
 //           GET    /api/admin/youtube?url=..&mode=video|playlist
+//           GET/POST /api/admin/ideas, PUT/DELETE /api/admin/ideas/:id   (private ideas board)
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8' };
 const enc = new TextEncoder();
@@ -79,6 +80,14 @@ async function route(req, env) {
     if ((mt = path.match(/^\/api\/admin\/courses\/([a-z0-9-]+)$/))) {
       if (m === 'PUT') return saveCourse(env, mt[1], await readJSON(req));
       if (m === 'DELETE') return deleteCourse(env, mt[1]);
+    }
+    if (path === '/api/admin/ideas') {
+      if (m === 'GET') return listIdeas(env);
+      if (m === 'POST') return saveIdea(env, null, await readJSON(req));
+    }
+    if ((mt = path.match(/^\/api\/admin\/ideas\/(\d+)$/))) {
+      if (m === 'PUT') return saveIdea(env, Number(mt[1]), await readJSON(req));
+      if (m === 'DELETE') return deleteIdea(env, Number(mt[1]));
     }
     if (path === '/api/admin/youtube' && m === 'GET') {
       return youtubeLookup(env, url.searchParams.get('url') || '', url.searchParams.get('mode') || '');
@@ -369,6 +378,40 @@ async function mergeProgress(env, user, b) {
     ));
   }
   return getProgress(env, user);
+}
+
+/* ------------------------------ ideas (admin only) ------------------------------ */
+
+const IDEA_CATEGORIES = ['youtube', 'instagram', 'course', 'website', 'other'];
+const IDEA_STATUSES = ['idea', 'planned', 'doing', 'done'];
+
+async function listIdeas(env) {
+  const rows = (await env.DB.prepare('SELECT * FROM ideas ORDER BY updated_at DESC, id DESC').all()).results;
+  return json({ ideas: rows });
+}
+
+async function saveIdea(env, id, b) {
+  const title = str(b.title, 200);
+  if (!title) throw httpError(400, 'Give the idea a title');
+  const notes = str(b.notes, 5000);
+  const category = IDEA_CATEGORIES.includes(b.category) ? b.category : 'other';
+  const status = IDEA_STATUSES.includes(b.status) ? b.status : 'idea';
+  const t = now();
+  let row;
+  if (id) {
+    row = await env.DB.prepare('UPDATE ideas SET title = ?, notes = ?, category = ?, status = ?, updated_at = ? WHERE id = ? RETURNING *')
+      .bind(title, notes, category, status, t, id).first();
+    if (!row) throw httpError(404, 'Idea not found');
+  } else {
+    row = await env.DB.prepare('INSERT INTO ideas (title, notes, category, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?) RETURNING *')
+      .bind(title, notes, category, status, t, t).first();
+  }
+  return json({ idea: row });
+}
+
+async function deleteIdea(env, id) {
+  await env.DB.prepare('DELETE FROM ideas WHERE id = ?').bind(id).run();
+  return json({ ok: true });
 }
 
 /* ------------------------------ YouTube ------------------------------ */

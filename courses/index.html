@@ -11,10 +11,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="courses.css">
 <style>
-  .hero{max-width:1100px;margin:0 auto;padding:48px 20px 24px}
+  .hero{width:100%;max-width:1100px;margin:0 auto;padding:48px 20px 24px}
   .hero h1{font-size:clamp(28px,4vw,40px);margin:0 0 8px;letter-spacing:-.02em}
   .hero p{color:var(--muted);margin:0;font-size:17px}
-  .grid{max-width:1100px;margin:0 auto;padding:8px 20px 48px;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px}
+  .grid{width:100%;max-width:1100px;margin:0 auto;padding:8px 20px 48px;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px}
   .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;text-decoration:none;transition:transform .15s,border-color .15s}
   .card:hover{transform:translateY(-2px);border-color:#3a4456}
   .thumb{aspect-ratio:16/9;background:linear-gradient(135deg,#2a1f66,#0e3a44);display:grid;place-items:center;position:relative;overflow:hidden}
@@ -28,6 +28,7 @@
   .row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;padding-top:6px}
   .pct{font-size:12px;color:var(--muted)}
   .row .progress{flex:1}
+  @media (max-width:600px){ .grid{grid-template-columns:1fr} .hero{padding:32px 16px 16px} .grid{padding:8px 16px 40px} }
 </style>
 </head>
 <body>

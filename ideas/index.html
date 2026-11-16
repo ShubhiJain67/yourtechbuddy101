@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="../assets/theme.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ideas — YourTechBuddy</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../courses/courses.css">
+<style>
+  .main{max-width:1280px;margin:0 auto;padding:24px 20px 60px;width:100%}
+  .gate{max-width:480px;margin:60px auto;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center;color:var(--muted)}
+  .gate b{color:var(--text);font-size:18px}
+  h1{font-size:26px;margin:0 0 4px;letter-spacing:-.02em}
+  .sub{color:var(--muted);margin:0 0 20px;font-size:14px}
+  input,select,textarea{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font:inherit;font-size:14px;width:100%}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+  textarea{resize:vertical;min-height:90px;line-height:1.5}
+
+  .add{display:flex;gap:8px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:16px}
+  .add input{flex:1;min-width:0}
+  .add select{width:150px;flex:none}
+
+  .filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+  .filters input{width:240px;flex:none}
+  .chip{border:1px solid var(--border);background:var(--panel);border-radius:99px;padding:6px 12px;font-size:13px;cursor:pointer;color:var(--muted);font-weight:500}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .count{color:var(--muted);font-size:13px;margin-left:auto}
+
+  .tabs{display:none;gap:6px;margin-bottom:12px;overflow-x:auto}
+  .tabs .chip{white-space:nowrap;flex:none}
+  .board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:start}
+  .col{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;min-height:120px}
+  .col h2{display:flex;align-items:center;gap:8px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:4px 6px 10px}
+  .col h2 .dot{width:8px;height:8px;border-radius:50%}
+  .col h2 .n{margin-left:auto;font-family:var(--mono)}
+  .empty{color:var(--muted);font-size:13px;text-align:center;padding:18px 6px}
+
+  .card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+  .card:hover{border-color:var(--accent)}
+  .card .top{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+  .cat{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;border:1px solid}
+  .age{font-size:11px;color:var(--muted);margin-left:auto}
+  .card h3{margin:0;font-size:14.5px;font-weight:600;line-height:1.35;word-break:break-word}
+  .card p{margin:6px 0 0;color:var(--muted);font-size:13px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap}
+  .card .mv{display:flex;gap:6px;margin-top:8px}
+  .card .mv button{flex:1;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:4px;font-size:12px;cursor:pointer;color:var(--muted)}
+  .card .mv button:hover{color:var(--text);border-color:var(--accent)}
+
+  /* Editor dialog */
+  .scrim{position:fixed;inset:0;background:rgba(5,8,14,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:60}
+  .scrim.show{display:flex}
+  .dlg{background:var(--panel);border:1px solid var(--border);border-radius:14px;width:100%;max-width:560px;padding:20px;display:flex;flex-direction:column;gap:12px;max-height:92vh;overflow:auto}
+  .dlg h3{margin:0;font-size:17px}
+  .dlg label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .dlg .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .dlg .acts{display:flex;gap:8px;margin-top:4px}
+  .dlg .acts .sp{flex:1}
+  .btn.danger{color:#ff6b6b;border-color:#ff6b6b55}
+  .meta{font-size:12px;color:var(--muted)}
+
+  @media (max-width:900px){
+    .board{grid-template-columns:1fr}
+    .tabs{display:flex}
+    .col{display:none}
+    .col.show{display:block}
+    .filters input{width:100%}
+    .count{margin-left:0}
+  }
+  @media (max-width:600px){
+    .main{padding:16px 14px 40px}
+    .add{flex-wrap:wrap}
+    .add input{flex:1 1 100%}
+    .add select{flex:1;width:auto}
+    .dlg .row2{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="../"><div class="logo">&lt;/&gt;</div><b>YourTechBuddy</b></a>
+  <nav>
+    <a href="../courses/">Courses</a>
+    <a href="../admin/">Admin</a>
+    <a href="./" class="active">Ideas</a>
+  </nav>
+  <div id="auth"></div>
+</header>
+
+<main class="main" id="app"></main>
+
+<div class="scrim" id="scrim">
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlg-title">
+    <h3 id="dlg-title">Edit idea</h3>
+    <label>Title<input id="e-title" maxlength="200"></label>
+    <label>Notes<textarea id="e-notes" maxlength="5000" placeholder="Hook, outline, links, references…"></textarea></label>
+    <div class="row2">
+      <label>Category<select id="e-cat"></select></label>
+      <label>Status<select id="e-status"></select></label>
+    </div>
+    <div class="meta" id="e-meta"></div>
+    <div class="acts">
+      <button class="btn danger" id="e-del">Delete</button>
+      <span class="sp"></span>
+      <button class="btn" id="e-cancel">Cancel</button>
+      <button class="btn primary" id="e-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/config.js"></script>
+<script src="../assets/ytb.js"></script>
+<script>
+  const { esc } = YTB;
+  const app = document.getElementById('app');
+  const CATS = [
+    { id: 'youtube', label: 'YouTube', color: '#ff4d6d' },
+    { id: 'instagram', label: 'Instagram', color: '#e879f9' },
+    { id: 'course', label: 'Course', color: '#7c5cff' },
+    { id: 'website', label: 'Website', color: '#22d3ee' },
+    { id: 'other', label: 'Other', color: '#94a3b8' },
+  ];
+  const STATUSES = [
+    { id: 'idea', label: 'Ideas', color: '#94a3b8' },
+    { id: 'planned', label: 'Planned', color: '#f0b429' },
+    { id: 'doing', label: 'In progress', color: '#22d3ee' },
+    { id: 'done', label: 'Done', color: '#3fb950' },
+  ];
+  const catOf = (id) => CATS.find((c) => c.id === id) || CATS[4];
+  let ideas = [], filterCat = 'all', query = '', mobileCol = 'idea', editing = null;
+
+  function gate(html) { app.innerHTML = `<div class="gate">${html}</div>`; }
+  function ago(t) {
+    const s = Math.max(1, Math.floor(Date.now() / 1000 - t));
+    if (s < 3600) return Math.ceil(s / 60) + 'm';
+    if (s < 86400) return Math.floor(s / 3600) + 'h';
+    if (s < 86400 * 30) return Math.floor(s / 86400) + 'd';
+    return new Date(t * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+  }
+
+  (async function init() {
+    if (!YTB.apiOn || !YTB.authOn) return gate('<b>Ideas needs the API</b><span>Set <code>apiBase</code> and <code>googleClientId</code> in <code>assets/config.js</code>.</span>');
+    if (!YTB.user) { gate('<b>Private page</b><span>Sign in with your admin Google account.</span><div id="gsi"></div>'); return YTB.renderGoogleButton(document.getElementById('gsi'), { size: 'large' }); }
+    if (!YTB.isAdmin) return gate('<b>Not authorised</b><span>This page is private.</span>');
+    app.innerHTML = '<p class="sub">Loading ideas…</p>';
+    try { ideas = (await YTB.api('/api/admin/ideas')).ideas; }
+    catch (e) { return gate(`<b>Couldn't load ideas</b><span>${esc(e.message)}${e.status === 404 ? ' — run <code>make api-schema</code> and <code>make api-deploy</code>.' : ''}</span>`); }
+    render();
+  })();
+
+  function visible() {
+    const q = query.trim().toLowerCase();
+    return ideas.filter((i) => (filterCat === 'all' || i.category === filterCat) &&
+      (!q || i.title.toLowerCase().includes(q) || i.notes.toLowerCase().includes(q)));
+  }
+
+  function render() {
+    const list = visible();
+    const catOpts = CATS.map((c) => `<option value="${c.id}">${c.label}</option>`).join('');
+    app.innerHTML = `
+      <h1>💡 Ideas</h1>
+      <p class="sub">Private — only you can see this. Capture fast, sort later.</p>
+      <form class="add" id="add">
+        <input id="a-title" placeholder="New idea… (press Enter to save)" maxlength="200" autocomplete="off">
+        <select id="a-cat">${catOpts}</select>
+        <button class="btn primary" type="submit">Add</button>
+      </form>
+      <div class="filters">
+        <input id="q" placeholder="Search ideas…" value="${esc(query)}">
+        <button class="chip ${filterCat === 'all' ? 'on' : ''}" data-cat="all">All</button>
+        ${CATS.map((c) => `<button class="chip ${filterCat === c.id ? 'on' : ''}" data-cat="${c.id}">${c.label}</button>`).join('')}
+        <span class="count">${list.length} of ${ideas.length}</span>
+      </div>
+      <div class="tabs">${STATUSES.map((s) => `<button class="chip ${mobileCol === s.id ? 'on' : ''}" data-tab="${s.id}">${s.label} · ${list.filter((i) => i.status === s.id).length}</button>`).join('')}</div>
+      <div class="board">
+        ${STATUSES.map((s, si) => {
+          const items = list.filter((i) => i.status === s.id);
+          return `<section class="col ${mobileCol === s.id ? 'show' : ''}">
+            <h2><span class="dot" style="background:${s.color}"></span>${s.label}<span class="n">${items.length}</span></h2>
+            ${items.length ? items.map((i) => card(i, si)).join('') : `<div class="empty">${s.id === 'idea' ? 'Nothing here yet — add one above.' : 'Empty'}</div>`}
+          </section>`;
+        }).join('')}
+      </div>`;
+    const sel = document.getElementById('a-cat');
+    sel.value = filterCat !== 'all' ? filterCat : (localStorage.getItem('ytb:ideaCat') || 'youtube');
+  }
+
+  function card(i, si) {
+    const c = catOf(i.category);
+    return `<article class="card" data-id="${i.id}">
+      <div class="top"><span class="cat" style="color:${c.color};border-color:${c.color}55">${c.label}</span><span class="age">${ago(i.updated_at)}</span></div>
+      <h3>${esc(i.title)}</h3>
+      ${i.notes ? `<p>${esc(i.notes)}</p>` : ''}
+      <div class="mv">
+        ${si > 0 ? `<button data-move="-1" title="Move back">← ${STATUSES[si - 1].label}</button>` : ''}
+        ${si < STATUSES.length - 1 ? `<button data-move="1" title="Move forward">${STATUSES[si + 1].label} →</button>` : ''}
+      </div>
+    </article>`;
+  }
+
+  /* ---------- actions ---------- */
+  async function update(idea, patch) {
+    const before = { ...idea };
+    Object.assign(idea, patch, { updated_at: Math.floor(Date.now() / 1000) });
+    render();
+    try {
+      const { idea: saved } = await YTB.api('/api/admin/ideas/' + idea.id, { method: 'PUT', body: idea });
+      Object.assign(idea, saved); render();
+    } catch (e) { Object.assign(idea, before); render(); YTB.toast('Not saved: ' + e.message); }
+  }
+
+  app.addEventListener('submit', async (e) => {
+    if (e.target.id !== 'add') return;
+    e.preventDefault();
+    const t = document.getElementById('a-title'), cat = document.getElementById('a-cat').value;
+    const title = t.value.trim();
+    if (!title) return t.focus();
+    try { localStorage.setItem('ytb:ideaCat', cat); } catch {}
+    t.disabled = true;
+    try {
+      const { idea } = await YTB.api('/api/admin/ideas', { method: 'POST', body: { title, category: cat, status: 'idea' } });
+      ideas.unshift(idea); mobileCol = 'idea'; render();
+      document.getElementById('a-title').focus();
+    } catch (err) { t.disabled = false; YTB.toast('Not saved: ' + err.message); }
+  });
+
+  app.addEventListener('input', (e) => {
+    if (e.target.id !== 'q') return;
+    query = e.target.value;
+    const pos = e.target.selectionStart;
+    render();
+    const q = document.getElementById('q'); q.focus(); q.setSelectionRange(pos, pos);
+  });
+
+  app.addEventListener('click', (e) => {
+    const chip = e.target.closest('[data-cat]');
+    if (chip) { filterCat = chip.dataset.cat; return render(); }
+    const tab = e.target.closest('[data-tab]');
+    if (tab) { mobileCol = tab.dataset.tab; return render(); }
+    const cardEl = e.target.closest('.card');
+    if (!cardEl) return;
+    const idea = ideas.find((i) => i.id === +cardEl.dataset.id);
+    const mv = e.target.closest('[data-move]');
+    if (mv) {
+      const si = STATUSES.findIndex((s) => s.id === idea.status) + +mv.dataset.move;
+      return update(idea, { status: STATUSES[si].id });
+    }
+    openEditor(idea);
+  });
+
+  /* ---------- editor dialog ---------- */
+  const $ = (id) => document.getElementById(id);
+  $('e-cat').innerHTML = CATS.map((c) => `<option value="${c.id}">${c.label}</option>`).join('');
+  $('e-status').innerHTML = STATUSES.map((s) => `<option value="${s.id}">${s.label}</option>`).join('');
+
+  function openEditor(idea) {
+    editing = idea;
+    $('e-title').value = idea.title;
+    $('e-notes').value = idea.notes;
+    $('e-cat').value = idea.category;
+    $('e-status').value = idea.status;
+    $('e-meta').textContent = `Created ${new Date(idea.created_at * 1000).toLocaleString()} · updated ${new Date(idea.updated_at * 1000).toLocaleString()}`;
+    $('e-del').textContent = 'Delete'; delete $('e-del').dataset.armed;
+    $('scrim').classList.add('show');
+    setTimeout(() => $('e-notes').focus(), 30);
+  }
+  function closeEditor() { $('scrim').classList.remove('show'); editing = null; }
+
+  $('e-cancel').addEventListener('click', closeEditor);
+  $('scrim').addEventListener('click', (e) => { if (e.target.id === 'scrim') closeEditor(); });
+  document.addEventListener('keydown', (e) => {
+    if (!editing) return;
+    if (e.key === 'Escape') closeEditor();
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) $('e-save').click();
+  });
+  $('e-save').addEventListener('click', () => {
+    if (!editing) return;
+    const title = $('e-title').value.trim();
+    if (!title) return $('e-title').focus();
+    const idea = editing;
+    closeEditor();
+    update(idea, { title, notes: $('e-notes').value, category: $('e-cat').value, status: $('e-status').value });
+  });
+  $('e-del').addEventListener('click', async () => {
+    const b = $('e-del');
+    if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Click again to delete'; return; }
+    const idea = editing; closeEditor();
+    ideas = ideas.filter((i) => i !== idea); render();
+    try { await YTB.api('/api/admin/ideas/' + idea.id, { method: 'DELETE' }); YTB.toast('Idea deleted'); }
+    catch (e) { ideas.push(idea); render(); YTB.toast('Delete failed: ' + e.message); }
+  });
+</script>
+</body>
+</html>

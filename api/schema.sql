@@ -51,3 +51,15 @@ CREATE TABLE IF NOT EXISTS progress (
   completed_at INTEGER NOT NULL,
   PRIMARY KEY (user_id, course_id, video_id)
 );
+
+-- Private ideas board (admin only)
+CREATE TABLE IF NOT EXISTS ideas (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  title       TEXT NOT NULL,
+  notes       TEXT NOT NULL DEFAULT '',
+  category    TEXT NOT NULL DEFAULT 'other',   -- youtube | instagram | course | website | other
+  status      TEXT NOT NULL DEFAULT 'idea',    -- idea | planned | doing | done
+  created_at  INTEGER NOT NULL,
+  updated_at  INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_ideas_status ON ideas(status, updated_at);

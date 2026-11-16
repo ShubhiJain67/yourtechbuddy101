@@ -152,7 +152,8 @@
     if (!el || !authOn) return;
     if (!session) {
       el.innerHTML = '<div class="ytb-gsi"></div>';
-      renderGoogleButton(el.firstChild).catch((e) => console.warn(e));
+      const small = window.matchMedia('(max-width: 600px)').matches;
+      renderGoogleButton(el.firstChild, small ? { type: 'icon', shape: 'circle', size: 'medium' } : {}).catch((e) => console.warn(e));
       return;
     }
     const u = session.user;
@@ -165,7 +166,7 @@
         <div class="ytb-menu" hidden>
           <div class="ytb-who"><b>${esc(u.name)}</b><small>${esc(u.email)}</small></div>
           <a href="${ROOT}me/">📚 My courses</a>
-          ${u.isAdmin ? `<a href="${ROOT}admin/">🛠 Admin</a>` : ''}
+          ${u.isAdmin ? `<a href="${ROOT}admin/">🛠 Admin</a><a href="${ROOT}ideas/">💡 Ideas</a>` : ''}
           <button data-signout>Sign out</button>
         </div>
       </div>`;
