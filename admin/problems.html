@@ -75,7 +75,9 @@
     if (!YTB.user) { gate('<b>Admin sign-in</b><div id="gsi"></div>'); return YTB.renderGoogleButton(document.getElementById('gsi'), { size: 'large' }); }
     if (!YTB.isAdmin) return gate('<b>Not authorised</b>');
     await load();
-    const want = new URLSearchParams(location.search).get('p');
+    const qs = new URLSearchParams(location.search);
+    if (qs.get('new')) { open(null); history.replaceState(null, '', 'problems.html'); return; }
+    const want = qs.get('p');
     open((problems.find((p) => p.slug === want) || problems[0]) || null);
   })();
 
@@ -91,7 +93,7 @@
         <aside class="side">
           <h3>Practice problems</h3>
           ${problems.map((p) => `<button class="c ${cur._orig === p.slug ? 'on' : ''}" data-open="${esc(p.slug)}">${esc(p.title)}<small>${esc(p.difficulty)} · ${p.published ? 'live' : 'draft'}</small></button>`).join('')}
-          <button class="btn" style="margin-top:8px" data-act="new">New problem</button>
+          <button class="btn primary" style="margin-top:8px" data-act="new">+ New problem</button>
         </aside>
         <main class="main">
           <div class="head">
