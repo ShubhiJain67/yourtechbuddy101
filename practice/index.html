@@ -4,116 +4,197 @@
 <meta charset="utf-8">
 <script src="../assets/theme.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LLD mock interviews — YourTechBuddy</title>
-<meta name="description" content="Practise Low Level Design interviews: requirements, entities, UML, code and a follow-up twist, each reviewed by an AI interviewer. Free.">
+<title>Mock interviews (LLD &amp; HLD) — YourTechBuddy</title>
+<meta name="description" content="Practise Low Level Design and system design (HLD) interviews step by step, each step reviewed by an AI interviewer. Free.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../courses/courses.css">
 <style>
-  .wrap{width:100%;max-width:1120px;margin:0 auto;padding:0 24px}
-  .hero{padding:52px 0 28px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:40px;align-items:end}
-  .hero h1{font:700 clamp(30px,4vw,46px)/1.08 var(--sans);letter-spacing:-.03em;margin:0 0 12px}
-  .hero p{color:var(--muted);font-size:17px;margin:0;max-width:52ch}
-  .flow{font:13.5px/1.9 var(--mono);background:var(--panel);border:1.5px solid var(--border);border-radius:8px;padding:14px 18px}
-  .flow .n{color:var(--accent);font-weight:600}
-  .flow span{color:var(--muted)}
-  h2{font:600 20px var(--sans);margin:36px 0 14px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px;align-items:start}
-  .uml .diff{font-weight:600}
-  .uml .attrs .diff.Easy{color:var(--ok)} .uml .attrs .diff.Medium{color:var(--warn)} .uml .attrs .diff.Hard{color:var(--err)}
-  .uml .name small{min-height:2.9em}
-  .att{background:var(--panel);border:1.5px solid var(--border);border-radius:8px;overflow:hidden}
-  .att a{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(5,48px) 120px 90px;gap:10px;align-items:center;padding:11px 16px;text-decoration:none;border-top:1px solid var(--border);font-size:14px}
-  .att a:first-child{border-top:0}
-  .att a:hover{background:var(--panel2)}
-  .att .h{font:12px var(--mono);color:var(--muted);padding:9px 16px;display:grid;grid-template-columns:minmax(0,1.4fr) repeat(5,48px) 120px 90px;gap:10px;border-bottom:1px solid var(--border)}
-  .sc{font:600 13px var(--mono);text-align:center}
-  .sc.hi{color:var(--ok)} .sc.mid{color:var(--warn)} .sc.lo{color:var(--err)} .sc.none{color:var(--muted);font-weight:400}
-  .sig{font:12.5px var(--mono);color:var(--muted)}
-  .when{font:12px var(--mono);color:var(--muted);text-align:right}
-  .note{color:var(--muted);font-size:14px}
-  @media (max-width:860px){
-    .hero{grid-template-columns:1fr;gap:24px}
-    .att .h{display:none}
-    .att a{grid-template-columns:1fr auto;}
-    .att a .sc,.att a .when{display:none}
+  .flow{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:-6px 0 22px}
+  .flow .st{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);border-radius:99px;padding:5px 12px 5px 6px;font-size:13.5px}
+  .flow .st i{width:22px;height:22px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font:600 11.5px var(--mono);font-style:normal}
+  .flow .ar{color:var(--faint);font-size:13px}
+
+  .toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .toolbar .field{flex:1;min-width:220px;max-width:360px}
+  .toolbar .sp{flex:1}
+  .count{font-size:13.5px;color:var(--muted)}
+
+  .table{overflow:hidden}
+  .thead,.trow{display:grid;grid-template-columns:44px minmax(0,1fr) 110px 110px 120px;gap:14px;align-items:center;padding:0 18px}
+  .thead{height:42px;font:600 12.5px var(--sans);color:var(--faint);border-bottom:1px solid var(--border);background:var(--panel2)}
+  .trow{min-height:66px;text-decoration:none;color:var(--text);border-bottom:1px solid var(--border);padding-top:10px;padding-bottom:10px}
+  .trow:last-child{border-bottom:0}
+  .trow:hover{background:var(--panel2)}
+  .trow .stat{width:26px;height:26px;border-radius:50%;border:1.5px dashed var(--border-strong);display:grid;place-items:center;font-size:12px}
+  .trow .stat.done{border:0;background:var(--ok);color:var(--on-accent);font-weight:700}
+  .trow .stat.active{border:2px solid var(--warn);border-right-color:transparent}
+  .trow b{display:block;font-weight:600;font-size:15px}
+  .trow small{display:block;color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .trow .score{font:600 14px var(--mono)}
+  .score.hi{color:var(--ok)} .score.mid{color:var(--warn)} .score.lo{color:var(--err)} .score.none{color:var(--faint);font-weight:400}
+  .trow .act{justify-self:end}
+  .trow:hover .act .btn{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+  .empty{padding:40px 20px;text-align:center;color:var(--muted)}
+  .trow.locked{cursor:default;opacity:.55}
+  .trow.locked:hover{background:none}
+  .trow.locked:hover .act .btn{background:var(--panel);border-color:var(--border-strong);color:var(--muted)}
+  .quota{display:flex;align-items:center;gap:12px;padding:12px 16px;margin-bottom:14px;font-size:14px}
+  .quota .dot{width:10px;height:10px;border-radius:50%;background:var(--ok);flex:none;box-shadow:0 0 0 4px var(--ok-soft)}
+  .quota.used .dot{background:var(--warn);box-shadow:0 0 0 4px var(--warn-soft)}
+  .quota b{font-weight:600}
+  .quota span{color:var(--muted)}
+
+  .recent{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+  .rc{padding:14px 16px;gap:10px}
+  .rc .top{display:flex;align-items:center;gap:10px}
+  .rc .top b{flex:1;min-width:0;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rc .bars{display:flex;gap:4px;height:28px;align-items:flex-end}
+  .rc .bars i{flex:1;border-radius:3px 3px 0 0;background:var(--panel3);min-height:3px}
+  .rc .ft{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted)}
+  .rc .sig{font-weight:600;color:var(--text)}
+
+  .gate{max-width:520px;margin:60px auto;padding:28px;text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center;color:var(--muted)}
+
+  @media (max-width:760px){
+    .thead{display:none}
+    .trow{grid-template-columns:30px minmax(0,1fr) auto;padding:12px 14px}
+    .trow .score,.trow .act{display:none}
+    .flow .ar{display:none}
   }
 </style>
 </head>
 <body>
 <header>
   <a class="brand" href="../"><div class="logo">YTB</div><b>yourtechbuddy</b></a>
-  <nav>
-    <a href="../courses/">courses</a>
-    <a href="./" class="active">practice</a>
-    <a href="../playground/">playground</a>
-  </nav>
+  <nav><a href="../courses/">courses</a><a href="./" class="active">practice</a><a href="../playground/">playground</a></nav>
   <div id="auth"></div>
 </header>
 
-<main class="wrap">
-  <section class="hero">
-    <div>
-      <h1>LLD mock interviews</h1>
-      <p>Pick a classic Low Level Design problem and work through it the way a real interview runs. After each step, an AI interviewer scores your answer, points out what's missing and asks a follow-up. Free.</p>
+<main class="page">
+  <div class="ph">
+    <div><h1 id="title">Mock interviews</h1><p id="sub"></p></div>
+    <span class="sp"></span>
+    <div class="tabs" role="tablist" aria-label="Interview type" id="track">
+      <button role="tab" data-track="lld" aria-selected="true">LLD · classes &amp; code</button>
+      <button role="tab" data-track="hld" aria-selected="false">HLD · system design</button>
     </div>
-    <div class="flow" aria-label="Interview steps">
-      <div><span class="n">1</span> requirements <span>— scope, clarifying questions</span></div>
-      <div><span class="n">2</span> entities <span>— classes and relationships</span></div>
-      <div><span class="n">3</span> uml + patterns <span>— class diagram, why each pattern</span></div>
-      <div><span class="n">4</span> implementation <span>— core classes in code</span></div>
-      <div><span class="n">5</span> the twist <span>— a follow-up change to your design</span></div>
+  </div>
+  <div class="flow" id="flow" aria-label="Interview steps"></div>
+
+  <div id="recent-wrap"></div>
+
+  <div class="sec-h" style="margin-top:8px"><h2>Problems</h2></div>
+  <div class="toolbar">
+    <label class="field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" placeholder="Search problems" aria-label="Search problems"></label>
+    <div class="filters" id="diff" aria-label="Difficulty">
+      <button data-d="" aria-pressed="true">All</button><button data-d="Easy" aria-pressed="false">Easy</button><button data-d="Medium" aria-pressed="false">Medium</button><button data-d="Hard" aria-pressed="false">Hard</button>
     </div>
-  </section>
-
-  <div id="mine"></div>
-
-  <h2>Problems</h2>
-  <div class="grid" id="grid"><p class="note">Loading problems…</p></div>
-  <p class="note" style="margin:28px 0 56px">AI reviews are free with a daily limit per person. Sign in with Google to start; your answers are saved so you can come back.</p>
+    <span class="sp"></span><span class="count" id="count"></span>
+  </div>
+  <div id="quota"></div>
+  <div class="panel table">
+    <div class="thead"><span>Status</span><span>Problem</span><span>Difficulty</span><span>Best score</span><span></span></div>
+    <div id="rows"><div class="trow"><span class="stat"></span><span><b class="skel" style="height:16px;width:40%"></b></span></div></div>
+  </div>
+  <p class="note" style="margin-top:16px">AI reviews are free, with a daily limit per person. Sign in with Google to start; your answers are saved so you can come back any time.</p>
 </main>
 
-<footer>Made by <a href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YourTechBuddy</a> · <a href="../privacy.html">Privacy</a></footer>
+<footer><a href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a> · <a href="../privacy.html">Privacy</a></footer>
 
 <script src="../assets/config.js"></script>
 <script src="../assets/ytb.js"></script>
 <script>
   const { esc } = YTB;
-  const STEPS = ['requirements', 'entities', 'uml', 'code', 'twist'];
+  const $ = (id) => document.getElementById(id);
+  const TRACKS = {
+    lld: { title: 'LLD mock interviews', sub: 'Design the classes, draw the UML, write the code. An AI interviewer scores each step and asks a follow-up.',
+      steps: ['Requirements', 'Entities', 'UML + patterns', 'Implementation', 'The twist'], ids: ['requirements', 'entities', 'uml', 'code', 'twist'] },
+    hld: { title: 'HLD mock interviews', sub: 'Design a system at scale: estimate, sketch the architecture, defend your trade-offs. Scored step by step by an AI interviewer.',
+      steps: ['Requirements', 'Estimation', 'APIs + data', 'Architecture', 'Scale & trade-offs', 'The twist'], ids: ['requirements', 'estimation', 'api', 'architecture', 'deepdive', 'twist'] },
+  };
+  let track = new URLSearchParams(location.search).get('track') === 'hld' ? 'hld' : 'lld';
+  let problems = null, attempts = [], diff = '', q = '', usage = null;
   const cls = (s) => s == null ? 'none' : s >= 7 ? 'hi' : s >= 5 ? 'mid' : 'lo';
   const ago = (t) => { const d = Math.floor(Date.now() / 1000 - t); return d < 3600 ? Math.max(1, Math.round(d / 60)) + 'm ago' : d < 86400 ? Math.round(d / 3600) + 'h ago' : Math.round(d / 86400) + 'd ago'; };
+  const avg = (a) => { const v = Object.values(a.scores || {}); return v.length ? Math.round(v.reduce((x, y) => x + y, 0) / v.length * 10) / 10 : null; };
 
+  function drawHead() {
+    const T = TRACKS[track];
+    $('title').textContent = T.title; $('sub').textContent = T.sub;
+    document.title = `${T.title} — YourTechBuddy`;
+    $('track').querySelectorAll('button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.track === track)));
+    $('flow').innerHTML = T.steps.map((s, i) => `${i ? '<span class="ar">→</span>' : ''}<span class="st"><i>${i + 1}</i>${s}</span>`).join('');
+  }
+
+  function drawRows() {
+    if (!problems) return;
+    const T = TRACKS[track];
+    const mine = {};
+    attempts.forEach((a) => {
+      const k = a.problem.slug, m = (mine[k] ||= { best: null, status: null, last: a });
+      const s = avg(a); if (s != null && (m.best == null || s > m.best)) m.best = s;
+      if (a.status === 'done') m.status = 'done'; else if (m.status !== 'done') m.status = 'active';
+    });
+    const locked = !!(usage && !usage.unlimited && usage.startedToday?.[track]);
+    const TR = track.toUpperCase(), OTHER = track === 'lld' ? 'HLD' : 'LLD';
+    $('quota').innerHTML = !YTB.user ? `<div class="panel quota"><i class="dot"></i><span><b>One ${TR} and one ${OTHER} interview a day</b>, free. Sign in to start.</span></div>`
+      : !usage ? '' : usage.unlimited ? `<div class="panel quota"><i class="dot"></i><span><b>Admin:</b> no daily interview limit for you.</span></div>`
+      : locked ? `<div class="panel quota used"><i class="dot"></i><span><b>You've started today's ${TR} interview.</b> A new one unlocks at 5:30 AM IST.${usage.startedToday[track === 'lld' ? 'hld' : 'lld'] ? '' : ` Your ${OTHER} interview for today is still free.`}</span></div>`
+      : `<div class="panel quota"><i class="dot"></i><span><b>Today's ${TR} interview is free to start.</b> You get one ${TR} and one ${OTHER} interview a day.</span></div>`;
+    const list = problems.filter((p) => (p.track || 'lld') === track && (!diff || p.difficulty === diff) && (!q || (p.title + ' ' + p.summary).toLowerCase().includes(q)));
+    $('count').textContent = `${list.length} problem${list.length === 1 ? '' : 's'}`;
+    $('rows').innerHTML = list.map((p) => {
+      const m = mine[p.slug];
+      const href = m && m.status === 'active' ? `session.html?id=${m.last.id}` : `session.html?p=${encodeURIComponent(p.slug)}`;
+      const canResume = m && m.status === 'active';
+      const isLocked = locked && !canResume;
+      const label = isLocked ? 'Tomorrow' : !m ? 'Start' : m.status === 'active' ? 'Resume' : 'Retry';
+      return `<a class="trow ${isLocked ? 'locked' : ''}" ${isLocked ? 'aria-disabled="true" title="One ' + TR + ' interview a day. Unlocks at 5:30 AM IST."' : `href="${href}"`}>
+        <span class="stat ${m ? m.status : ''}" title="${m ? (m.status === 'done' ? 'Completed' : 'In progress') : 'Not started'}">${m && m.status === 'done' ? '✓' : ''}</span>
+        <span><b>${esc(p.title)}</b><small>${esc(p.summary)}</small></span>
+        <span><span class="chip diff ${esc(p.difficulty)}">${esc(p.difficulty)}</span></span>
+        <span class="score ${cls(m?.best)}">${m?.best != null ? m.best + '/10' : '—'}</span>
+        <span class="act"><span class="btn sm">${label}</span></span>
+      </a>`;
+    }).join('') || `<div class="empty">No ${track.toUpperCase()} problems match.${diff || q ? ' Try clearing the filters.' : ''}</div>`;
+
+    const recent = attempts.filter((a) => (a.problem.track || 'lld') === track).slice(0, 6);
+    $('recent-wrap').innerHTML = recent.length ? `
+      <div class="sec-h" style="margin-top:0"><h2>Your interviews</h2></div>
+      <div class="recent">${recent.map((a) => {
+        const s = avg(a);
+        return `<a class="card rc" href="session.html?id=${a.id}">
+          <div class="top"><b>${esc(a.problem.title)}</b><span class="chip diff ${esc(a.problem.difficulty)}">${esc(a.problem.difficulty)}</span></div>
+          <div class="bars" title="Score per step">${T.ids.map((id) => { const v = a.scores[id]; return `<i style="height:${v != null ? Math.max(12, v * 10) : 10}%;${v != null ? `background:var(--${v >= 7 ? 'ok' : v >= 5 ? 'warn' : 'err'})` : ''}"></i>`; }).join('')}</div>
+          <div class="ft"><span class="sig">${a.status === 'done' ? esc(a.signal || 'Done') : `Step ${a.step} of ${a.steps || T.ids.length}`}</span><span>${s != null ? `avg ${s} · ` : ''}${ago(a.updated_at)}</span></div>
+        </a>`; }).join('')}</div>` : '';
+  }
+
+  $('track').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-track]'); if (!b || b.dataset.track === track) return;
+    track = b.dataset.track; history.replaceState(null, '', '?track=' + track);
+    // sidebar highlight follows the tab
+    document.querySelectorAll('.sn-sub').forEach((a) => a.classList.toggle('on', a.href.endsWith('track=' + track)));
+    drawHead(); drawRows();
+  });
+  $('diff').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-d]'); if (!b) return;
+    diff = b.dataset.d; $('diff').querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); drawRows();
+  });
+  $('q').addEventListener('input', (e) => { q = e.target.value.trim().toLowerCase(); drawRows(); });
+
+  drawHead();
   (async () => {
-    const grid = document.getElementById('grid');
-    if (!YTB.apiOn) { grid.innerHTML = '<p class="note">Mock interviews need the site\'s API, which isn\'t configured yet.</p>'; return; }
-    let problems = [];
+    if (!YTB.apiOn) { $('rows').innerHTML = '<div class="empty">Mock interviews need the site\'s API, which isn\'t configured yet.</div>'; return; }
     try { problems = (await YTB.api('/api/practice/problems')).problems; }
-    catch (e) { grid.innerHTML = `<p class="note">Couldn't load problems: ${esc(e.message)}</p>`; return; }
-    grid.innerHTML = problems.map((p) => `
-      <a class="uml" href="session.html?p=${encodeURIComponent(p.slug)}">
-        <div class="name"><span class="stereo">«problem»</span><b>${esc(p.title)}</b><small>${esc(p.summary)}</small></div>
-        <div class="attrs">+ difficulty <span>=</span> <span class="diff ${esc(p.difficulty)}">${esc(p.difficulty)}</span><br>+ steps <span>= 5</span></div>
-        <div class="ops"><span class="call">+ startInterview()</span></div>
-      </a>`).join('') || '<p class="note">No problems yet.</p>';
-
-    if (!YTB.user) return;
-    try {
-      const { attempts } = await YTB.api('/api/practice/attempts');
-      if (!attempts.length) return;
-      document.getElementById('mine').innerHTML = `
-        <h2>Your interviews</h2>
-        <div class="att">
-          <div class="h"><span>problem</span>${['req', 'ent', 'uml', 'code', 'twist'].map((s) => `<span style="text-align:center">${s}</span>`).join('')}<span>result</span><span style="text-align:right">updated</span></div>
-          ${attempts.map((a) => `
-            <a href="session.html?id=${a.id}">
-              <span><b>${esc(a.problem.title)}</b></span>
-              ${STEPS.map((s) => `<span class="sc ${cls(a.scores[s])}">${a.scores[s] ?? '–'}</span>`).join('')}
-              <span class="sig">${a.status === 'done' ? esc(a.signal || 'done') : `step ${a.step} of 5`}</span>
-              <span class="when">${ago(a.updated_at)}</span>
-            </a>`).join('')}
-        </div>`;
-    } catch {}
+    catch (e) { $('rows').innerHTML = `<div class="empty">Couldn't load problems: ${esc(e.message)}</div>`; return; }
+    drawRows();
+    if (YTB.user) {
+      try { [attempts, usage] = await Promise.all([YTB.api('/api/practice/attempts').then((r) => r.attempts), YTB.api('/api/practice/usage')]); } catch {}
+      drawRows();
+    }
   })();
 </script>
 </body>

@@ -11,16 +11,17 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="courses.css">
 <style>
-  .hero{width:100%;max-width:1120px;margin:0 auto;padding:52px 24px 28px}
-  .hero h1{font:700 clamp(30px,4vw,44px)/1.1 var(--sans);margin:0 0 10px;letter-spacing:-.03em}
-  .hero p{color:var(--muted);margin:0;font-size:17px;max-width:56ch}
-  .grid{width:100%;max-width:1120px;margin:0 auto;padding:8px 24px 56px;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;align-items:start}
-  .uml .attrs .draft{color:var(--warn)}
-  .uml .ops{display:flex;align-items:center;gap:12px}
-  .uml .ops .progress{flex:1}
-  .uml .ops .pct{color:var(--muted);font-size:12.5px}
-  .empty{color:var(--muted)}
-  @media (max-width:600px){ .grid{grid-template-columns:1fr;padding:8px 16px 40px} .hero{padding:32px 16px 16px} }
+  .cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+  .ccard .body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:6px;flex:1}
+  .ccard h3{margin:0;font:600 17px/1.35 var(--sans)}
+  .ccard p{margin:0;color:var(--muted);font-size:14px;line-height:1.5}
+  .ccard .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+  .ccard .meta{display:flex;align-items:center;gap:12px;margin-top:auto;padding-top:14px}
+  .ccard .meta .progress{flex:1}
+  .ccard .meta small{color:var(--muted);font-size:13px;white-space:nowrap}
+  .ccard .btn{pointer-events:none}
+  a.ccard:hover .btn{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+  .draft{color:var(--warn)}
 </style>
 </head>
 <body>
@@ -35,12 +36,10 @@
   <div id="auth"></div>
 </header>
 
-<section class="hero">
-  <h1>Courses</h1>
-  <p>Free, structured video courses. Watch them here, track your progress, and practise in the Playground.</p>
-</section>
-
-<section class="grid" id="grid"></section>
+<main class="page">
+  <div class="ph"><div><h1>Courses</h1><p>Free video courses in Hindi. Watch here, tick off lessons as you go, and practise in the playground or a mock interview.</p></div></div>
+  <div class="cgrid" id="grid"></div>
+</main>
 
 <footer>Made by <a href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YourTechBuddy</a></footer>
 
@@ -68,21 +67,17 @@
       const last = read('ytb:last:' + c.slug);
       const lastQ = last && typeof last === 'object' ? (last.v ? '&v=' + encodeURIComponent(last.v) : '&l=' + last.l) : '';
       const groups = (c.sections || []).filter((s) => s.lessons.some((l) => l.youtube)).length;
+      const cover = (last && last.v) || live[0]?.youtube;
       const a = document.createElement('a');
-      a.className = 'uml';
+      a.className = 'card ccard';
       a.href = `watch.html?c=${encodeURIComponent(c.slug)}${lastQ}`;
       a.innerHTML = `
-        <div class="name"><span class="stereo">«course»</span><b>${esc(c.title)}</b>${c.tagline ? `<small>${esc(c.tagline)}</small>` : ''}</div>
-        <div class="attrs">
-          + lessons <span>= ${liveCount || '—'}</span><br>
-          ${groups > 1 ? `+ groups <span>= ${groups}</span><br>` : ''}
-          ${c.level ? `+ level <span>= "${esc(c.level)}"</span><br>` : ''}
-          ${c.published === false ? '<span class="draft">+ draft = true</span>' : ''}
-        </div>
-        <div class="ops">
-          <span class="call">+ ${done ? 'continue' : 'start'}()</span>
-          <div class="progress" title="${pct}% complete"><i style="width:${pct}%"></i></div>
-          <span class="pct">${pct}%</span>
+        <div class="thumb">${cover ? `<img src="${YTB.thumb(cover)}" alt="" loading="lazy" onerror="this.remove()">` : ''}<span class="play"><i></i></span>
+          <span class="dur">${liveCount ? liveCount + ' lessons' : 'coming soon'}</span>${pct ? `<span class="bar"><i style="width:${pct}%"></i></span>` : ''}</div>
+        <div class="body">
+          <h3>${esc(c.title)}</h3>${c.tagline ? `<p>${esc(c.tagline)}</p>` : ''}
+          <div class="tags">${c.level ? `<span class="tag">${esc(c.level)}</span>` : ''}${groups > 1 ? `<span class="tag">${groups} sections</span>` : ''}${c.published === false ? '<span class="tag draft">draft</span>' : ''}</div>
+          <div class="meta"><span class="progress" title="${pct}% complete"><i style="width:${pct}%"></i></span><small>${done ? `${done}/${liveCount}` : ''}</small><span class="btn sm">${done ? 'Continue' : 'Start'}</span></div>
         </div>`;
       grid.appendChild(a);
     }

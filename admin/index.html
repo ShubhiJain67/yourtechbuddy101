@@ -21,7 +21,7 @@
   .main{padding:24px clamp(16px,3vw,36px) 80px;min-width:0}
   .gate{max-width:480px;margin:60px auto;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center;color:var(--muted)}
   .gate b{color:var(--text);font-size:18px}
-  .head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px;position:sticky;top:55px;background:var(--bg);padding:10px 0;z-index:4;border-bottom:1px solid var(--border)}
+  .head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px;position:sticky;top:0;background:var(--bg);padding:10px 0;z-index:4;border-bottom:1px solid var(--border)}
   .head h1{font-size:22px;margin:0;margin-right:auto;letter-spacing:-.01em}
   .dirty{font:12px var(--mono);color:var(--warn)}
   .fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:28px}
@@ -66,7 +66,7 @@
   .ls .yt-id{width:120px;flex:none;font:12px var(--mono)}
   @media (max-width:640px){
     .main{padding:12px 14px 60px}
-    .head{top:52px;gap:8px}
+    .head{top:56px;gap:8px}
     .head h1{font-size:18px;width:100%}
     .fields{grid-template-columns:1fr;gap:12px}
     .check{padding-top:4px}
@@ -200,7 +200,8 @@
           ${listHtml || '<p style="color:var(--muted);font-size:14px;margin:0 8px">No courses yet.</p>'}
           <button class="btn" style="margin-top:8px" data-act="new">+ New course</button>
           <h3 style="margin-top:26px">Interview practice</h3>
-          <a class="btn primary" href="problems.html?new=1">+ New interview problem</a>
+          <a class="btn primary" href="problems.html?new=1">+ New LLD problem</a>
+          <a class="btn primary" style="margin-top:6px" href="problems.html?new=1&track=hld">+ New HLD problem</a>
           <a class="btn" style="margin-top:6px" href="problems.html">Manage problems</a>
         </aside>
         <main class="main">

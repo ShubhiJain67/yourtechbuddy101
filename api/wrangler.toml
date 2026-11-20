@@ -6,7 +6,7 @@ preview_urls = false
 
 [vars]
 # AI reviews per person per day (admins get 50)
-PRACTICE_DAILY_LIMIT = "8"
+PRACTICE_DAILY_LIMIT = "16"
 # Sites allowed to call this API (comma-separated).
 ALLOWED_ORIGINS = "https://yourtechbuddy101.com,https://www.yourtechbuddy101.com,http://localhost:8000,http://127.0.0.1:8000,http://127.0.0.1:5501"
 # Google OAuth Web Client ID (public, safe to commit). Paste yours here.

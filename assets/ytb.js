@@ -188,6 +188,9 @@
     .ytb-who{padding:8px 10px 10px;border-bottom:1px solid var(--border);margin-bottom:4px}
     .ytb-who b{display:block;font-size:14px}.ytb-who small{color:var(--muted);font-size:12px}
     .ytb-gsi{min-height:32px;display:flex;align-items:center}
+    body.shell .sn-row .ytb-menu{top:auto;bottom:44px;left:0;right:auto}
+    body.shell .sn-row .ytb-user{display:flex}
+    @media (max-width:900px){body.shell .sn-row .ytb-menu{bottom:auto;top:44px;left:auto;right:0}}
     .ytb-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--border);color:var(--text);box-shadow:0 8px 24px rgba(0,0,0,.25);padding:10px 16px;border-radius:8px;z-index:100;font-size:14px}`;
   css += `
     .theme-toggle{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--panel2);color:var(--text);cursor:pointer;display:grid;place-items:center;padding:0;flex:none}
@@ -232,15 +235,150 @@
     });
   } catch {}
 
+
+  /* ---------------- App shell: sidebar, mobile tab bar, command palette ---------------- */
+  const IC = {
+    home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+    courses: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3z"/>',
+    practice: '<path d="M9 3h6M10 3v6L4.5 18.5A1.6 1.6 0 0 0 6 21h12a1.6 1.6 0 0 0 1.5-2.5L14 9V3"/><path d="M7 15h10"/>',
+    code: '<path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 4l-4 16"/>',
+    me: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    plan: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/>',
+    idea: '<path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/>',
+    admin: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+    puzzle: '<path d="M4 7h3a2 2 0 1 1 4 0h3v3a2 2 0 1 1 0 4v3h-3a2 2 0 1 0-4 0H4v-3a2 2 0 1 0 0-4z"/>',
+    search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+    play: '<path d="m7 4 13 8-13 8z"/>',
+    layers: '<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>',
+    server: '<rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/>',
+  };
+  const icon = (n) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n] || ''}</svg>`;
+  const here = location.pathname.replace(/index\.html$/, '');
+  const trackParam = new URLSearchParams(location.search).get('track');
+  function isOn(path) {
+    const full = ROOT + path;
+    if (path === '') return here === ROOT;
+    return here.startsWith(full);
+  }
+  function buildShell() {
+    const header = document.querySelector('body > header');
+    if (!header || document.body.dataset.shell === 'off' || /\/playground\//.test(location.pathname)) return;
+    const admin = !!(session && session.user && session.user.isAdmin);
+    const item = (path, label, ic, extra = '') => `<a class="sn-item ${isOn(path) ? 'on' : ''}" href="${ROOT}${path}">${icon(ic)}<span>${label}</span>${extra}</a>`;
+    const pr = isOn('practice/');
+    const sub = (t, label) => `<a class="sn-item sn-sub ${pr && ((trackParam || 'lld') === t) && !/session/.test(here) ? 'on' : ''}" href="${ROOT}practice/?track=${t}">${label}</a>`;
+    const sn = document.createElement('div');
+    sn.className = 'sn';
+    sn.innerHTML = `
+      <a class="sn-brand" href="${ROOT}"><span class="sn-logo">YTB</span><span><b>YourTechBuddy</b><small>LLD &amp; HLD in Hindi</small></span></a>
+      <button class="sn-search" data-cmdk>${icon('search')}<span>Search</span><kbd>⌘K</kbd></button>
+      ${item('', 'Home', 'home')}
+      ${item('courses/', 'Courses', 'courses')}
+      <a class="sn-item ${pr && !(trackParam || /session/.test(here)) ? '' : ''} ${pr ? 'on' : ''}" href="${ROOT}practice/">${icon('practice')}<span>Mock interviews</span></a>
+      ${sub('lld', 'LLD · classes &amp; code')}
+      ${sub('hld', 'HLD · system design')}
+      ${item('playground/', 'Playground', 'code')}
+      ${session ? item('me/', 'My learning', 'me') : ''}
+      ${admin ? `<div class="sn-label">Studio</div>${item('planner/', 'Content planner', 'plan')}${item('ideas/', 'Ideas', 'idea')}${item('admin/problems.html', 'Interview problems', 'puzzle')}${item('admin/', 'Courses admin', 'admin')}` : ''}
+      <div class="sn-foot">
+        <a class="sn-yt" href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener"><i></i>Watch on YouTube</a>
+        <div class="sn-row"><span class="sn-slot"></span></div>
+      </div>`;
+    // the admin "problems" link would also match "admin/"; keep only the most specific one active
+    const ons = sn.querySelectorAll('.sn-item.on:not(.sn-sub)');
+    if (ons.length > 1) ons.forEach((a, i) => { if (i < ons.length - 1 && a.getAttribute('href').length < ons[ons.length - 1].getAttribute('href').length) a.classList.remove('on'); });
+    header.prepend(sn);
+    const auth = document.getElementById('auth');
+    const slot = sn.querySelector('.sn-slot');
+    if (auth) slot.replaceWith(auth); else slot.remove();
+    document.body.classList.add('shell');
+    const tb = document.createElement('nav');
+    tb.className = 'tabbar';
+    tb.setAttribute('aria-label', 'Main');
+    const tab = (path, label, ic) => `<a class="${isOn(path) ? 'on' : ''}" href="${ROOT}${path}">${icon(ic)}${label}</a>`;
+    tb.innerHTML = tab('', 'Home', 'home') + tab('courses/', 'Courses', 'courses') + tab('practice/', 'Interviews', 'practice') + tab('playground/', 'Code', 'code') + (session ? tab('me/', 'Me', 'me') : '');
+    document.body.appendChild(tb);
+  }
+
+  let cmdkEl = null, cmdkItems = null;
+  async function cmdkIndex() {
+    if (cmdkItems) return cmdkItems;
+    const items = [
+      { g: 'Pages', t: 'Home', u: ROOT, ic: 'home' },
+      { g: 'Pages', t: 'All courses', u: ROOT + 'courses/', ic: 'courses' },
+      { g: 'Pages', t: 'LLD mock interviews', u: ROOT + 'practice/?track=lld', ic: 'layers' },
+      { g: 'Pages', t: 'HLD mock interviews', u: ROOT + 'practice/?track=hld', ic: 'server' },
+      { g: 'Pages', t: 'Code playground', u: ROOT + 'playground/', ic: 'code' },
+    ];
+    if (session) items.push({ g: 'Pages', t: 'My learning', u: ROOT + 'me/', ic: 'me' });
+    if (session && session.user.isAdmin) items.push({ g: 'Studio', t: 'Content planner', u: ROOT + 'planner/', ic: 'plan' }, { g: 'Studio', t: 'Ideas', u: ROOT + 'ideas/', ic: 'idea' }, { g: 'Studio', t: 'Interview problems', u: ROOT + 'admin/problems.html', ic: 'puzzle' }, { g: 'Studio', t: 'Courses admin', u: ROOT + 'admin/', ic: 'admin' });
+    const [courses, probs] = await Promise.all([
+      getCourses().catch(() => []),
+      apiOn ? api('/api/practice/problems').then((r) => r.problems).catch(() => []) : Promise.resolve([]),
+    ]);
+    courses.forEach((c) => (c.sections || []).forEach((s) => s.lessons.filter((l) => l.youtube).forEach((l) =>
+      items.push({ g: 'Lessons', t: l.title, s: c.title, u: `${ROOT}courses/watch.html?c=${encodeURIComponent(c.slug)}&v=${encodeURIComponent(l.youtube)}`, ic: 'play' }))));
+    probs.forEach((p) => items.push({ g: 'Mock interviews', t: p.title, s: `${(p.track || 'lld').toUpperCase()} · ${p.difficulty}`, u: `${ROOT}practice/session.html?p=${encodeURIComponent(p.slug)}`, ic: p.track === 'hld' ? 'server' : 'layers' }));
+    return (cmdkItems = items);
+  }
+  function openCmdk() {
+    if (!cmdkEl) {
+      cmdkEl = document.createElement('div');
+      cmdkEl.className = 'cmdk'; cmdkEl.hidden = true;
+      cmdkEl.innerHTML = `<div class="cmdk-box" role="dialog" aria-label="Search">
+        <div class="cmdk-in">${icon('search')}<input placeholder="Search lessons, interview problems, pages…" aria-label="Search" autocomplete="off"><kbd>esc</kbd></div>
+        <div class="cmdk-list" role="listbox"></div>
+        <div class="cmdk-foot"><span><kbd>↑</kbd> <kbd>↓</kbd> move</span><span><kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span></div></div>`;
+      document.body.appendChild(cmdkEl);
+      const input = cmdkEl.querySelector('input'), list = cmdkEl.querySelector('.cmdk-list');
+      let sel = 0, shown = [];
+      const draw = async () => {
+        const q = input.value.trim().toLowerCase();
+        const all = await cmdkIndex();
+        const words = q.split(/\s+/).filter(Boolean);
+        shown = all.filter((x) => words.every((w) => (x.t + ' ' + (x.s || '') + ' ' + x.g).toLowerCase().includes(w))).slice(0, 40);
+        if (!q) shown = all.filter((x) => x.g !== 'Lessons').concat(all.filter((x) => x.g === 'Lessons').slice(0, 5)).slice(0, 40);
+        sel = Math.min(sel, Math.max(0, shown.length - 1));
+        let g = '';
+        list.innerHTML = shown.map((x, i) => (x.g !== g ? `<div class="cmdk-g">${esc((g = x.g))}</div>` : '') +
+          `<a href="${esc(x.u)}" class="${i === sel ? 'sel' : ''}" data-i="${i}" role="option"><span class="ic">${icon(x.ic)}</span><span class="t">${esc(x.t)}</span>${x.s ? `<small>${esc(x.s)}</small>` : ''}</a>`).join('')
+          || `<div class="cmdk-empty">Nothing matches “${esc(input.value)}”.</div>`;
+        list.querySelector('.sel')?.scrollIntoView({ block: 'nearest' });
+      };
+      input.addEventListener('input', () => { sel = 0; draw(); });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') { e.preventDefault(); sel = Math.min(sel + 1, shown.length - 1); draw(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); sel = Math.max(sel - 1, 0); draw(); }
+        else if (e.key === 'Enter' && shown[sel]) { e.preventDefault(); location.href = shown[sel].u; }
+      });
+      list.addEventListener('mousemove', (e) => { const a = e.target.closest('[data-i]'); if (a && +a.dataset.i !== sel) { sel = +a.dataset.i; list.querySelectorAll('a').forEach((n) => n.classList.toggle('sel', +n.dataset.i === sel)); } });
+      cmdkEl.addEventListener('click', (e) => { if (e.target === cmdkEl) closeCmdk(); });
+      cmdkEl._draw = draw;
+    }
+    cmdkEl.hidden = false;
+    const input = cmdkEl.querySelector('input'); input.value = ''; input.focus();
+    cmdkEl._draw();
+  }
+  function closeCmdk() { if (cmdkEl) cmdkEl.hidden = true; }
+  document.addEventListener('keydown', (e) => {
+    const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '') || document.activeElement?.isContentEditable;
+    if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || (e.key === '/' && !typing)) {
+      if (/\/playground\//.test(location.pathname) && e.key === '/') return;
+      e.preventDefault(); cmdkEl && !cmdkEl.hidden ? closeCmdk() : openCmdk();
+    } else if (e.key === 'Escape' && cmdkEl && !cmdkEl.hidden) closeCmdk();
+  });
+  document.addEventListener('click', (e) => { if (e.target.closest('[data-cmdk]')) { e.preventDefault(); openCmdk(); } });
+  const thumb = (id, q = 'mqdefault') => `https://i.ytimg.com/vi/${encodeURIComponent(id)}/${q}.jpg`;
+
   window.YTB = {
     config: CFG, apiOn, authOn, root: ROOT, api, esc, LS,
     get session() { return session; },
     get user() { return session && session.user; },
     get isAdmin() { return !!(session && session.user && session.user.isAdmin); },
     getCourses, getCourse, progress, renderAuth, renderGoogleButton, signOut, toast: alertBox,
-    get theme() { return getTheme(); }, setTheme,
+    get theme() { return getTheme(); }, setTheme, icon, thumb, openCmdk,
   };
 
-  function boot() { mountThemeToggle(); renderAuth(document.getElementById('auth')); }
+  function boot() { buildShell(); mountThemeToggle(); renderAuth(document.getElementById('auth')); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();

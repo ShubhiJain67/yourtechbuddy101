@@ -125,24 +125,46 @@
 <script>
   const { esc } = YTB;
   const root = document.getElementById('root');
-  const STEPS = [
+  const LLD_STEPS = [
     { id: 'requirements', name: 'Requirements', short: 'Scope & questions',
       hint: 'Start like a real interview: ask clarifying questions, then list functional and non-functional requirements and say what you are keeping out of scope.',
       template: 'Clarifying questions:\n- \n\nFunctional requirements:\n- \n\nNon-functional requirements:\n- \n\nOut of scope:\n- ' },
     { id: 'entities', name: 'Entities', short: 'Classes & relationships',
       hint: 'List the core classes with their key attributes, and how they relate (is-a / has-a, one-to-many).',
       template: 'Entities:\n- ClassName: attribute1, attribute2\n\nRelationships:\n- A has many B\n- C is a D' },
-    { id: 'uml', name: 'UML + patterns', short: 'Class diagram',
+    { id: 'uml', kind: 'diagram', name: 'UML + patterns', short: 'Class diagram', mark: '%% ---- patterns ----',
+      diagramLabel: 'Class diagram (Mermaid)', notesLabel: 'Design patterns used, and why', notesPh: 'Strategy: lets the rule change without touching the main class&#10;Factory: …', emptyMsg: 'Write a classDiagram to see it here.',
       hint: 'Write a class diagram in Mermaid syntax (preview on the right), then name the design patterns you used and why.',
       template: 'classDiagram\n  class ClassA {\n    -field: Type\n    +method(arg) ReturnType\n  }\n  class ClassB\n  ClassA "1" *-- "many" ClassB : has' },
-    { id: 'code', name: 'Implementation', short: 'Core classes in code',
+    { id: 'code', kind: 'code', name: 'Implementation', short: 'Core classes in code',
       hint: 'Implement the core classes and the key methods. Focus on design (interfaces, responsibilities, thread safety), not boilerplate.' },
-    { id: 'twist', name: 'The twist', short: 'Follow-up change',
+    { id: 'twist', kind: 'twist', name: 'The twist', short: 'Follow-up change',
       hint: 'The interviewer changes the requirements based on your design. Explain what changes in your classes and code, and why the change stays small.',
       template: 'What changes:\n- \n\nNew/changed classes:\n- \n\nWhy the rest of the design stays the same:\n- ' },
   ];
+  const HLD_STEPS = [
+    { id: 'requirements', name: 'Requirements', short: 'Scope & scale',
+      hint: 'Ask clarifying questions, then list functional and non-functional requirements (scale, latency, availability vs consistency) and what is out of scope.',
+      template: 'Clarifying questions:\n- \n\nFunctional requirements:\n- \n\nNon-functional requirements (scale, latency, availability, consistency):\n- \n\nOut of scope:\n- ' },
+    { id: 'estimation', name: 'Estimation', short: 'Back-of-the-envelope',
+      hint: 'Rough numbers are fine. Show your working: users, read and write QPS (average and peak), storage over a few years, bandwidth, and what these numbers mean for the design.',
+      template: 'Users / DAU:\n\nWrite QPS (avg, peak):\n\nRead QPS (avg, peak):\n\nStorage (per record x records x years):\n\nBandwidth:\n\nWhat this tells us:\n- ' },
+    { id: 'api', name: 'APIs + data model', short: 'Endpoints, tables, DB',
+      hint: 'List the main API endpoints, the core tables or collections with their keys, and which database you pick and why.',
+      template: 'APIs:\n- POST /... \n- GET /... \n\nData model:\n- table_name(id PK, ...)\n\nDatabase choice and why:\n- ' },
+    { id: 'architecture', kind: 'diagram', name: 'Architecture', short: 'Component diagram', mark: '%% ---- walkthrough ----',
+      hint: 'Draw the high-level components as a Mermaid flowchart (preview on the right), then walk through how the main request flows through them.',
+      diagramLabel: 'Architecture (Mermaid flowchart)', notesLabel: 'Walk through the main request', notesPh: '1. Client calls the load balancer…&#10;2. …', emptyMsg: 'Write a flowchart to see it here.',
+      template: 'flowchart LR\n  C[Client] --> LB[Load balancer]\n  LB --> S[App service]\n  S --> Cache[(Cache)]\n  S --> DB[(Database)]' },
+    { id: 'deepdive', name: 'Scale & trade-offs', short: 'Bottlenecks, CAP',
+      hint: 'Find the bottlenecks and fix them: caching, sharding keys, replication, queues, consistency choices (CAP / PACELC), what happens when a component fails.',
+      template: 'Bottlenecks:\n- \n\nCaching:\n- \n\nSharding / partitioning:\n- \n\nReplication and consistency (CAP):\n- \n\nFailures and how we handle them:\n- ' },
+    { id: 'twist', kind: 'twist', name: 'The twist', short: 'Follow-up change',
+      hint: 'The interviewer changes the requirements based on your design. Explain what changes in your architecture, which components you add or modify, and the trade-offs.',
+      template: 'What changes:\n- \n\nNew / changed components:\n- \n\nTrade-offs:\n- ' },
+  ];
+  let STEPS = LLD_STEPS;
   const LANGS = { java: 'Java', python: 'Python', cpp: 'C++', go: 'Go', typescript: 'TypeScript', javascript: 'JavaScript', csharp: 'C#' };
-  const PATTERN_MARK = '%% ---- patterns ----';
   let attempt = null, cur = 0, busy = false, saveTimer = null, monacoEd = null, mermaidMod = null, usage = null, view = 'step';
 
   const cls = (s) => s >= 7 ? 'hi' : s >= 5 ? 'mid' : 'lo';
@@ -163,28 +185,29 @@
         attempt = (await YTB.api('/api/practice/attempts', { method: 'POST', body: { slug: q.get('p') } })).attempt;
         history.replaceState(null, '', '?id=' + attempt.id);
       } else { location.href = './'; return; }
-    } catch (e) { return gate(`<b>Couldn't open this interview</b><span>${esc(e.message)}</span><a class="btn" href="./">Back to problems</a>`); }
+    } catch (e) { return gate(`<b>${e.status === 429 ? "That's today's interview done" : "Couldn't open this interview"}</b><span>${esc(e.message)}</span><a class="btn" href="./">Back to problems</a>`); }
     try { usage = await YTB.api('/api/practice/usage'); } catch {}
-    cur = Math.min(attempt.step, 5) - 1;
+    STEPS = attempt.problem.track === 'hld' ? HLD_STEPS : LLD_STEPS;
+    cur = Math.min(attempt.step, STEPS.length) - 1;
     if (attempt.status === 'done' && attempt.report) view = 'report';
     render();
   })();
 
   /* ---------------- answers helpers ---------------- */
-  function splitUml(v) {
-    const i = (v || '').indexOf(PATTERN_MARK);
+  function splitUml(v, mark) {
+    const i = (v || '').indexOf(mark);
     if (i < 0) return { diagram: v || '', patterns: '' };
-    return { diagram: v.slice(0, i).trimEnd(), patterns: v.slice(i + PATTERN_MARK.length).split('\n').map((l) => l.replace(/^%% ?/, '')).join('\n').trim() };
+    return { diagram: v.slice(0, i).trimEnd(), patterns: v.slice(i + mark.length).split('\n').map((l) => l.replace(/^%% ?/, '')).join('\n').trim() };
   }
-  function joinUml(diagram, patterns) {
+  function joinUml(diagram, patterns, mark) {
     const p = (patterns || '').trim();
-    return p ? `${diagram.trimEnd()}\n\n${PATTERN_MARK}\n${p.split('\n').map((l) => '%% ' + l).join('\n')}` : diagram;
+    return p ? `${diagram.trimEnd()}\n\n${mark}\n${p.split('\n').map((l) => '%% ' + l).join('\n')}` : diagram;
   }
   function collect() {
-    const s = STEPS[cur].id, a = attempt.answers;
-    if (s === 'uml') {
+    const st = STEPS[cur], s = st.id, a = attempt.answers;
+    if (st.kind === 'diagram') {
       const d = document.getElementById('uml-d'), p = document.getElementById('uml-p');
-      if (d) a.uml = joinUml(d.value, p ? p.value : '');
+      if (d) a[s] = joinUml(d.value, p ? p.value : '', st.mark);
     } else if (s === 'code') {
       if (monacoEd) a.code = monacoEd.getValue(); else { const t = document.getElementById('code-fb'); if (t) a.code = t.value; }
       const l = document.getElementById('lang'); if (l) a.lang = l.value;
@@ -217,7 +240,7 @@
       <div class="app">
         <aside class="rail">
           <div class="top">
-            <a href="./">‹ all problems</a>
+            <a href="./?track=${p.track === 'hld' ? 'hld' : 'lld'}">‹ all ${p.track === 'hld' ? 'HLD' : 'LLD'} problems</a>
             <h1>${esc(p.title)}</h1>
             <div class="meta"><span class="diff ${esc(p.difficulty)}">${esc(p.difficulty)}</span><span id="clock" title="Time since you started">${fmt(elapsed)}</span></div>
           </div>
@@ -246,14 +269,14 @@
     const s = STEPS[cur], a = attempt.answers, r = attempt.reviews[s.id];
     const stage = document.getElementById('stage');
     let editor = '';
-    if (s.id === 'uml') {
-      const u = splitUml(a.uml || s.template);
+    if (s.kind === 'diagram') {
+      const u = splitUml(a[s.id] || s.template, s.mark);
       editor = `
         <div class="split">
-          <div><span class="lbl">Class diagram (Mermaid)</span><textarea class="ed" id="uml-d" spellcheck="false" style="min-height:340px">${esc(u.diagram)}</textarea></div>
+          <div><span class="lbl">${s.diagramLabel}</span><textarea class="ed" id="uml-d" spellcheck="false" style="min-height:340px">${esc(u.diagram)}</textarea></div>
           <div><span class="lbl">Preview</span><div class="preview" id="preview"><span class="msg">Rendering…</span></div></div>
         </div>
-        <div><span class="lbl">Design patterns used, and why</span><textarea class="ed" id="uml-p" spellcheck="false" style="min-height:110px" placeholder="Strategy: lets the rule change without touching the main class&#10;Factory: …">${esc(u.patterns)}</textarea></div>`;
+        <div><span class="lbl">${s.notesLabel}</span><textarea class="ed" id="uml-p" spellcheck="false" style="min-height:110px" placeholder="${s.notesPh}">${esc(u.patterns)}</textarea></div>`;
     } else if (s.id === 'code') {
       editor = `
         <div class="row"><label class="lbl" for="lang" style="margin:0">Language</label>
@@ -276,16 +299,16 @@
       ${canSubmit ? `<div class="row">
         <button class="btn primary" data-act="review" ${busy ? 'disabled' : ''}>${busy ? 'Reviewing…' : r ? 'Submit again for review' : 'Submit for review'}</button>
         <span class="saved" id="saved"></span><span class="sp"></span>
-        ${cur < 4 && r ? `<button class="btn" data-go="${cur + 1}">Next: ${STEPS[cur + 1].name}</button>` : ''}
+        ${cur < STEPS.length - 1 && r ? `<button class="btn" data-go="${cur + 1}">Next: ${STEPS[cur + 1].name}</button>` : ''}
       </div>` : ''}
       <div id="msg"></div>
       ${r ? reviewHtml(r) : ''}`;
-    if (s.id === 'uml') { renderMermaid(); }
+    if (s.kind === 'diagram') { renderMermaid(); }
     if (s.id === 'code') { mountMonaco(); }
   }
 
   function reviewHtml(r) {
-    const next = cur < 4;
+    const next = cur < STEPS.length - 1;
     return `
       <section class="review" aria-live="polite">
         <div class="hd"><span class="score ${cls(r.score)}">${r.score}<small>/10</small></span><p>${esc(r.summary)}</p></div>
@@ -306,7 +329,7 @@
     const R = attempt.report;
     document.getElementById('stage').innerHTML = `
       <div class="report">
-        <div><h2>Interview report</h2><p class="hint">${esc(attempt.problem.title)} · ${R.complete ? 'all 5 steps' : `${R.steps.length} of 5 steps reviewed`}</p></div>
+        <div><h2>Interview report</h2><p class="hint">${esc(attempt.problem.title)} · ${R.complete ? `all ${STEPS.length} steps` : `${R.steps.length} of ${STEPS.length} steps reviewed`}</p></div>
         <div class="verdict"><span class="sig">${esc(R.signal)}</span><span class="avg">average ${R.average}/10</span></div>
         <div class="bars">${STEPS.map((s) => {
           const st = R.steps.find((x) => x.step === s.id);
@@ -320,8 +343,8 @@
         <div class="row">
           ${!R.complete ? '<button class="btn primary" data-act="resume">Continue the interview</button>' : ''}
           <a class="btn ${R.complete ? 'primary' : ''}" href="session.html?p=${encodeURIComponent(attempt.problem.slug)}">Retry this problem</a>
-          <a class="btn" href="./">Try another problem</a>
-          <a class="btn" href="../courses/watch.html?c=lld">Revise with the LLD course</a>
+          <a class="btn" href="./?track=${attempt.problem.track === 'hld' ? 'hld' : 'lld'}">Try another problem</a>
+          ${attempt.problem.track === 'hld' ? '<a class="btn" href="../courses/">Browse courses</a>' : '<a class="btn" href="../courses/watch.html?c=lld">Revise with the LLD course</a>'}
         </div>
       </div>`;
   }
@@ -340,7 +363,7 @@
       }
       mermaidMod.initialize({ startOnLoad: false, securityLevel: 'strict', theme: YTB.theme === 'light' ? 'neutral' : 'dark', fontFamily: 'IBM Plex Mono' });
       const code = src.value.trim();
-      if (!code) { box.innerHTML = '<span class="msg">Write a classDiagram to see it here.</span>'; return; }
+      if (!code) { box.innerHTML = `<span class="msg">${STEPS[cur].emptyMsg}</span>`; return; }
       const { svg } = await mermaidMod.render('m' + (++mermaidSeq), code);
       box.innerHTML = svg;
     } catch (e) {
@@ -348,7 +371,7 @@
       document.querySelectorAll('[id^="dm"]').forEach((n) => n.remove());
     }
   }
-  window.addEventListener('ytb:theme', () => { if (STEPS[cur].id === 'uml') renderMermaid(); if (monacoEd) monaco.editor.setTheme(YTB.theme === 'light' ? 'vs' : 'vs-dark'); });
+  window.addEventListener('ytb:theme', () => { if (STEPS[cur].kind === 'diagram') renderMermaid(); if (monacoEd) monaco.editor.setTheme(YTB.theme === 'light' ? 'vs' : 'vs-dark'); });
 
   /* ---------------- monaco ---------------- */
   const MONACO = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min';
@@ -392,7 +415,7 @@
     if (act === 'review') return submitReview();
     if (act === 'twist') return getTwist();
     if (act === 'report') return finish();
-    if (act === 'resume') { view = 'step'; cur = Math.min(maxUnlocked(), 5) - 1; render(); }
+    if (act === 'resume') { view = 'step'; cur = Math.min(maxUnlocked(), STEPS.length) - 1; render(); }
   });
   function disposeEditor() { if (monacoEd) { monacoEd.dispose(); monacoEd = null; } }
 
@@ -402,7 +425,7 @@
   async function submitReview() {
     if (busy) return;
     collect(); clearTimeout(saveTimer);
-    const st = STEPS[cur], val = st.id === 'uml' ? splitUml(attempt.answers.uml).diagram : (attempt.answers[st.id] || '');
+    const st = STEPS[cur], val = st.kind === 'diagram' ? splitUml(attempt.answers[st.id], st.mark).diagram : (attempt.answers[st.id] || '');
     if (!val.trim() || (st.template && val.trim() === st.template.trim())) return showError('Write your own answer first — the starter text is just a guide.');
     busy = true; setBusyUi();
     try {
