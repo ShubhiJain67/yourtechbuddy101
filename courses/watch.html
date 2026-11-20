@@ -11,8 +11,8 @@
 <link rel="stylesheet" href="courses.css">
 <style>
   .layout{display:grid;grid-template-columns:340px minmax(0,1fr);gap:0;flex:1;min-height:0}
-  .stage{padding:24px clamp(16px,3vw,32px) 40px;min-width:0}
-  .player-wrap{position:relative;aspect-ratio:16/9;background:#000;border-radius:4px;overflow:hidden;border:1.5px solid var(--text)}
+  .stage{padding:24px clamp(16px,3vw,32px) 40px;min-width:0;max-width:960px}
+  .player-wrap{position:relative;aspect-ratio:16/9;width:100%;max-width:min(880px,calc((100vh - 290px) * 16 / 9));min-width:min(100%,480px);background:#000;border-radius:4px;overflow:hidden;border:1.5px solid var(--text)}
   .player-wrap > div, .player-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
   .placeholder{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px;background:var(--panel)}
   .placeholder.show{display:flex}

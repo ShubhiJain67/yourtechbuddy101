@@ -3,10 +3,10 @@
 
 :root{
   /* blueprint (dark) */
-  --bg:#0E1A2E; --grid:#132240; --panel:#13213A; --panel2:#182A47;
-  --border:#2A3E63; --text:#E6ECF8; --muted:#93A3C2;
-  --accent:#7FA6FF; --accent-2:#7FA6FF; --on-accent:#0E1A2E;
-  --ok:#5ED394; --warn:#F2B44C; --err:#FF7A70;
+  --bg:#0A1424; --grid:#111E36; --panel:#14233F; --panel2:#1D3056;
+  --border:#5470A3; --text:#F1F5FC; --muted:#B0BED8;
+  --accent:#8DB1FF; --accent-2:#8DB1FF; --on-accent:#0A1424;
+  --ok:#6BE0A0; --warn:#F5BF5C; --err:#FF8A80;
   --sans:'IBM Plex Sans', system-ui, -apple-system, Segoe UI, sans-serif;
   --mono:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   --r:6px;
@@ -14,10 +14,10 @@
 }
 [data-theme="light"]{
   /* whiteboard (light) */
-  --bg:#F6F8FB; --grid:#E3E8F1; --panel:#FFFFFF; --panel2:#EFF2F7;
-  --border:#C9D2E0; --text:#17223B; --muted:#56637D;
-  --accent:#2350D8; --accent-2:#2350D8; --on-accent:#FFFFFF;
-  --ok:#178A4C; --warn:#B26B00; --err:#C8302C;
+  --bg:#EDF1F7; --grid:#DDE4EF; --panel:#FFFFFF; --panel2:#E2E8F1;
+  --border:#8592AA; --text:#0F1A30; --muted:#46536C;
+  --accent:#1F48C9; --accent-2:#1F48C9; --on-accent:#FFFFFF;
+  --ok:#11723F; --warn:#8F5500; --err:#B3261E;
   color-scheme:light;
 }
 
@@ -96,8 +96,8 @@ footer a{color:var(--muted)}
 }
 
 /* ---------- Affordance: make clickable things feel pressable ---------- */
-:root{--edge:#06101F;--lift:#7FA6FF}
-[data-theme="light"]{--edge:#A9B6CC;--lift:#2350D8}
+:root{--edge:#000814;--lift:#8DB1FF}
+[data-theme="light"]{--edge:#7C89A3;--lift:#1F48C9}
 a,button,select,summary,[role="button"],[data-go],[data-act],[data-open],[data-course],[data-tab],[data-cat]{cursor:pointer}
 button:disabled,.btn:disabled{cursor:not-allowed}
 
@@ -137,3 +137,11 @@ nav a.active:hover{background:transparent}
 .lesson:hover .t{text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--border)}
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.btn:hover,a.uml:hover{transform:none!important}}
+
+/* Contrast: surfaces sit visibly above the grid */
+header,footer{border-color:var(--border)}
+.uml,.btn{border-color:var(--border)}
+.uml{border-color:var(--text)}
+[data-theme="light"] .uml,[data-theme="light"] .tree,[data-theme="light"] .diagram,[data-theme="light"] .strip,[data-theme="light"] .box,[data-theme="light"] .review,[data-theme="light"] .col,[data-theme="light"] .att,[data-theme="light"] .item{box-shadow:0 1px 2px rgba(15,26,48,.08),0 4px 12px rgba(15,26,48,.05)}
+/* stage/category colours are tuned for light mode; brighten them on the dark blueprint */
+:root:not([data-theme="light"]) .cat,:root:not([data-theme="light"]) select.stage{filter:brightness(1.65) saturate(1.1)}

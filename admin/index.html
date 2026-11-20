@@ -116,11 +116,11 @@
     sections: (c.sections || []).map((s) => ({ title: s.title, lessons: s.lessons.map((l) => ({ title: l.title, youtube: l.youtube, duration: l.duration || '', status: l.status || (l.youtube ? 'published' : 'idea'), notes: l.notes || '' })) })),
   });
   const STAGES = [
-    { id: 'idea', label: 'Idea', color: '#8B95A8' },
-    { id: 'scripted', label: 'Scripted', color: '#D4A72C' },
-    { id: 'shot', label: 'Shot', color: '#E5793A' },
-    { id: 'edited', label: 'Edited', color: '#3E9BDD' },
-    { id: 'published', label: 'Published', color: '#2F9E5B' },
+    { id: 'idea', label: 'Idea', color: '#64708A' },
+    { id: 'scripted', label: 'Scripted', color: '#A07800' },
+    { id: 'shot', label: 'Shot', color: '#C2560F' },
+    { id: 'edited', label: 'Edited', color: '#1F78B8' },
+    { id: 'published', label: 'Published', color: '#1E8049' },
   ];
   const stageOf = (id) => STAGES.find((s) => s.id === id) || STAGES[0];
   const openNotes = new Set();

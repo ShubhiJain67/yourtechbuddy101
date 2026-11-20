@@ -12,9 +12,9 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0E1A2E; --panel:#13213A; --panel2:#182A47; --border:#2A3E63;
-    --text:#E6ECF8; --muted:#93A3C2; --accent:#7FA6FF; --accent-2:#7FA6FF; --on-accent:#0E1A2E;
-    --ok:#5ED394; --err:#FF7A70; --warn:#F2B44C;
+    --bg:#0A1424; --panel:#14233F; --panel2:#1D3056; --border:#5470A3;
+    --text:#F1F5FC; --muted:#B0BED8; --accent:#8DB1FF; --accent-2:#8DB1FF; --on-accent:#0A1424;
+    --ok:#6BE0A0; --err:#FF8A80; --warn:#F5BF5C;
     --mono:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
     color-scheme:dark;
   }
@@ -85,9 +85,9 @@
   a.btn.yt{color:var(--text)}
   /* Light theme */
   [data-theme="light"]{
-    --bg:#F6F8FB; --panel:#FFFFFF; --panel2:#EFF2F7; --border:#C9D2E0;
-    --text:#17223B; --muted:#56637D; --accent:#2350D8; --accent-2:#2350D8; --on-accent:#FFFFFF;
-    --ok:#178A4C; --err:#C8302C; --warn:#B26B00; color-scheme:light;
+    --bg:#EDF1F7; --panel:#FFFFFF; --panel2:#E2E8F1; --border:#8592AA;
+    --text:#0F1A30; --muted:#46536C; --accent:#1F48C9; --accent-2:#1F48C9; --on-accent:#FFFFFF;
+    --ok:#11723F; --err:#B3261E; --warn:#8F5500; color-scheme:light;
   }
   @media (max-width: 600px){
     header{padding:8px 10px;gap:8px}
@@ -99,8 +99,8 @@
     footer{flex-wrap:wrap;gap:6px}
   }
   /* Pressable buttons */
-  :root{--edge:#06101F}
-  [data-theme="light"]{--edge:#A9B6CC}
+  :root{--edge:#000814}
+  [data-theme="light"]{--edge:#7C89A3}
   .btn{box-shadow:0 2px 0 var(--edge);transition:transform .08s ease,box-shadow .08s ease,border-color .12s,filter .12s}
   .btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 3px 0 var(--edge);border-color:var(--text)}
   .btn:active:not(:disabled){transform:translateY(1px);box-shadow:none}
@@ -436,13 +436,13 @@ function loadMonaco() {
     require(['vs/editor/editor.main'], () => {
       monaco.editor.defineTheme('ytb-light', {
         base: 'vs', inherit: true, rules: [],
-        colors: { 'editor.background': '#FFFFFF', 'editorLineNumber.foreground': '#A9B4C7', 'editor.lineHighlightBackground': '#F2F5FA', 'editorCursor.foreground': '#2350D8' }
+        colors: { 'editor.background': '#FFFFFF', 'editorLineNumber.foreground': '#6B7891', 'editor.lineHighlightBackground': '#EEF2F8', 'editorCursor.foreground': '#1F48C9' }
       });
       const monacoTheme = () => document.documentElement.getAttribute('data-theme') === 'light' ? 'ytb-light' : 'ytb';
       window.addEventListener('ytb:theme', () => monaco.editor.setTheme(monacoTheme()));
       monaco.editor.defineTheme('ytb', {
         base: 'vs-dark', inherit: true, rules: [],
-        colors: { 'editor.background': '#0E1A2E', 'editorLineNumber.foreground': '#3C5482', 'editor.lineHighlightBackground': '#13213A', 'editorCursor.foreground': '#7FA6FF' }
+        colors: { 'editor.background': '#0A1424', 'editorLineNumber.foreground': '#6A82B0', 'editor.lineHighlightBackground': '#14233F', 'editorCursor.foreground': '#8DB1FF' }
       });
       monacoEditor = monaco.editor.create($('editor'), {
         value: initialCode(), language: LANGS[currentLang].monaco, theme: monacoTheme(),
