@@ -166,7 +166,7 @@
         <div class="ytb-menu" hidden>
           <div class="ytb-who"><b>${esc(u.name)}</b><small>${esc(u.email)}</small></div>
           <a href="${ROOT}me/">📚 My courses</a>
-          ${u.isAdmin ? `<a href="${ROOT}admin/">🛠 Admin</a><a href="${ROOT}ideas/">💡 Ideas</a>` : ''}
+          ${u.isAdmin ? `<a href="${ROOT}admin/">🛠 Admin</a><a href="${ROOT}planner/">🎬 Planner</a><a href="${ROOT}ideas/">💡 Ideas</a>` : ''}
           <button data-signout>Sign out</button>
         </div>
       </div>`;

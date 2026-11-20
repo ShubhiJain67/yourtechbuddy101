@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="../assets/theme.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planner — YourTechBuddy</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../courses/courses.css">
+<style>
+  .main{max-width:1400px;margin:0 auto;padding:24px 20px 60px;width:100%}
+  .gate{max-width:480px;margin:60px auto;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center;color:var(--muted)}
+  .gate b{color:var(--text);font-size:18px}
+  .top{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .top h1{font-size:26px;margin:0;letter-spacing:-.02em}
+  .top p{color:var(--muted);margin:4px 0 0;font-size:14px}
+  .top .sp{flex:1}
+  input,select,textarea{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font:inherit;font-size:14px;width:100%}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+  textarea{resize:vertical;min-height:110px;line-height:1.5}
+
+  /* course progress strip */
+  .courses{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:20px}
+  .cp{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;text-align:left}
+  .cp.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+  .cp h3{margin:0 0 2px;font-size:14.5px;display:flex;gap:8px;align-items:center}
+  .cp h3 small{margin-left:auto;font:600 12px var(--mono);color:var(--muted)}
+  .cp .d{font-size:12px;color:var(--muted)}
+  .seg{display:flex;height:7px;border-radius:99px;overflow:hidden;background:var(--panel2);margin-top:10px}
+  .seg i{display:block;height:100%}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:-6px 0 16px}
+  .legend span{display:flex;align-items:center;gap:6px}
+  .legend b{width:8px;height:8px;border-radius:50%;display:inline-block}
+
+  .filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .filters input{max-width:280px}
+  .filters select{max-width:260px}
+  .chip{border:1px solid var(--border);background:var(--panel);border-radius:99px;padding:6px 12px;font-size:13px;cursor:pointer;color:var(--muted);font-weight:500;white-space:nowrap;flex:none}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  .tabs{display:none;gap:6px;margin-bottom:12px;overflow-x:auto}
+  .board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:start}
+  .col{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;min-height:140px}
+  .col h2{display:flex;align-items:center;gap:8px;font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:4px 6px 10px}
+  .col h2 .dot{width:8px;height:8px;border-radius:50%}
+  .col h2 .n{margin-left:auto;font-family:var(--mono)}
+  .empty{color:var(--muted);font-size:13px;text-align:center;padding:18px 6px}
+  .more{width:100%;background:none;border:1px dashed var(--border);border-radius:8px;padding:7px;color:var(--muted);cursor:pointer;font-size:12.5px}
+
+  .card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+  .card:hover{border-color:var(--accent)}
+  .card .path{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px}
+  .card h3{margin:0;font-size:14px;font-weight:600;line-height:1.35;word-break:break-word}
+  .card p{margin:6px 0 0;color:var(--muted);font-size:12.5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap}
+  .card .path .yt{color:#ff4d6d;text-decoration:none;font-weight:600}
+  .card .path .yt:hover{text-decoration:underline}
+  .col.pub .card{padding:8px 12px}
+  .col.pub .card .mv{display:none}
+  .col.pub .card:hover .mv{display:flex}
+  .card .mv{display:flex;gap:6px;margin-top:8px}
+  .card .mv button{flex:1;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:4px;font-size:11.5px;cursor:pointer;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card .mv button:hover{color:var(--text);border-color:var(--accent)}
+
+  .scrim{position:fixed;inset:0;background:rgba(5,8,14,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:60}
+  .scrim.show{display:flex}
+  .dlg{background:var(--panel);border:1px solid var(--border);border-radius:14px;width:100%;max-width:580px;padding:20px;display:flex;flex-direction:column;gap:12px;max-height:92vh;overflow:auto}
+  .dlg h3{margin:0;font-size:17px}
+  .dlg .path{font-size:12px;color:var(--muted);margin-top:-6px}
+  .dlg label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .stages{display:flex;gap:6px;flex-wrap:wrap}
+  .stages button{flex:1;min-width:90px;border:1px solid var(--border);background:var(--panel2);border-radius:8px;padding:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted)}
+  .stages button.on{color:#fff;border-color:transparent}
+  .dlg .acts{display:flex;gap:8px;align-items:center}
+  .dlg .acts .sp{flex:1}
+  .hint{font-size:12px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400}
+
+  @media (max-width:1100px){ .board{grid-template-columns:repeat(3,minmax(0,1fr))} }
+  @media (max-width:900px){
+    .board{grid-template-columns:1fr}
+    .tabs{display:flex}
+    .col{display:none}
+    .col.show{display:block}
+    .filters input,.filters select{max-width:none}
+  }
+  @media (max-width:600px){ .main{padding:16px 14px 40px} .courses{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="../"><div class="logo">&lt;/&gt;</div><b>YourTechBuddy</b></a>
+  <nav>
+    <a href="../admin/">Admin</a>
+    <a href="./" class="active">Planner</a>
+    <a href="../ideas/">Ideas</a>
+  </nav>
+  <div id="auth"></div>
+</header>
+
+<main class="main" id="app"></main>
+
+<div class="scrim" id="scrim">
+  <div class="dlg" role="dialog" aria-modal="true">
+    <h3 id="d-title"></h3>
+    <div class="path" id="d-path"></div>
+    <label>Title<input id="d-name" maxlength="200"></label>
+    <label>Stage<div class="stages" id="d-stages"></div></label>
+    <label>Notes<textarea id="d-notes" maxlength="5000" placeholder="Hook, outline, script link, B-roll ideas, thumbnail text…"></textarea></label>
+    <label>YouTube link <span class="hint">— paste it when the video is live; it'll be marked Published</span><input id="d-yt" placeholder="https://youtu.be/…"></label>
+    <div class="acts">
+      <a class="btn" id="d-edit">Edit in Admin ↗</a>
+      <span class="sp"></span>
+      <button class="btn" id="d-cancel">Cancel</button>
+      <button class="btn primary" id="d-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/config.js"></script>
+<script src="../assets/ytb.js"></script>
+<script>
+  const { esc } = YTB;
+  const app = document.getElementById('app');
+  const STAGES = [
+    { id: 'idea', label: 'Idea', color: '#94a3b8' },
+    { id: 'scripted', label: 'Scripted', color: '#f0b429' },
+    { id: 'shot', label: 'Shot', color: '#fb923c' },
+    { id: 'edited', label: 'Edited', color: '#22d3ee' },
+    { id: 'published', label: 'Published', color: '#3fb950' },
+  ];
+  const PUBLISHED_LIMIT = 12;
+  let courses = [], videos = [], courseFilter = 'all', query = '', mobileCol = 'idea', showAllPublished = false, editing = null;
+
+  function gate(html) { app.innerHTML = `<div class="gate">${html}</div>`; }
+  function ytId(input) {
+    input = (input || '').trim();
+    if (/^[A-Za-z0-9_-]{11}$/.test(input)) return input;
+    try {
+      const u = new URL(input);
+      const v = u.searchParams.get('v') || (u.hostname.endsWith('youtu.be') ? u.pathname.slice(1, 12) : (u.pathname.match(/\/(?:shorts|embed|live)\/([A-Za-z0-9_-]{11})/) || [])[1]);
+      return v && /^[A-Za-z0-9_-]{11}$/.test(v.slice(0, 11)) ? v.slice(0, 11) : null;
+    } catch { return null; }
+  }
+
+  (async function init() {
+    if (!YTB.apiOn || !YTB.authOn) return gate('<b>Planner needs the API</b><span>Set it up in <code>assets/config.js</code>.</span>');
+    if (!YTB.user) { gate('<b>Private page</b><span>Sign in with your admin Google account.</span><div id="gsi"></div>'); return YTB.renderGoogleButton(document.getElementById('gsi'), { size: 'large' }); }
+    if (!YTB.isAdmin) return gate('<b>Not authorised</b><span>This page is private.</span>');
+    app.innerHTML = '<p style="color:var(--muted)">Loading…</p>';
+    try { await load(); } catch (e) { return gate(`<b>Couldn't load</b><span>${esc(e.message)}</span>`); }
+    const c = new URLSearchParams(location.search).get('c');
+    if (c && courses.some((x) => x.slug === c)) courseFilter = c;
+    render();
+  })();
+
+  async function load() {
+    courses = (await YTB.api('/api/courses?all=1')).courses.filter((c) => typeof c.id === 'number');
+    videos = [];
+    for (const c of courses) for (const s of c.sections) for (const l of s.lessons) {
+      videos.push({ ...l, status: l.status || (l.youtube ? 'published' : 'idea'), notes: l.notes || '', course: c, section: s.title });
+    }
+  }
+
+  function visible() {
+    const q = query.trim().toLowerCase();
+    return videos.filter((v) => (courseFilter === 'all' || v.course.slug === courseFilter) &&
+      (!q || v.title.toLowerCase().includes(q) || v.notes.toLowerCase().includes(q) || v.section.toLowerCase().includes(q)));
+  }
+
+  function render() {
+    if (!courses.length) {
+      return gate('<b>No courses yet</b><span>Create a course in Admin, add groups (sections) and planned videos — they\'ll show up here as a pipeline.</span><a class="btn primary" href="../admin/">Open Admin →</a>');
+    }
+    const list = visible();
+    const courseCards = courses.map((c) => {
+      const vs = videos.filter((v) => v.course === c);
+      const counts = STAGES.map((s) => vs.filter((v) => v.status === s.id).length);
+      const pub = counts[4];
+      return `<button class="cp ${courseFilter === c.slug ? 'on' : ''}" data-course="${esc(c.slug)}">
+        <h3>${esc(c.title)}<small>${pub}/${vs.length}</small></h3>
+        <div class="d">${c.sections.length} groups · ${c.published ? 'Live course' : 'Draft'}</div>
+        <div class="seg">${STAGES.map((s, i) => counts[i] ? `<i style="width:${(counts[i] / vs.length) * 100}%;background:${s.color}" title="${s.label}: ${counts[i]}"></i>` : '').join('')}</div>
+      </button>`;
+    }).join('');
+
+    app.innerHTML = `
+      <div class="top">
+        <div><h1>🎬 Content planner</h1><p>Every video across your courses, from idea to published. Private to you.</p></div>
+        <span class="sp"></span>
+        <a class="btn" href="../admin/">+ Plan videos in Admin</a>
+      </div>
+      <div class="courses">${courseCards}</div>
+      <div class="legend">${STAGES.map((s) => `<span><b style="background:${s.color}"></b>${s.label}</span>`).join('')}</div>
+      <div class="filters">
+        <input id="q" placeholder="Search titles, notes, groups…" value="${esc(query)}">
+        <select id="cf"><option value="all">All courses</option>${courses.map((c) => `<option value="${esc(c.slug)}" ${courseFilter === c.slug ? 'selected' : ''}>${esc(c.title)}</option>`).join('')}</select>
+      </div>
+      <div class="tabs">${STAGES.map((s) => `<button class="chip ${mobileCol === s.id ? 'on' : ''}" data-tab="${s.id}">${s.label} · ${list.filter((v) => v.status === s.id).length}</button>`).join('')}</div>
+      <div class="board">
+        ${STAGES.map((s, si) => {
+          let items = list.filter((v) => v.status === s.id);
+          const total = items.length;
+          if (s.id === 'published' && !showAllPublished) items = items.slice(0, PUBLISHED_LIMIT);
+          return `<section class="col ${s.id === 'published' ? 'pub' : ''} ${mobileCol === s.id ? 'show' : ''}">
+            <h2><span class="dot" style="background:${s.color}"></span>${s.label}<span class="n">${total}</span></h2>
+            ${items.length ? items.map((v) => card(v, si)).join('') : '<div class="empty">Nothing here</div>'}
+            ${s.id === 'published' && total > PUBLISHED_LIMIT && !showAllPublished ? `<button class="more" data-more>Show all ${total}</button>` : ''}
+          </section>`;
+        }).join('')}
+      </div>`;
+  }
+
+  function card(v, si) {
+    return `<article class="card" data-id="${v.id}">
+      <div class="path">${esc(v.course.title)} › ${esc(v.section)}${v.youtube ? ` · <a href="https://youtu.be/${esc(v.youtube)}" target="_blank" rel="noopener" class="yt">▶ watch</a>` : ''}</div>
+      <h3>${esc(v.title)}</h3>
+      ${v.notes ? `<p>${esc(v.notes)}</p>` : ''}
+      <div class="mv">
+        ${si > 0 ? `<button data-move="-1">← ${STAGES[si - 1].label}</button>` : ''}
+        ${si < STAGES.length - 1 ? `<button data-move="1">${STAGES[si + 1].label} →</button>` : ''}
+      </div>
+    </article>`;
+  }
+
+  async function save(v, patch) {
+    const before = { title: v.title, notes: v.notes, status: v.status, youtube: v.youtube };
+    Object.assign(v, patch);
+    render();
+    try {
+      const { lesson } = await YTB.api('/api/admin/lessons/' + v.id, { method: 'PUT', body: patch });
+      Object.assign(v, lesson);
+      render();
+    } catch (e) {
+      Object.assign(v, before); render();
+      YTB.toast('Not saved: ' + e.message + (e.status === 404 ? ' (refreshing…)' : ''));
+      if (e.status === 404) { await load(); render(); }
+    }
+  }
+
+  app.addEventListener('click', (e) => {
+    const cp = e.target.closest('[data-course]');
+    if (cp) { courseFilter = courseFilter === cp.dataset.course ? 'all' : cp.dataset.course; return render(); }
+    const tab = e.target.closest('[data-tab]');
+    if (tab) { mobileCol = tab.dataset.tab; return render(); }
+    if (e.target.closest('[data-more]')) { showAllPublished = true; return render(); }
+    if (e.target.closest('a.yt')) return;
+    const el = e.target.closest('.card');
+    if (!el) return;
+    const v = videos.find((x) => x.id === +el.dataset.id);
+    const mv = e.target.closest('[data-move]');
+    if (mv) {
+      const next = STAGES[STAGES.findIndex((s) => s.id === v.status) + +mv.dataset.move];
+      if (next.id === 'published' && !v.youtube) YTB.toast('Tip: open the card and paste the YouTube link so learners can watch it');
+      return save(v, { status: next.id });
+    }
+    openDlg(v);
+  });
+  app.addEventListener('change', (e) => { if (e.target.id === 'cf') { courseFilter = e.target.value; render(); } });
+  app.addEventListener('input', (e) => {
+    if (e.target.id !== 'q') return;
+    query = e.target.value; const pos = e.target.selectionStart; render();
+    const q = document.getElementById('q'); q.focus(); q.setSelectionRange(pos, pos);
+  });
+
+  /* ---------- dialog ---------- */
+  const $ = (id) => document.getElementById(id);
+  let dlgStage = 'idea';
+  function paintStages() {
+    $('d-stages').innerHTML = STAGES.map((s) => `<button type="button" data-stage="${s.id}" class="${dlgStage === s.id ? 'on' : ''}" style="${dlgStage === s.id ? `background:${s.color}` : ''}">${s.label}</button>`).join('');
+  }
+  $('d-stages').addEventListener('click', (e) => { const b = e.target.closest('[data-stage]'); if (b) { dlgStage = b.dataset.stage; paintStages(); } });
+  $('d-yt').addEventListener('input', () => { if (ytId($('d-yt').value)) { dlgStage = 'published'; paintStages(); } });
+
+  function openDlg(v) {
+    editing = v; dlgStage = v.status;
+    $('d-title').textContent = v.title;
+    $('d-path').textContent = `${v.course.title} › ${v.section}`;
+    $('d-name').value = v.title;
+    $('d-notes').value = v.notes;
+    $('d-yt').value = v.youtube ? `https://youtu.be/${v.youtube}` : '';
+    $('d-edit').href = `../admin/?c=${encodeURIComponent(v.course.slug)}`;
+    paintStages();
+    $('scrim').classList.add('show');
+    setTimeout(() => $('d-notes').focus(), 30);
+  }
+  function closeDlg() { $('scrim').classList.remove('show'); editing = null; }
+  $('d-cancel').addEventListener('click', closeDlg);
+  $('scrim').addEventListener('click', (e) => { if (e.target.id === 'scrim') closeDlg(); });
+  document.addEventListener('keydown', (e) => {
+    if (!editing) return;
+    if (e.key === 'Escape') closeDlg();
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) $('d-save').click();
+  });
+  $('d-save').addEventListener('click', () => {
+    if (!editing) return;
+    const raw = $('d-yt').value.trim();
+    const id = raw ? ytId(raw) : '';
+    if (raw && !id) { YTB.toast("That doesn't look like a YouTube video link"); return $('d-yt').focus(); }
+    const title = $('d-name').value.trim() || editing.title;
+    const v = editing; closeDlg();
+    save(v, { title, notes: $('d-notes').value, status: dlgStage, youtube: id });
+  });
+</script>
+</body>
+</html>

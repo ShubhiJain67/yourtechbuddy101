@@ -57,6 +57,12 @@
     .ls li{flex-wrap:wrap}
   }
   .ls .ctl{display:contents}
+  .ls li{flex-wrap:wrap}
+  .ls li > input[data-f="les-title"]{flex:1 1 220px;width:auto;min-width:0}
+  .ls select.stage{width:auto;padding:6px 8px;font-size:12px;font-weight:600;color:var(--c);border-color:color-mix(in srgb,var(--c) 45%,transparent)}
+  .ib.has{border-color:var(--accent);color:var(--accent)}
+  .ls textarea.notes{flex:1 1 100%;min-height:80px;margin:4px 0 2px 32px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;color:var(--text);font:inherit;font-size:13px;resize:vertical}
+  .ls textarea.notes:focus{outline:none;border-color:var(--accent)}
   .ls .yt-id{width:120px;flex:none;font:12px var(--mono)}
   @media (max-width:640px){
     .main{padding:12px 14px 60px}
@@ -70,6 +76,7 @@
     .ls img,.ls .noimg{width:64px}
     .ls .ctl{display:flex;grid-column:1/-1;flex-wrap:wrap;gap:6px;align-items:center;padding-left:28px}
     .ls .yt-id{width:118px}
+    .ls textarea.notes{grid-column:1/-1;margin:2px 0 0}
     .ls select{max-width:none;flex:1;min-width:110px}
     .add{flex-direction:column}
     .add input{min-width:0}
@@ -85,6 +92,7 @@
     <a href="../playground/">Playground</a>
     <a href="../courses/">Courses</a>
     <a href="./" class="active">Admin</a>
+    <a href="../planner/">Planner</a>
     <a href="../ideas/">Ideas</a>
   </nav>
   <div id="auth"></div>
@@ -103,10 +111,20 @@
   const clone = (o) => JSON.parse(JSON.stringify(o));
   const toEditable = (c) => ({
     _orig: c.slug, slug: c.slug, title: c.title, tagline: c.tagline || '', level: c.level || '', tags: c.tags || [],
-    practice: c.practice || '', published: !!c.published, position: c.position || 0,
-    sections: (c.sections || []).map((s) => ({ title: s.title, lessons: s.lessons.map((l) => ({ title: l.title, youtube: l.youtube, duration: l.duration || '' })) })),
+    practice: c.practice || '', published: !!c.published, position: c.position || 0, show_upcoming: !!c.show_upcoming,
+    sections: (c.sections || []).map((s) => ({ title: s.title, lessons: s.lessons.map((l) => ({ title: l.title, youtube: l.youtube, duration: l.duration || '', status: l.status || (l.youtube ? 'published' : 'idea'), notes: l.notes || '' })) })),
   });
-  const blank = () => ({ _orig: null, slug: '', title: '', tagline: '', level: '', tags: [], practice: '', published: false, position: courses.length, sections: [{ title: 'Lessons', lessons: [] }] });
+  const STAGES = [
+    { id: 'idea', label: 'Idea', color: '#94a3b8' },
+    { id: 'scripted', label: 'Scripted', color: '#f0b429' },
+    { id: 'shot', label: 'Shot', color: '#fb923c' },
+    { id: 'edited', label: 'Edited', color: '#22d3ee' },
+    { id: 'published', label: 'Published', color: '#3fb950' },
+  ];
+  const stageOf = (id) => STAGES.find((s) => s.id === id) || STAGES[0];
+  const openNotes = new Set();
+  const isYtId = (v) => /^[A-Za-z0-9_-]{11}$/.test(v);
+  const blank = () => ({ _orig: null, slug: '', title: '', tagline: '', level: '', tags: [], practice: '', published: false, show_upcoming: false, position: courses.length, sections: [{ title: 'Lessons', lessons: [] }] });
   const setDirty = (v = true) => { dirty = v; const d = document.getElementById('dirty'); if (d) d.textContent = v ? '● Unsaved changes' : ''; };
   const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
   window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
@@ -134,7 +152,7 @@
   /* ---------------- rendering ---------------- */
   function render() {
     const listHtml = courses.map((c) => `<button class="c ${cur && cur._orig === c.slug ? 'on' : ''}" data-act="open" data-slug="${esc(c.slug)}">
-        ${esc(c.title)}<small>${c.published ? 'Published' : 'Draft'} · ${c.sections.reduce((n, s) => n + s.lessons.length, 0)} lessons</small></button>`).join('');
+        ${esc(c.title)}<small>${c.published ? 'Published' : 'Draft'} · ${c.sections.reduce((n, s) => n + s.lessons.filter((l) => l.status === 'published').length, 0)}/${c.sections.reduce((n, s) => n + s.lessons.length, 0)} live</small></button>`).join('');
 
     const allLessons = cur.sections.reduce((n, s) => n + s.lessons.length, 0);
     const sectionOptions = (si) => cur.sections.map((s, i) => `<option value="${i}" ${i === si ? 'selected' : ''}>${i === si ? 'Move to…' : esc(s.title)}</option>`).join('');
@@ -143,7 +161,7 @@
       <div class="sec">
         <div class="sec-head">
           <input value="${esc(s.title)}" data-f="sec-title" data-si="${si}" placeholder="Section title">
-          <span class="n">${s.lessons.length} lessons</span>
+          <span class="n">${s.lessons.filter((l) => l.status === 'published').length}/${s.lessons.length} published</span>
           <button class="ib" title="Move section up" data-act="sec-up" data-si="${si}">↑</button>
           <button class="ib" title="Move section down" data-act="sec-down" data-si="${si}">↓</button>
           <button class="ib del" title="Delete section" data-act="sec-del" data-si="${si}">✕</button>
@@ -155,6 +173,8 @@
               ${l.youtube ? `<img src="https://i.ytimg.com/vi/${esc(l.youtube)}/mqdefault.jpg" alt="" loading="lazy">` : '<span class="noimg">soon</span>'}
               <input value="${esc(l.title)}" data-f="les-title" data-si="${si}" data-li="${li}" placeholder="Lesson title">
               <div class="ctl">
+                <select data-f="les-status" data-si="${si}" data-li="${li}" class="stage" style="--c:${stageOf(l.status).color}">${STAGES.map((s) => `<option value="${s.id}" ${s.id === l.status ? 'selected' : ''}>${s.label}</option>`).join('')}</select>
+                <button class="ib ${l.notes ? 'has' : ''}" title="Notes" data-act="les-notes" data-si="${si}" data-li="${li}">📝</button>
                 <span class="meta">${esc(l.duration || '')}</span>
                 <input value="${esc(l.youtube)}" data-f="les-yt" data-si="${si}" data-li="${li}" placeholder="video id" class="yt-id">
                 ${cur.sections.length > 1 ? `<select data-f="les-move" data-si="${si}" data-li="${li}">${sectionOptions(si)}</select>` : ''}
@@ -162,12 +182,13 @@
                 <button class="ib" title="Down" data-act="les-down" data-si="${si}" data-li="${li}">↓</button>
                 <button class="ib del" title="Remove" data-act="les-del" data-si="${si}" data-li="${li}">✕</button>
               </div>
+              ${openNotes.has(si + ':' + li) ? `<textarea class="notes" data-f="les-notes" data-si="${si}" data-li="${li}" placeholder="Private notes: hook, outline, script links, B-roll ideas…">${esc(l.notes)}</textarea>` : ''}
             </li>`).join('') : '<li class="empty">No lessons yet — paste a YouTube video or playlist link below.</li>'}
         </ol>
         <div class="add">
           <input data-add="${si}" placeholder="Paste a YouTube video or playlist link…">
           <button class="btn primary" data-act="add-yt" data-si="${si}">Add</button>
-          <button class="btn" data-act="add-blank" data-si="${si}">+ Coming-soon lesson</button>
+          <button class="btn" data-act="add-blank" data-si="${si}">+ Planned video</button>
         </div>
       </div>`).join('');
 
@@ -196,6 +217,7 @@
             <label>Practice language<select data-f="practice">${LANGS.map((l) => `<option value="${l}" ${l === cur.practice ? 'selected' : ''}>${l || '— none —'}</option>`).join('')}</select></label>
             <label>Order on courses page<input data-f="position" type="number" value="${cur.position}"></label>
             <label class="check"><input type="checkbox" data-f="published" ${cur.published ? 'checked' : ''}> Published (visible to everyone)</label>
+            <label class="check"><input type="checkbox" data-f="show_upcoming" ${cur.show_upcoming ? 'checked' : ''}> Show unpublished videos to learners as “Coming soon”</label>
           </div>
 
           <h2>Sections & lessons <span style="color:var(--muted);font-weight:400;font-size:13px">· ${cur.sections.length} sections · ${allLessons} lessons</span></h2>
@@ -220,7 +242,8 @@
     else if (f === 'position') cur.position = parseInt(t.value, 10) || 0;
     else if (f === 'sec-title') cur.sections[si].title = t.value;
     else if (f === 'les-title') cur.sections[si].lessons[li].title = t.value;
-    else if (f === 'les-yt') cur.sections[si].lessons[li].youtube = t.value.trim();
+    else if (f === 'les-yt') { const l = cur.sections[si].lessons[li]; l.youtube = t.value.trim(); if (isYtId(l.youtube) && l.status !== 'published') { l.status = 'published'; const s = app.querySelector(`[data-f="les-status"][data-si="${si}"][data-li="${li}"]`); if (s) { s.value = 'published'; s.style.setProperty('--c', stageOf('published').color); } } }
+    else if (f === 'les-notes') cur.sections[si].lessons[li].notes = t.value;
     else return;
     setDirty();
   });
@@ -230,6 +253,8 @@
     if (!f || !cur) return;
     if (f === 'practice') cur.practice = t.value;
     else if (f === 'published') cur.published = t.checked;
+    else if (f === 'show_upcoming') cur.show_upcoming = t.checked;
+    else if (f === 'les-status') { cur.sections[+t.dataset.si].lessons[+t.dataset.li].status = t.value; t.style.setProperty('--c', stageOf(t.value).color); }
     else if (f === 'les-move') {
       const si = +t.dataset.si, li = +t.dataset.li, to = +t.value;
       if (to !== si) { const [l] = cur.sections[si].lessons.splice(li, 1); cur.sections[to].lessons.push(l); render(); }
@@ -269,7 +294,8 @@
     else if (act === 'les-up') move(S[si].lessons, li, -1);
     else if (act === 'les-down') move(S[si].lessons, li, 1);
     else if (act === 'les-del') S[si].lessons.splice(li, 1);
-    else if (act === 'add-blank') S[si].lessons.push({ title: 'New lesson (coming soon)', youtube: '', duration: '' });
+    else if (act === 'add-blank') S[si].lessons.push({ title: 'New video idea', youtube: '', duration: '', status: 'idea', notes: '' });
+    else if (act === 'les-notes') { const k = si + ':' + li; openNotes.has(k) ? openNotes.delete(k) : openNotes.add(k); render(); const ta = app.querySelector(`textarea[data-si="${si}"][data-li="${li}"]`); if (ta) ta.focus(); return; }
     else return;
     setDirty(); render();
   });
@@ -296,7 +322,7 @@
       const existing = new Set(cur.sections.flatMap((s) => s.lessons.map((l) => l.youtube)).filter(Boolean));
       const items = r.type === 'playlist' ? r.items : [r.item];
       const fresh = items.filter((i) => !existing.has(i.youtube));
-      fresh.forEach((i) => cur.sections[si].lessons.push({ title: i.title, youtube: i.youtube, duration: i.duration || '' }));
+      fresh.forEach((i) => cur.sections[si].lessons.push({ title: i.title, youtube: i.youtube, duration: i.duration || '', status: 'published', notes: '' }));
       if (r.type === 'playlist' && !cur.title) { cur.title = r.title; if (!cur._orig && !cur.slug) cur.slug = slugify(r.title); }
       const skipped = items.length - fresh.length;
       YTB.toast(r.type === 'playlist'

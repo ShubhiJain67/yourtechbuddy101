@@ -11,6 +11,7 @@
 // Admin:    PUT    /api/admin/courses/:slug   full course tree (create or replace)
 //           DELETE /api/admin/courses/:slug
 //           GET    /api/admin/youtube?url=..&mode=video|playlist
+//           PUT    /api/admin/lessons/:id     { status, notes, youtube, title, duration }
 //           GET/POST /api/admin/ideas, PUT/DELETE /api/admin/ideas/:id   (private ideas board)
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8' };
@@ -56,11 +57,11 @@ async function route(req, env) {
 
   if (path === '/api/courses' && m === 'GET') {
     const admin = url.searchParams.get('all') === '1' && (await optionalUser(req, env))?.isAdmin;
-    return json({ courses: await loadCourses(env, { includeDrafts: !!admin }) });
+    return json({ courses: await loadCourses(env, { includeDrafts: !!admin, admin: !!admin }) });
   }
   if ((mt = path.match(/^\/api\/courses\/([a-z0-9-]+)$/)) && m === 'GET') {
     const admin = (await optionalUser(req, env))?.isAdmin;
-    const [course] = await loadCourses(env, { slug: mt[1], includeDrafts: !!admin });
+    const [course] = await loadCourses(env, { slug: mt[1], includeDrafts: !!admin, admin: !!admin });
     if (!course) throw httpError(404, 'Not found');
     return json({ course });
   }
@@ -80,6 +81,9 @@ async function route(req, env) {
     if ((mt = path.match(/^\/api\/admin\/courses\/([a-z0-9-]+)$/))) {
       if (m === 'PUT') return saveCourse(env, mt[1], await readJSON(req));
       if (m === 'DELETE') return deleteCourse(env, mt[1]);
+    }
+    if ((mt = path.match(/^\/api\/admin\/lessons\/(\d+)$/)) && m === 'PUT') {
+      return updateLesson(env, Number(mt[1]), await readJSON(req));
     }
     if (path === '/api/admin/ideas') {
       if (m === 'GET') return listIdeas(env);
@@ -235,7 +239,9 @@ async function verifyGoogleIdToken(token, clientId) {
 
 /* ------------------------------ courses ------------------------------ */
 
-async function loadCourses(env, { slug = null, includeDrafts = false } = {}) {
+const LESSON_STATUSES = ['idea', 'scripted', 'shot', 'edited', 'published'];
+
+async function loadCourses(env, { slug = null, includeDrafts = false, admin = false } = {}) {
   const where = [];
   const binds = [];
   if (slug) { where.push('slug = ?'); binds.push(slug); }
@@ -259,6 +265,7 @@ async function loadCourses(env, { slug = null, includeDrafts = false } = {}) {
     practice: c.practice,
     published: !!c.published,
     position: c.position,
+    ...(admin ? { show_upcoming: !!c.show_upcoming } : {}),
     sections: sections
       .filter((s) => s.course_id === c.id)
       .map((s) => ({
@@ -266,8 +273,13 @@ async function loadCourses(env, { slug = null, includeDrafts = false } = {}) {
         title: s.title,
         lessons: lessons
           .filter((l) => l.section_id === s.id)
-          .map((l) => ({ id: l.id, title: l.title, youtube: l.youtube, duration: l.duration })),
-      })),
+          // Learners only see published videos (plus "coming soon" titles if the course opts in).
+          .filter((l) => admin || l.youtube || c.show_upcoming)
+          .map((l) => admin
+            ? { id: l.id, title: l.title, youtube: l.youtube, duration: l.duration, status: l.status, notes: l.notes }
+            : { id: l.id, title: l.title, youtube: l.youtube, duration: l.duration }),
+      }))
+      .filter((s) => admin || s.lessons.length),
   }));
 }
 
@@ -290,7 +302,7 @@ async function saveCourse(env, slugParam, b) {
   if (lessonCount > 1000) throw httpError(400, 'Too many lessons');
 
   const tags = JSON.stringify((Array.isArray(b.tags) ? b.tags : []).map((t) => str(t, 40)).filter(Boolean).slice(0, 12));
-  const fields = [title, str(b.tagline, 300), str(b.level, 60), tags, str(b.practice, 20), b.published ? 1 : 0, Number(b.position) || 0, now()];
+  const fields = [title, str(b.tagline, 300), str(b.level, 60), tags, str(b.practice, 20), b.published ? 1 : 0, Number(b.position) || 0, b.show_upcoming ? 1 : 0, now()];
 
   const existing = await env.DB.prepare('SELECT id FROM courses WHERE slug = ?').bind(slugParam).first();
   if (slug !== slugParam || !existing) {
@@ -302,11 +314,11 @@ async function saveCourse(env, slugParam, b) {
   if (existing) {
     id = existing.id;
     await env.DB.prepare(
-      'UPDATE courses SET slug = ?, title = ?, tagline = ?, level = ?, tags = ?, practice = ?, published = ?, position = ?, updated_at = ? WHERE id = ?'
+      'UPDATE courses SET slug = ?, title = ?, tagline = ?, level = ?, tags = ?, practice = ?, published = ?, position = ?, show_upcoming = ?, updated_at = ? WHERE id = ?'
     ).bind(slug, ...fields, id).run();
   } else {
     const row = await env.DB.prepare(
-      'INSERT INTO courses (slug, title, tagline, level, tags, practice, published, position, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id'
+      'INSERT INTO courses (slug, title, tagline, level, tags, practice, published, position, show_upcoming, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id'
     ).bind(slug, ...fields).first();
     id = row.id;
   }
@@ -321,16 +333,37 @@ async function saveCourse(env, slugParam, b) {
     (s.lessons || []).forEach((l, li) => {
       stmts.push(
         env.DB.prepare(
-          `INSERT INTO lessons (course_id, section_id, title, youtube, duration, position)
-           VALUES (?, (SELECT id FROM sections WHERE course_id = ? AND position = ?), ?, ?, ?, ?)`
-        ).bind(id, id, si, str(l.title, 200), str(l.youtube, 11), str(l.duration, 12), li)
+          `INSERT INTO lessons (course_id, section_id, title, youtube, duration, position, status, notes)
+           VALUES (?, (SELECT id FROM sections WHERE course_id = ? AND position = ?), ?, ?, ?, ?, ?, ?)`
+        ).bind(id, id, si, str(l.title, 200), str(l.youtube, 11), str(l.duration, 12), li, lessonStatus(l), str(l.notes, 5000))
       );
     });
   });
   await env.DB.batch(stmts);
 
-  const [course] = await loadCourses(env, { slug, includeDrafts: true });
+  const [course] = await loadCourses(env, { slug, includeDrafts: true, admin: true });
   return json({ course });
+}
+
+function lessonStatus(l) {
+  if (LESSON_STATUSES.includes(l.status)) return l.status;
+  return l.youtube ? 'published' : 'idea';
+}
+
+// Quick edits from the Planner board (status / notes / video link) without re-saving the whole course.
+async function updateLesson(env, id, b) {
+  const cur = await env.DB.prepare('SELECT * FROM lessons WHERE id = ?').bind(id).first();
+  if (!cur) throw httpError(404, 'Lesson not found — refresh the page');
+  const youtube = b.youtube !== undefined ? str(b.youtube, 11) : cur.youtube;
+  if (youtube && !/^[A-Za-z0-9_-]{11}$/.test(youtube)) throw httpError(400, `Invalid YouTube id: ${youtube}`);
+  const status = b.status !== undefined ? (LESSON_STATUSES.includes(b.status) ? b.status : cur.status) : cur.status;
+  const notes = b.notes !== undefined ? str(b.notes, 5000) : cur.notes;
+  const title = b.title !== undefined && str(b.title, 200) ? str(b.title, 200) : cur.title;
+  const duration = b.duration !== undefined ? str(b.duration, 12) : cur.duration;
+  const row = await env.DB.prepare('UPDATE lessons SET title = ?, youtube = ?, status = ?, notes = ?, duration = ? WHERE id = ? RETURNING *')
+    .bind(title, youtube, status, notes, duration, id).first();
+  await env.DB.prepare('UPDATE courses SET updated_at = ? WHERE id = ?').bind(now(), cur.course_id).run();
+  return json({ lesson: { id: row.id, title: row.title, youtube: row.youtube, duration: row.duration, status: row.status, notes: row.notes } });
 }
 
 async function deleteCourse(env, slug) {
