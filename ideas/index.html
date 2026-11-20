@@ -8,7 +8,7 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../courses/courses.css">
 <style>
   .main{max-width:1280px;margin:0 auto;padding:24px 20px 60px;width:100%}
@@ -27,14 +27,14 @@
   .filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
   .filters input{width:240px;flex:none}
   .chip{border:1px solid var(--border);background:var(--panel);border-radius:99px;padding:6px 12px;font-size:13px;cursor:pointer;color:var(--muted);font-weight:500}
-  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
   .count{color:var(--muted);font-size:13px;margin-left:auto}
 
   .tabs{display:none;gap:6px;margin-bottom:12px;overflow-x:auto}
   .tabs .chip{white-space:nowrap;flex:none}
   .board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:start}
   .col{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;min-height:120px}
-  .col h2{display:flex;align-items:center;gap:8px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:4px 6px 10px}
+  .col h2{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin:4px 6px 10px}
   .col h2 .dot{width:8px;height:8px;border-radius:50%}
   .col h2 .n{margin-left:auto;font-family:var(--mono)}
   .empty{color:var(--muted);font-size:13px;text-align:center;padding:18px 6px}
@@ -51,15 +51,15 @@
   .card .mv button:hover{color:var(--text);border-color:var(--accent)}
 
   /* Editor dialog */
-  .scrim{position:fixed;inset:0;background:rgba(5,8,14,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:60}
+  .scrim{position:fixed;inset:0;background:rgba(14,26,46,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:60}
   .scrim.show{display:flex}
   .dlg{background:var(--panel);border:1px solid var(--border);border-radius:14px;width:100%;max-width:560px;padding:20px;display:flex;flex-direction:column;gap:12px;max-height:92vh;overflow:auto}
   .dlg h3{margin:0;font-size:17px}
-  .dlg label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .dlg label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted);font-weight:600;}
   .dlg .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .dlg .acts{display:flex;gap:8px;margin-top:4px}
   .dlg .acts .sp{flex:1}
-  .btn.danger{color:#ff6b6b;border-color:#ff6b6b55}
+  .btn.danger{color:var(--err);border-color:var(--err)}
   .meta{font-size:12px;color:var(--muted)}
 
   @media (max-width:900px){
@@ -81,12 +81,12 @@
 </head>
 <body>
 <header>
-  <a class="brand" href="../"><div class="logo">&lt;/&gt;</div><b>YourTechBuddy</b></a>
+  <a class="brand" href="../"><div class="logo">YTB</div><b>yourtechbuddy</b></a>
   <nav>
-    <a href="../courses/">Courses</a>
-    <a href="../admin/">Admin</a>
-    <a href="../planner/">Planner</a>
-    <a href="./" class="active">Ideas</a>
+    <a href="../courses/">courses</a>
+    <a href="../admin/">admin</a>
+    <a href="../planner/">planner</a>
+    <a href="./" class="active">ideas</a>
   </nav>
   <div id="auth"></div>
 </header>
@@ -118,17 +118,17 @@
   const { esc } = YTB;
   const app = document.getElementById('app');
   const CATS = [
-    { id: 'youtube', label: 'YouTube', color: '#ff4d6d' },
-    { id: 'instagram', label: 'Instagram', color: '#e879f9' },
-    { id: 'course', label: 'Course', color: '#7c5cff' },
-    { id: 'website', label: 'Website', color: '#22d3ee' },
-    { id: 'other', label: 'Other', color: '#94a3b8' },
+    { id: 'youtube', label: 'YouTube', color: '#E5484D' },
+    { id: 'instagram', label: 'Instagram', color: '#D6409F' },
+    { id: 'course', label: 'Course', color: '#3E63DD' },
+    { id: 'website', label: 'Website', color: '#0D9488' },
+    { id: 'other', label: 'Other', color: '#8B95A8' },
   ];
   const STATUSES = [
-    { id: 'idea', label: 'Ideas', color: '#94a3b8' },
-    { id: 'planned', label: 'Planned', color: '#f0b429' },
-    { id: 'doing', label: 'In progress', color: '#22d3ee' },
-    { id: 'done', label: 'Done', color: '#3fb950' },
+    { id: 'idea', label: 'Ideas', color: '#8B95A8' },
+    { id: 'planned', label: 'Planned', color: '#D4A72C' },
+    { id: 'doing', label: 'In progress', color: '#3E9BDD' },
+    { id: 'done', label: 'Done', color: '#2F9E5B' },
   ];
   const catOf = (id) => CATS.find((c) => c.id === id) || CATS[4];
   let ideas = [], filterCat = 'all', query = '', mobileCol = 'idea', editing = null;
@@ -162,7 +162,7 @@
     const list = visible();
     const catOpts = CATS.map((c) => `<option value="${c.id}">${c.label}</option>`).join('');
     app.innerHTML = `
-      <h1>💡 Ideas</h1>
+      <h1>Ideas</h1>
       <p class="sub">Private — only you can see this. Capture fast, sort later.</p>
       <form class="add" id="add">
         <input id="a-title" placeholder="New idea… (press Enter to save)" maxlength="200" autocomplete="off">

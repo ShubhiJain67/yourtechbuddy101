@@ -8,7 +8,7 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../courses/courses.css">
 <style>
   .main{max-width:1400px;margin:0 auto;padding:24px 20px 60px;width:100%}
@@ -39,12 +39,12 @@
   .filters input{max-width:280px}
   .filters select{max-width:260px}
   .chip{border:1px solid var(--border);background:var(--panel);border-radius:99px;padding:6px 12px;font-size:13px;cursor:pointer;color:var(--muted);font-weight:500;white-space:nowrap;flex:none}
-  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 
   .tabs{display:none;gap:6px;margin-bottom:12px;overflow-x:auto}
   .board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:start}
   .col{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;min-height:140px}
-  .col h2{display:flex;align-items:center;gap:8px;font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:4px 6px 10px}
+  .col h2{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin:4px 6px 10px}
   .col h2 .dot{width:8px;height:8px;border-radius:50%}
   .col h2 .n{margin-left:auto;font-family:var(--mono)}
   .empty{color:var(--muted);font-size:13px;text-align:center;padding:18px 6px}
@@ -55,7 +55,7 @@
   .card .path{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px}
   .card h3{margin:0;font-size:14px;font-weight:600;line-height:1.35;word-break:break-word}
   .card p{margin:6px 0 0;color:var(--muted);font-size:12.5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap}
-  .card .path .yt{color:#ff4d6d;text-decoration:none;font-weight:600}
+  .card .path .yt{color:var(--err);text-decoration:none;font-weight:600}
   .card .path .yt:hover{text-decoration:underline}
   .col.pub .card{padding:8px 12px}
   .col.pub .card .mv{display:none}
@@ -64,12 +64,12 @@
   .card .mv button{flex:1;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:4px;font-size:11.5px;cursor:pointer;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .card .mv button:hover{color:var(--text);border-color:var(--accent)}
 
-  .scrim{position:fixed;inset:0;background:rgba(5,8,14,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:60}
+  .scrim{position:fixed;inset:0;background:rgba(14,26,46,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:60}
   .scrim.show{display:flex}
   .dlg{background:var(--panel);border:1px solid var(--border);border-radius:14px;width:100%;max-width:580px;padding:20px;display:flex;flex-direction:column;gap:12px;max-height:92vh;overflow:auto}
   .dlg h3{margin:0;font-size:17px}
   .dlg .path{font-size:12px;color:var(--muted);margin-top:-6px}
-  .dlg label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .dlg label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted);font-weight:600;}
   .stages{display:flex;gap:6px;flex-wrap:wrap}
   .stages button{flex:1;min-width:90px;border:1px solid var(--border);background:var(--panel2);border-radius:8px;padding:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted)}
   .stages button.on{color:#fff;border-color:transparent}
@@ -90,11 +90,11 @@
 </head>
 <body>
 <header>
-  <a class="brand" href="../"><div class="logo">&lt;/&gt;</div><b>YourTechBuddy</b></a>
+  <a class="brand" href="../"><div class="logo">YTB</div><b>yourtechbuddy</b></a>
   <nav>
-    <a href="../admin/">Admin</a>
-    <a href="./" class="active">Planner</a>
-    <a href="../ideas/">Ideas</a>
+    <a href="../admin/">admin</a>
+    <a href="./" class="active">planner</a>
+    <a href="../ideas/">ideas</a>
   </nav>
   <div id="auth"></div>
 </header>
@@ -124,11 +124,11 @@
   const { esc } = YTB;
   const app = document.getElementById('app');
   const STAGES = [
-    { id: 'idea', label: 'Idea', color: '#94a3b8' },
-    { id: 'scripted', label: 'Scripted', color: '#f0b429' },
-    { id: 'shot', label: 'Shot', color: '#fb923c' },
-    { id: 'edited', label: 'Edited', color: '#22d3ee' },
-    { id: 'published', label: 'Published', color: '#3fb950' },
+    { id: 'idea', label: 'Idea', color: '#8B95A8' },
+    { id: 'scripted', label: 'Scripted', color: '#D4A72C' },
+    { id: 'shot', label: 'Shot', color: '#E5793A' },
+    { id: 'edited', label: 'Edited', color: '#3E9BDD' },
+    { id: 'published', label: 'Published', color: '#2F9E5B' },
   ];
   const PUBLISHED_LIMIT = 12;
   let courses = [], videos = [], courseFilter = 'all', query = '', mobileCol = 'idea', showAllPublished = false, editing = null;
@@ -187,9 +187,9 @@
 
     app.innerHTML = `
       <div class="top">
-        <div><h1>🎬 Content planner</h1><p>Every video across your courses, from idea to published. Private to you.</p></div>
+        <div><h1>Content planner</h1><p>Every video across your courses, from idea to published. Private to you.</p></div>
         <span class="sp"></span>
-        <a class="btn" href="../admin/">+ Plan videos in Admin</a>
+        <a class="btn" href="../admin/">Plan videos in Admin</a>
       </div>
       <div class="courses">${courseCards}</div>
       <div class="legend">${STAGES.map((s) => `<span><b style="background:${s.color}"></b>${s.label}</span>`).join('')}</div>

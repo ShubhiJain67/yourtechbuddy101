@@ -8,16 +8,16 @@
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../courses/courses.css">
 <style>
   .wrap{max-width:900px;margin:0 auto;padding:40px 20px 60px;width:100%}
   h1{font-size:clamp(26px,3.5vw,34px);margin:0 0 6px;letter-spacing:-.02em}
   .sub{color:var(--muted);margin:0 0 28px}
-  h2{font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:32px 0 12px}
+  h2{font-size:15px;color:var(--muted);margin:32px 0 12px}
   .item{display:flex;gap:16px;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;text-decoration:none}
-  .item:hover{border-color:#3a4456}
-  .item .th{width:160px;flex:none;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:linear-gradient(135deg,#2a1f66,#0e3a44);display:grid;place-items:center;font:700 22px var(--mono)}
+  .item:hover{border-color:var(--text)}
+  .item .th{width:160px;flex:none;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:var(--panel2);border:1px solid var(--border);display:grid;place-items:center;font:700 22px var(--mono)}
   .item .th img{width:100%;height:100%;object-fit:cover}
   .item .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
   .item h3{margin:0;font-size:17px}
@@ -31,11 +31,11 @@
 </head>
 <body>
 <header>
-  <a class="brand" href="../"><div class="logo">&lt;/&gt;</div><b>YourTechBuddy</b></a>
+  <a class="brand" href="../"><div class="logo">YTB</div><b>yourtechbuddy</b></a>
   <nav>
-    <a href="../playground/">Playground</a>
-    <a href="../courses/">Courses</a>
-    <a class="yt" href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a>
+    <a href="../playground/">playground</a>
+    <a href="../courses/">courses</a>
+    <a class="yt" href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">youtube</a>
   </nav>
   <div id="auth"></div>
 </header>
@@ -98,13 +98,13 @@
           <div class="meta"><div class="progress"><i style="width:${r.pct}%"></i></div><span>${status}</span></div>
           ${r.next && r.count ? `<div class="next">Up next: ${esc(r.next.title)}</div>` : ''}
         </div>
-        <span class="btn ${r.count ? 'primary' : ''}">${r.pct === 100 ? 'Review' : r.count ? 'Continue' : 'Start'} →</span>
+        <span class="btn ${r.count ? 'primary' : ''}">${r.pct === 100 ? 'Review' : r.count ? 'Continue' : 'Start'}</span>
       </a>`;
     };
 
     content.innerHTML =
       (started.length ? `<h2>In progress</h2>${started.map(card).join('')}`
-                      : `<div class="empty">You haven't started a course yet. Pick one below 👇</div>`) +
+                      : `<div class="empty">You haven't started a course yet. Pick one below.</div>`) +
       (rest.length ? `<h2>${started.length ? 'Explore more' : 'Courses'}</h2>${rest.map(card).join('')}` : '');
   })();
 </script>

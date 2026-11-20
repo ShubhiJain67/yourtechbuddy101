@@ -8,12 +8,12 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../courses/courses.css">
 <style>
   .layout{display:grid;grid-template-columns:260px minmax(0,1fr);flex:1;min-height:0}
   .side{border-right:1px solid var(--border);background:var(--panel);padding:16px 12px;display:flex;flex-direction:column;gap:6px}
-  .side h3{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:4px 8px 8px}
+  .side h3{font-size:12px;color:var(--muted);margin:4px 8px 8px}
   .side .c{display:block;width:100%;text-align:left;padding:9px 10px;border-radius:8px;background:none;border:0;cursor:pointer;font-size:14px}
   .side .c:hover{background:var(--panel2)}
   .side .c.on{background:var(--panel2);box-shadow:inset 3px 0 0 var(--accent)}
@@ -23,9 +23,9 @@
   .gate b{color:var(--text);font-size:18px}
   .head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px;position:sticky;top:55px;background:var(--bg);padding:10px 0;z-index:4;border-bottom:1px solid var(--border)}
   .head h1{font-size:22px;margin:0;margin-right:auto;letter-spacing:-.01em}
-  .dirty{font-size:12px;color:#f0b429}
+  .dirty{font:12px var(--mono);color:var(--warn)}
   .fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:28px}
-  label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted);font-weight:600;}
   label.wide{grid-column:1/-1}
   input,select{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;color:var(--text);font:inherit;font-size:14px;text-transform:none;letter-spacing:0;font-weight:400;width:100%}
   input:focus,select:focus{outline:none;border-color:var(--accent)}
@@ -37,19 +37,19 @@
   .sec-head input{font-weight:600}
   .sec-head .n{font-size:12px;color:var(--muted);white-space:nowrap}
   .ib{background:none;border:1px solid var(--border);border-radius:7px;width:32px;height:32px;cursor:pointer;color:var(--muted);flex:none;font-size:13px}
-  .ib:hover{color:var(--text);border-color:#3a4456}
-  .ib.del:hover{color:#ff6b6b;border-color:#ff6b6b66}
+  .ib:hover{color:var(--text);border-color:var(--text)}
+  .ib.del:hover{color:var(--err);border-color:var(--err)}
   .ls{list-style:none;margin:0;padding:0}
   .ls li{display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border)}
   .ls li:last-child{border-bottom:0}
   .ls .i{width:22px;text-align:right;font:600 12px var(--mono);color:var(--muted);flex:none}
-  .ls img,.ls .noimg{width:80px;aspect-ratio:16/9;border-radius:5px;object-fit:cover;flex:none;background:#0e3a44;display:grid;place-items:center;font-size:10px;color:var(--muted)}
+  .ls img,.ls .noimg{width:80px;aspect-ratio:16/9;border-radius:5px;object-fit:cover;flex:none;background:var(--panel2);border:1px dashed var(--border);display:grid;place-items:center;font-size:10px;color:var(--muted)}
   .ls .meta{font:12px var(--mono);color:var(--muted);white-space:nowrap}
   .ls select{width:auto;max-width:150px;padding:6px 8px;font-size:12px}
   .ls .empty{color:var(--muted);font-size:14px;padding:14px 12px}
-  .add{display:flex;gap:8px;padding:12px;background:rgba(124,92,255,.05);border-top:1px solid var(--border);flex-wrap:wrap}
+  .add{display:flex;gap:8px;padding:12px;background:var(--panel2);border-top:1px solid var(--border);flex-wrap:wrap}
   .add input{flex:1;min-width:220px}
-  .btn.danger{color:#ff6b6b;border-color:#ff6b6b55}
+  .btn.danger{color:var(--err);border-color:var(--err)}
   .hint{color:var(--muted);font-size:13px;margin:-6px 0 18px}
   @media (max-width:900px){
     .layout{grid-template-columns:1fr}
@@ -87,13 +87,13 @@
 </head>
 <body>
 <header>
-  <a class="brand" href="../"><div class="logo">&lt;/&gt;</div><b>YourTechBuddy</b></a>
+  <a class="brand" href="../"><div class="logo">YTB</div><b>yourtechbuddy</b></a>
   <nav>
-    <a href="../playground/">Playground</a>
-    <a href="../courses/">Courses</a>
-    <a href="./" class="active">Admin</a>
-    <a href="../planner/">Planner</a>
-    <a href="../ideas/">Ideas</a>
+    <a href="../playground/">playground</a>
+    <a href="../courses/">courses</a>
+    <a href="./" class="active">admin</a>
+    <a href="../planner/">planner</a>
+    <a href="../ideas/">ideas</a>
   </nav>
   <div id="auth"></div>
 </header>
@@ -115,11 +115,11 @@
     sections: (c.sections || []).map((s) => ({ title: s.title, lessons: s.lessons.map((l) => ({ title: l.title, youtube: l.youtube, duration: l.duration || '', status: l.status || (l.youtube ? 'published' : 'idea'), notes: l.notes || '' })) })),
   });
   const STAGES = [
-    { id: 'idea', label: 'Idea', color: '#94a3b8' },
-    { id: 'scripted', label: 'Scripted', color: '#f0b429' },
-    { id: 'shot', label: 'Shot', color: '#fb923c' },
-    { id: 'edited', label: 'Edited', color: '#22d3ee' },
-    { id: 'published', label: 'Published', color: '#3fb950' },
+    { id: 'idea', label: 'Idea', color: '#8B95A8' },
+    { id: 'scripted', label: 'Scripted', color: '#D4A72C' },
+    { id: 'shot', label: 'Shot', color: '#E5793A' },
+    { id: 'edited', label: 'Edited', color: '#3E9BDD' },
+    { id: 'published', label: 'Published', color: '#2F9E5B' },
   ];
   const stageOf = (id) => STAGES.find((s) => s.id === id) || STAGES[0];
   const openNotes = new Set();

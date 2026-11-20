@@ -9,41 +9,43 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0b0e14; --panel:#11151d; --panel2:#151a24; --border:#232a36;
-    --text:#e6edf3; --muted:#8b95a5; --accent:#7c5cff; --accent-2:#22d3ee;
-    --ok:#3fb950; --err:#ff6b6b; --warn:#f0b429;
-    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --bg:#0E1A2E; --panel:#13213A; --panel2:#182A47; --border:#2A3E63;
+    --text:#E6ECF8; --muted:#93A3C2; --accent:#7FA6FF; --accent-2:#7FA6FF; --on-accent:#0E1A2E;
+    --ok:#5ED394; --err:#FF7A70; --warn:#F2B44C;
+    --mono:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    color-scheme:dark;
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0}
-  body{background:var(--bg);color:var(--text);font:14px/1.5 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;display:flex;flex-direction:column}
+  body{background:var(--bg);color:var(--text);font:14px/1.5 'IBM Plex Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;display:flex;flex-direction:column}
   button,select,textarea{font:inherit;color:inherit}
 
   /* Header */
-  header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--panel);flex-wrap:wrap}
+  header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg);flex-wrap:wrap}
   .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);margin-right:auto}
-  .logo{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font:600 14px var(--mono);color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent-2))}
-  .brand b{font-weight:700;font-size:16px;letter-spacing:-.01em}
-  .brand span{color:var(--muted);font-size:13px;display:block;line-height:1.1}
+  .logo{width:26px;height:28px;border:1.5px solid var(--text);border-radius:3px;flex:none;color:transparent;font-size:0;overflow:hidden;
+    background:linear-gradient(var(--accent),var(--accent)) 0 0/100% 9px no-repeat,linear-gradient(var(--text),var(--text)) 0 9px/100% 1.5px no-repeat,linear-gradient(var(--text),var(--text)) 0 17px/100% 1.5px no-repeat}
+  .brand b{font:600 16px/1 var(--mono);letter-spacing:-.02em}
+  .brand span{color:var(--muted);font:13px var(--mono);display:block;line-height:1.3}
   .controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  select{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:7px 30px 7px 10px;cursor:pointer;appearance:none;
+  select{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:7px 30px 7px 10px;cursor:pointer;appearance:none;font-family:var(--mono);
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238b95a5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
-  .btn{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;cursor:pointer;text-decoration:none;white-space:nowrap}
-  .btn:hover{border-color:#3a4456;background:#1a2030}
-  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;padding:7px 16px}
-  .btn.primary:hover{background:#6a48ff}
+  .btn{display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1.5px solid var(--border);border-radius:6px;padding:7px 12px;cursor:pointer;text-decoration:none;white-space:nowrap}
+  .btn:hover{border-color:var(--text);background:var(--panel2)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600;padding:7px 16px}
+  .btn.primary:hover{filter:brightness(1.08)}
   .btn:disabled{opacity:.6;cursor:not-allowed}
-  .btn.yt{color:#ff6b6b}
-  kbd{font:11px var(--mono);opacity:.75;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:0 4px}
+  .btn.yt{color:var(--text)}
+  kbd{font:11px var(--mono);opacity:.8;border:1px solid currentColor;border-radius:4px;padding:0 4px}
 
   /* Layout */
   main{flex:1;display:flex;min-height:0}
   .editor-wrap{flex:1;min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--border)}
   .side{width:40%;min-width:320px;max-width:640px;display:flex;flex-direction:column;min-height:0}
-  .bar{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--panel);font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+  .bar{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--panel);font:500 12.5px var(--mono);color:var(--muted)}
   .bar .right{margin-left:auto;display:flex;gap:8px;align-items:center;text-transform:none;letter-spacing:0;font-weight:500}
   .link{background:none;border:0;color:var(--muted);cursor:pointer;padding:0;font-size:12px}
   .link:hover{color:var(--text)}
@@ -60,15 +62,15 @@
   #output .placeholder{color:var(--muted)}
 
   .pill{font-size:11px;padding:2px 8px;border-radius:99px;border:1px solid var(--border);color:var(--muted);font-weight:600}
-  .pill.run{color:var(--accent-2);border-color:rgba(34,211,238,.35)}
-  .pill.ok{color:var(--ok);border-color:rgba(63,185,80,.35)}
-  .pill.err{color:var(--err);border-color:rgba(255,107,107,.35)}
+  .pill.run{color:var(--accent);border-color:var(--accent)}
+  .pill.ok{color:var(--ok);border-color:var(--ok)}
+  .pill.err{color:var(--err);border-color:var(--err)}
 
   footer{display:flex;gap:12px;align-items:center;padding:6px 16px;border-top:1px solid var(--border);background:var(--panel);font-size:12px;color:var(--muted)}
   footer .right{margin-left:auto}
   footer a{color:var(--muted)}
 
-  .toast{position:fixed;bottom:44px;left:50%;transform:translateX(-50%) translateY(10px);background:#1f2633;border:1px solid var(--border);padding:8px 14px;border-radius:8px;opacity:0;transition:.2s;pointer-events:none}
+  .toast{position:fixed;bottom:44px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--panel);border:1.5px solid var(--text);padding:8px 14px;border-radius:6px;opacity:0;transition:.2s;pointer-events:none}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
   @media (max-width: 900px){
@@ -80,17 +82,13 @@
   }
 
   a.btn{color:var(--text)}
-  a.btn.yt{color:#ff6b6b}
+  a.btn.yt{color:var(--text)}
   /* Light theme */
   [data-theme="light"]{
-    --bg:#f6f7fb; --panel:#ffffff; --panel2:#f0f2f7; --border:#e2e6ee;
-    --text:#0f172a; --muted:#5b6475; --accent:#6d4aff; --accent-2:#0e7490;
-    --ok:#15803d; --err:#dc2626; --warn:#b45309; color-scheme:light;
+    --bg:#F6F8FB; --panel:#FFFFFF; --panel2:#EFF2F7; --border:#C9D2E0;
+    --text:#17223B; --muted:#56637D; --accent:#2350D8; --accent-2:#2350D8; --on-accent:#FFFFFF;
+    --ok:#178A4C; --err:#C8302C; --warn:#B26B00; color-scheme:light;
   }
-  [data-theme="light"] .btn:hover{border-color:#c9d1de;background:#e8ebf3}
-  [data-theme="light"] .btn.primary:hover{background:#5b3ae6}
-  [data-theme="light"] .toast{background:#ffffff;box-shadow:0 8px 24px rgba(0,0,0,.12)}
-  [data-theme="light"] kbd{border-color:rgba(255,255,255,.6)}
   @media (max-width: 600px){
     header{padding:8px 10px;gap:8px}
     .controls{width:100%;gap:6px}
@@ -107,16 +105,16 @@
 <header>
   <a class="brand" href="../">
     <div class="logo">&lt;/&gt;</div>
-    <div><b>YourTechBuddy</b><span>Playground</span></div>
+    <div><b>yourtechbuddy</b><span>/playground</span></div>
   </a>
   <div class="controls">
     <select id="lang" aria-label="Language"></select>
     <button class="btn primary" id="run" title="Run (Ctrl/Cmd + Enter)">▶ Run <kbd class="hide-sm">⌘↵</kbd></button>
-    <button class="btn" id="share" title="Copy a link to this code">🔗 Share</button>
+    <button class="btn" id="share" title="Copy a link to this code">Share</button>
     <button class="btn" id="reset" title="Reset to starter code">↺ Reset</button>
-    <a class="btn" href="../courses/">📚 Courses</a>
+    <a class="btn" href="../courses/">Courses</a>
     <span id="auth"></span>
-    <a class="btn yt hide-sm" href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">▶ YouTube</a>
+    <a class="btn yt hide-sm" href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a>
   </div>
 </header>
 
@@ -425,17 +423,17 @@ function loadMonaco() {
     require(['vs/editor/editor.main'], () => {
       monaco.editor.defineTheme('ytb-light', {
         base: 'vs', inherit: true, rules: [],
-        colors: { 'editor.background': '#ffffff', 'editorLineNumber.foreground': '#b6bfcc', 'editor.lineHighlightBackground': '#f4f6fa' }
+        colors: { 'editor.background': '#FFFFFF', 'editorLineNumber.foreground': '#A9B4C7', 'editor.lineHighlightBackground': '#F2F5FA', 'editorCursor.foreground': '#2350D8' }
       });
       const monacoTheme = () => document.documentElement.getAttribute('data-theme') === 'light' ? 'ytb-light' : 'ytb';
       window.addEventListener('ytb:theme', () => monaco.editor.setTheme(monacoTheme()));
       monaco.editor.defineTheme('ytb', {
         base: 'vs-dark', inherit: true, rules: [],
-        colors: { 'editor.background': '#0b0e14', 'editorLineNumber.foreground': '#3b4556', 'editor.lineHighlightBackground': '#11151d' }
+        colors: { 'editor.background': '#0E1A2E', 'editorLineNumber.foreground': '#3C5482', 'editor.lineHighlightBackground': '#13213A', 'editorCursor.foreground': '#7FA6FF' }
       });
       monacoEditor = monaco.editor.create($('editor'), {
         value: initialCode(), language: LANGS[currentLang].monaco, theme: monacoTheme(),
-        fontFamily: "'JetBrains Mono', Menlo, monospace", fontSize: 14, fontLigatures: true,
+        fontFamily: "'IBM Plex Mono', Menlo, monospace", fontSize: 14, fontLigatures: true,
         minimap: { enabled: false }, automaticLayout: true, scrollBeyondLastLine: false,
         padding: { top: 12 }, tabSize: 4, smoothScrolling: true, cursorBlinking: 'smooth',
       });

@@ -8,36 +8,28 @@
 <meta name="description" content="Free, structured video courses by YourTechBuddy: Low Level Design, design patterns and more. Watch here and practice in the browser.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="courses.css">
 <style>
-  .hero{width:100%;max-width:1100px;margin:0 auto;padding:48px 20px 24px}
-  .hero h1{font-size:clamp(28px,4vw,40px);margin:0 0 8px;letter-spacing:-.02em}
-  .hero p{color:var(--muted);margin:0;font-size:17px}
-  .grid{width:100%;max-width:1100px;margin:0 auto;padding:8px 20px 48px;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px}
-  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;text-decoration:none;transition:transform .15s,border-color .15s}
-  .card:hover{transform:translateY(-2px);border-color:#3a4456}
-  .thumb{aspect-ratio:16/9;background:linear-gradient(135deg,#2a1f66,#0e3a44);display:grid;place-items:center;position:relative;overflow:hidden}
-  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
-  .thumb .big{font:700 44px var(--mono);color:rgba(255,255,255,.9);letter-spacing:-.02em}
-  .thumb .count{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.75);font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px}
-  .body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:10px;flex:1}
-  .body h2{font-size:18px;margin:0;letter-spacing:-.01em}
-  .body p{margin:0;color:var(--muted);font-size:14px}
-  .tags{display:flex;flex-wrap:wrap;gap:6px}
-  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;padding-top:6px}
-  .pct{font-size:12px;color:var(--muted)}
-  .row .progress{flex:1}
-  @media (max-width:600px){ .grid{grid-template-columns:1fr} .hero{padding:32px 16px 16px} .grid{padding:8px 16px 40px} }
+  .hero{width:100%;max-width:1120px;margin:0 auto;padding:52px 24px 28px}
+  .hero h1{font:700 clamp(30px,4vw,44px)/1.1 var(--sans);margin:0 0 10px;letter-spacing:-.03em}
+  .hero p{color:var(--muted);margin:0;font-size:17px;max-width:56ch}
+  .grid{width:100%;max-width:1120px;margin:0 auto;padding:8px 24px 56px;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;align-items:start}
+  .uml .attrs .draft{color:var(--warn)}
+  .uml .ops{display:flex;align-items:center;gap:12px}
+  .uml .ops .progress{flex:1}
+  .uml .ops .pct{color:var(--muted);font-size:12.5px}
+  .empty{color:var(--muted)}
+  @media (max-width:600px){ .grid{grid-template-columns:1fr;padding:8px 16px 40px} .hero{padding:32px 16px 16px} }
 </style>
 </head>
 <body>
 <header>
-  <a class="brand" href="../"><div class="logo">&lt;/&gt;</div><b>YourTechBuddy</b></a>
+  <a class="brand" href="../"><div class="logo">YTB</div><b>yourtechbuddy</b></a>
   <nav>
-    <a href="../playground/">Playground</a>
-    <a href="./" class="active">Courses</a>
-    <a class="yt" href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a>
+    <a href="../playground/">playground</a>
+    <a href="./" class="active">courses</a>
+    <a class="yt" href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">youtube</a>
   </nav>
   <div id="auth"></div>
 </header>
@@ -74,28 +66,22 @@
       const pct = liveCount ? Math.min(100, Math.round((done / liveCount) * 100)) : 0;
       const last = read('ytb:last:' + c.slug);
       const lastQ = last && typeof last === 'object' ? (last.v ? '&v=' + encodeURIComponent(last.v) : '&l=' + last.l) : '';
-      const first = live[0];
-      const thumb = first
-        ? `<img src="https://i.ytimg.com/vi/${encodeURIComponent(first.youtube)}/hqdefault.jpg" alt="" loading="lazy">`
-        : `<span class="big">${esc(c.slug.toUpperCase())}</span>`;
-      const countLabel = isPlaylist ? (liveCount ? `${liveCount} lessons` : 'Full video course')
-        : (live.length === lessons.length ? `${lessons.length} lessons` : `${live.length} of ${lessons.length} lessons live`);
-      const draft = c.published === false ? '<span class="tag" style="color:#f0b429;border-color:#f0b42955">Draft</span>' : '';
-
+      const groups = (c.sections || []).filter((s) => s.lessons.some((l) => l.youtube)).length;
       const a = document.createElement('a');
-      a.className = 'card';
+      a.className = 'uml';
       a.href = `watch.html?c=${encodeURIComponent(c.slug)}${lastQ}`;
       a.innerHTML = `
-        <div class="thumb">${thumb}<span class="count">${countLabel}</span></div>
-        <div class="body">
-          <h2>${esc(c.title)}</h2>
-          <p>${esc(c.tagline || '')}</p>
-          <div class="tags">${draft}${[c.level, ...(c.tags || [])].filter(Boolean).map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</div>
-          <div class="row">
-            <div class="progress"><i style="width:${pct}%"></i></div>
-            <span class="pct">${done ? pct + '% done' : 'Not started'}</span>
-            <span class="btn primary">${done ? 'Continue' : 'Start'} →</span>
-          </div>
+        <div class="name"><span class="stereo">«course»</span><b>${esc(c.title)}</b>${c.tagline ? `<small>${esc(c.tagline)}</small>` : ''}</div>
+        <div class="attrs">
+          + lessons <span>= ${liveCount || '—'}</span><br>
+          ${groups > 1 ? `+ groups <span>= ${groups}</span><br>` : ''}
+          ${c.level ? `+ level <span>= "${esc(c.level)}"</span><br>` : ''}
+          ${c.published === false ? '<span class="draft">+ draft = true</span>' : ''}
+        </div>
+        <div class="ops">
+          <span class="call">+ ${done ? 'continue' : 'start'}()</span>
+          <div class="progress" title="${pct}% complete"><i style="width:${pct}%"></i></div>
+          <span class="pct">${pct}%</span>
         </div>`;
       grid.appendChild(a);
     }

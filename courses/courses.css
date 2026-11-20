@@ -1,66 +1,96 @@
+/* YourTechBuddy design system — "whiteboard" (light) / "blueprint" (dark).
+   The visual language comes from the subject: UML class diagrams on an engineering grid. */
+
 :root{
-  --bg:#0b0e14; --panel:#11151d; --panel2:#151a24; --border:#232a36;
-  --text:#e6edf3; --muted:#8b95a5; --accent:#7c5cff; --accent-2:#22d3ee; --ok:#3fb950;
-  --mono:'JetBrains Mono', ui-monospace, Menlo, monospace;
+  /* blueprint (dark) */
+  --bg:#0E1A2E; --grid:#132240; --panel:#13213A; --panel2:#182A47;
+  --border:#2A3E63; --text:#E6ECF8; --muted:#93A3C2;
+  --accent:#7FA6FF; --accent-2:#7FA6FF; --on-accent:#0E1A2E;
+  --ok:#5ED394; --warn:#F2B44C; --err:#FF7A70;
+  --sans:'IBM Plex Sans', system-ui, -apple-system, Segoe UI, sans-serif;
+  --mono:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --r:6px;
+  color-scheme:dark;
 }
-*{box-sizing:border-box}
-html,body{margin:0}
-body{background:var(--bg);color:var(--text);font:15px/1.55 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh;display:flex;flex-direction:column}
-a{color:inherit}
-button{font:inherit;color:inherit}
-
-/* Header (shared look with the Playground) */
-header{display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--panel);position:sticky;top:0;z-index:5}
-.brand{display:flex;align-items:center;gap:10px;text-decoration:none;margin-right:auto}
-.logo{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font:600 14px var(--mono);color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent-2))}
-.brand b{font-weight:700;font-size:16px;letter-spacing:-.01em}
-nav{display:flex;gap:4px}
-nav a{text-decoration:none;color:var(--muted);padding:7px 12px;border-radius:8px;font-size:14px;font-weight:500}
-nav a:hover{color:var(--text);background:var(--panel2)}
-nav a.active{color:var(--text);background:var(--panel2)}
-nav a.yt{color:#ff6b6b}
-
-.btn{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;cursor:pointer;text-decoration:none;white-space:nowrap;font-size:14px}
-.btn:hover{border-color:#3a4456;background:#1a2030}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
-.btn.primary:hover{background:#6a48ff}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.btn.done{border-color:rgba(63,185,80,.5);color:var(--ok)}
-
-.progress{height:6px;border-radius:99px;background:var(--panel2);overflow:hidden}
-.progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:99px;transition:width .3s}
-
-.tag{font-size:12px;color:var(--muted);border:1px solid var(--border);border-radius:99px;padding:2px 9px}
-.soon{font-size:11px;color:var(--muted);border:1px dashed var(--border);border-radius:99px;padding:1px 7px;white-space:nowrap}
-
-footer{margin-top:auto;padding:14px 20px;border-top:1px solid var(--border);color:var(--muted);font-size:13px}
-
-@media (max-width:640px){ .brand b{display:none} nav a{padding:7px 9px} }
-
-/* ---------------- Light theme ---------------- */
-:root{color-scheme:dark}
 [data-theme="light"]{
-  --bg:#f6f7fb; --panel:#ffffff; --panel2:#f0f2f7; --border:#e2e6ee;
-  --text:#0f172a; --muted:#5b6475; --accent:#6d4aff; --accent-2:#0e7490; --ok:#15803d;
+  /* whiteboard (light) */
+  --bg:#F6F8FB; --grid:#E3E8F1; --panel:#FFFFFF; --panel2:#EFF2F7;
+  --border:#C9D2E0; --text:#17223B; --muted:#56637D;
+  --accent:#2350D8; --accent-2:#2350D8; --on-accent:#FFFFFF;
+  --ok:#178A4C; --warn:#B26B00; --err:#C8302C;
   color-scheme:light;
 }
-body{transition:background-color .2s,color .2s}
-[data-theme="light"] .btn:hover{background:#e8ebf3;border-color:#c9d1de}
-[data-theme="light"] .btn.primary:hover{background:#5b3ae6;border-color:#5b3ae6}
-[data-theme="light"] .card:hover,[data-theme="light"] .ccard:hover,[data-theme="light"] .feat:hover,
-[data-theme="light"] .item:hover,[data-theme="light"] .ib:hover{border-color:#c9d1de}
-[data-theme="light"] .doc p,[data-theme="light"] .doc li,[data-theme="light"] .about p{color:#334155}
-[data-theme="light"] header{box-shadow:0 1px 0 rgba(15,23,42,.04)}
-/* Always-dark elements keep their dark palette in light mode */
-[data-theme="light"] .code{--panel:#11151d;--border:#232a36;--muted:#8b95a5}
-[data-theme="light"] .placeholder{--muted:#cbd5e1;color:#fff}
-.band{color:#fff}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background-color:var(--bg);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;
+  color:var(--text);font:16px/1.6 var(--sans);
+  min-height:100vh;display:flex;flex-direction:column;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+::selection{background:var(--accent);color:var(--on-accent)}
+
+/* Header */
+header{display:flex;align-items:center;gap:14px;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:5}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;margin-right:auto}
+/* Logo: a tiny UML class box (name / fields / methods) */
+.logo{width:26px;height:28px;border:1.5px solid var(--text);border-radius:3px;flex:none;color:transparent;font-size:0;overflow:hidden;
+  background:
+    linear-gradient(var(--accent),var(--accent)) 0 0/100% 9px no-repeat,
+    linear-gradient(var(--text),var(--text)) 0 9px/100% 1.5px no-repeat,
+    linear-gradient(var(--text),var(--text)) 0 17px/100% 1.5px no-repeat}
+.brand b{font:600 16px/1 var(--mono);letter-spacing:-.02em}
+.brand span{display:none}
+nav{display:flex;gap:2px}
+nav a{text-decoration:none;color:var(--muted);padding:6px 10px;font:500 14px var(--mono);border-radius:var(--r)}
+nav a:hover{color:var(--text)}
+nav a.active{color:var(--text);box-shadow:inset 0 -2px 0 var(--accent);border-radius:0}
+nav a.yt{color:var(--muted)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--panel);border:1.5px solid var(--border);border-radius:var(--r);padding:8px 14px;cursor:pointer;text-decoration:none;white-space:nowrap;font:500 14px var(--sans);color:var(--text)}
+.btn:hover{border-color:var(--text)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.btn.primary:hover{filter:brightness(1.08);border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.done{border-color:var(--ok);color:var(--ok)}
+
+.progress{height:6px;border-radius:99px;background:var(--panel2);overflow:hidden;border:1px solid var(--border)}
+.progress > i{display:block;height:100%;background:var(--ok);transition:width .3s}
+
+.tag{font:500 12px var(--mono);color:var(--muted);border:1px solid var(--border);border-radius:4px;padding:1px 7px;background:var(--panel)}
+.soon{font:500 11px var(--mono);color:var(--muted);border:1px dashed var(--border);border-radius:4px;padding:1px 6px;white-space:nowrap}
+
+/* UML class box — the signature component */
+.uml{background:var(--panel);border:1.5px solid var(--text);border-radius:3px;display:flex;flex-direction:column;text-decoration:none;color:var(--text)}
+.uml > .name{padding:12px 16px 10px;text-align:center;border-bottom:1.5px solid var(--text)}
+.uml .stereo{display:block;font:400 12px var(--mono);color:var(--muted)}
+.uml .name b{display:block;font:600 17px/1.3 var(--sans)}
+.uml .name small{display:block;color:var(--muted);font-size:13.5px;line-height:1.45;margin-top:4px}
+.uml > .attrs,.uml > .ops{padding:10px 16px;font:13.5px/1.75 var(--mono)}
+.uml > .attrs{border-bottom:1.5px solid var(--text)}
+.uml .attrs span,.uml .ops span{color:var(--muted)}
+.uml .ops .call{color:var(--accent);font-weight:600}
+a.uml:hover{border-color:var(--accent)}
+a.uml:hover > .name,a.uml:hover > .attrs{border-color:var(--accent)}
+
+footer{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);color:var(--muted);font-size:13px;background:var(--bg)}
+footer a{color:var(--muted)}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 /* Phone header */
 @media (max-width:600px){
   header{padding:10px 12px;gap:8px}
+  .brand b{display:none}
   nav{gap:0}
-  nav a{padding:6px 8px;font-size:13.5px}
+  nav a{padding:6px 7px;font-size:13px}
   nav a.yt{display:none}
   .theme-toggle,.ytb-avatar{width:32px!important;height:32px!important}
 }
