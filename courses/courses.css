@@ -83,7 +83,7 @@ a.uml:hover > .name,a.uml:hover > .attrs{border-color:var(--accent)}
 footer{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);color:var(--muted);font-size:13px;background:var(--bg)}
 footer a{color:var(--muted)}
 
-@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
 
 /* Phone header */
 @media (max-width:600px){
@@ -94,3 +94,46 @@ footer a{color:var(--muted)}
   nav a.yt{display:none}
   .theme-toggle,.ytb-avatar{width:32px!important;height:32px!important}
 }
+
+/* ---------- Affordance: make clickable things feel pressable ---------- */
+:root{--edge:#06101F;--lift:#7FA6FF}
+[data-theme="light"]{--edge:#A9B6CC;--lift:#2350D8}
+a,button,select,summary,[role="button"],[data-go],[data-act],[data-open],[data-course],[data-tab],[data-cat]{cursor:pointer}
+button:disabled,.btn:disabled{cursor:not-allowed}
+
+/* Buttons: a solid bottom edge like a key; lift on hover, press on click */
+.btn{box-shadow:0 2px 0 var(--edge);transition:transform .08s ease,box-shadow .08s ease,border-color .12s,background-color .12s,filter .12s}
+.btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 3px 0 var(--edge);border-color:var(--text)}
+.btn:active:not(:disabled){transform:translateY(1px);box-shadow:0 0 0 var(--edge)}
+.btn.primary{box-shadow:0 2px 0 color-mix(in srgb,var(--accent) 55%,#000)}
+.btn.primary:hover:not(:disabled){box-shadow:0 3px 0 color-mix(in srgb,var(--accent) 55%,#000);filter:brightness(1.06)}
+.btn.primary:active:not(:disabled){box-shadow:0 0 0 transparent}
+.btn:disabled{box-shadow:none}
+
+/* UML cards that are links: lift with a blue offset shadow */
+a.uml{transition:transform .12s ease,box-shadow .12s ease,border-color .12s}
+a.uml:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--lift);border-color:var(--lift)}
+a.uml:active{transform:translate(0,0);box-shadow:1px 1px 0 var(--lift)}
+a.uml .ops .call{text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;transition:text-decoration-color .12s}
+a.uml:hover .ops .call{text-decoration-color:currentColor}
+
+/* Links inside text read as links */
+main p a,.doc a,figcaption a,.hint a,.note a,footer a{color:var(--accent);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+main p a:hover,.doc a:hover,figcaption a:hover,footer a:hover{text-decoration-thickness:2px}
+footer a{color:var(--muted)}
+footer a:hover{color:var(--text)}
+
+/* Nav: clear hover target */
+nav a{transition:background-color .12s,color .12s}
+nav a:hover{background:var(--panel2);color:var(--text)}
+nav a.active:hover{background:transparent}
+
+/* Rows and list items that are clickable */
+.lesson,.tree a.row,.steps li button,.side .c,.item,.card,.cp,.att a{transition:background-color .12s,border-color .12s,transform .12s}
+.tree a.row{margin:0 -10px;padding:0 10px;border-radius:4px}
+.tree a.row:hover{background:var(--panel2)}
+.tree a.row:hover .t{text-decoration:underline;text-underline-offset:3px}
+.item:hover,.card:hover,.cp:hover{border-color:var(--lift)}
+.lesson:hover .t{text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--border)}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.btn:hover,a.uml:hover{transform:none!important}}

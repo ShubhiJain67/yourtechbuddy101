@@ -98,6 +98,18 @@
     .bar{padding:7px 12px}
     footer{flex-wrap:wrap;gap:6px}
   }
+  /* Pressable buttons */
+  :root{--edge:#06101F}
+  [data-theme="light"]{--edge:#A9B6CC}
+  .btn{box-shadow:0 2px 0 var(--edge);transition:transform .08s ease,box-shadow .08s ease,border-color .12s,filter .12s}
+  .btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 3px 0 var(--edge);border-color:var(--text)}
+  .btn:active:not(:disabled){transform:translateY(1px);box-shadow:none}
+  .btn.primary{box-shadow:0 2px 0 color-mix(in srgb,var(--accent) 55%,#000)}
+  .btn:disabled{box-shadow:none;cursor:not-allowed}
+  select{box-shadow:0 2px 0 var(--edge)}
+  select:hover{border-color:var(--text)}
+  .link{text-decoration:underline;text-underline-offset:3px}
+  footer a{text-decoration:underline;text-underline-offset:3px}
 </style>
 </head>
 <body>
