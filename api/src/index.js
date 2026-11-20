@@ -12,6 +12,8 @@
 //           DELETE /api/admin/courses/:slug
 //           GET    /api/admin/youtube?url=..&mode=video|playlist
 //           PUT    /api/admin/lessons/:id     { status, notes, youtube, title, duration }
+//           GET/PUT/DELETE /api/admin/problems[/:slug]   (practice problems + hidden rubrics)
+// Practice: GET /api/practice/problems[/:slug], /api/practice/usage, CRUD /api/practice/attempts[/:id], POST .../review|twist|finish
 //           GET/POST /api/admin/ideas, PUT/DELETE /api/admin/ideas/:id   (private ideas board)
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8' };
@@ -74,6 +76,11 @@ async function route(req, env) {
   if (path === '/api/progress/merge' && m === 'POST') {
     const user = await requireUser(req, env);
     return mergeProgress(env, user, await readJSON(req));
+  }
+
+  if (path.startsWith('/api/practice/') || path.startsWith('/api/admin/problems')) {
+    const res = await practiceRoutes(req, env, path, m, url);
+    if (res) return res;
   }
 
   if (path.startsWith('/api/admin/')) {
@@ -524,4 +531,311 @@ async function youtubeLookup(env, input, mode) {
   }
 
   throw httpError(400, "That doesn't look like a YouTube video or playlist link");
+}
+
+/* ------------------------------ LLD interview practice ------------------------------ */
+
+const PRACTICE_STEPS = ['requirements', 'entities', 'uml', 'code', 'twist'];
+const STEP_INFO = {
+  requirements: { name: 'Requirements', expect: 'Clarifying questions, functional and non-functional requirements, and an explicit scope (what is in and out).' },
+  entities: { name: 'Entities & relationships', expect: 'Core classes/entities, their key attributes, and relationships between them (is-a / has-a, multiplicities).' },
+  uml: { name: 'UML + design patterns', expect: 'A UML class diagram (Mermaid classDiagram syntax) and the design patterns used, each with a one-line reason.' },
+  code: { name: 'Implementation', expect: 'Code for the core classes and the key methods, consistent with the UML.' },
+  twist: { name: 'The twist', expect: "The candidate's answer to the interviewer's follow-up change: what changes in the design and code, and why the change stays contained." },
+};
+const REVIEW_SCHEMA = {
+  type: 'object',
+  properties: {
+    score: { type: 'integer', minimum: 0, maximum: 10 },
+    verdict: { type: 'string', enum: ['ready', 'revise'] },
+    summary: { type: 'string' },
+    strengths: { type: 'array', items: { type: 'string' } },
+    gaps: { type: 'array', items: { type: 'string' } },
+    followUp: { type: 'string' },
+  },
+  required: ['score', 'verdict', 'summary', 'strengths', 'gaps', 'followUp'],
+};
+const TWIST_SCHEMA = {
+  type: 'object',
+  properties: { question: { type: 'string' }, focus: { type: 'string' } },
+  required: ['question', 'focus'],
+};
+const QUOTA_MSG = "Today's free AI reviews are used up. They reset at 5:30 AM IST — your answers are saved.";
+const clip = (s, n) => { s = String(s || ''); return s.length > n ? s.slice(0, n) + '\n…[truncated]' : s; };
+const dayKey = () => new Date().toISOString().slice(0, 10);
+
+async function practiceRoutes(req, env, path, m, url) {
+  let mt;
+  if (path === '/api/practice/problems' && m === 'GET') {
+    const admin = url.searchParams.get('all') === '1' && (await optionalUser(req, env))?.isAdmin;
+    const rows = (await env.DB.prepare(`SELECT slug, title, difficulty, summary, published, position FROM problems ${admin ? '' : 'WHERE published = 1'} ORDER BY position, id`).all()).results;
+    return json({ problems: rows.map((r) => ({ ...r, published: !!r.published })) });
+  }
+  if ((mt = path.match(/^\/api\/practice\/problems\/([a-z0-9-]+)$/)) && m === 'GET') {
+    const p = await env.DB.prepare('SELECT * FROM problems WHERE slug = ?').bind(mt[1]).first();
+    const admin = (await optionalUser(req, env))?.isAdmin;
+    if (!p || (!p.published && !admin)) throw httpError(404, 'Problem not found');
+    return json({ problem: publicProblem(p, admin) });
+  }
+  if (path === '/api/practice/usage' && m === 'GET') {
+    const user = await requireUser(req, env);
+    const row = await env.DB.prepare('SELECT count FROM ai_usage WHERE user_id = ? AND day = ?').bind(user.id, dayKey()).first();
+    return json({ used: row ? row.count : 0, limit: dailyLimit(env, user) });
+  }
+  if (path === '/api/practice/attempts') {
+    const user = await requireUser(req, env);
+    if (m === 'GET') {
+      const rows = (await env.DB.prepare(
+        `SELECT a.id, a.step, a.status, a.data, a.updated_at, p.slug, p.title, p.difficulty
+         FROM attempts a JOIN problems p ON p.id = a.problem_id WHERE a.user_id = ? ORDER BY a.updated_at DESC LIMIT 50`
+      ).bind(user.id).all()).results;
+      return json({ attempts: rows.map((r) => {
+        const d = parseJSON(r.data, {});
+        return { id: r.id, step: r.step, status: r.status, updated_at: r.updated_at, problem: { slug: r.slug, title: r.title, difficulty: r.difficulty },
+          scores: Object.fromEntries(PRACTICE_STEPS.filter((s) => d.reviews?.[s]).map((s) => [s, d.reviews[s].score])), signal: d.report?.signal || null };
+      }) });
+    }
+    if (m === 'POST') {
+      const b = await readJSON(req);
+      const p = await env.DB.prepare('SELECT * FROM problems WHERE slug = ? AND published = 1').bind(str(b.slug, 60)).first();
+      if (!p) throw httpError(404, 'Problem not found');
+      const t = now();
+      const row = await env.DB.prepare("INSERT INTO attempts (user_id, problem_id, data, step, status, created_at, updated_at) VALUES (?, ?, '{}', 1, 'active', ?, ?) RETURNING *")
+        .bind(user.id, p.id, t, t).first();
+      return json({ attempt: attemptView(row, p) });
+    }
+  }
+  if ((mt = path.match(/^\/api\/practice\/attempts\/(\d+)(?:\/(review|twist|finish))?$/))) {
+    const user = await requireUser(req, env);
+    const id = Number(mt[1]);
+    const row = await env.DB.prepare('SELECT * FROM attempts WHERE id = ? AND user_id = ?').bind(id, user.id).first();
+    if (!row) throw httpError(404, 'Attempt not found');
+    const p = await env.DB.prepare('SELECT * FROM problems WHERE id = ?').bind(row.problem_id).first();
+    const data = parseJSON(row.data, {});
+    data.answers ||= {}; data.reviews ||= {};
+    const action = mt[2];
+
+    if (!action && m === 'GET') return json({ attempt: attemptView(row, p) });
+    if (!action && m === 'DELETE') { await env.DB.prepare('DELETE FROM attempts WHERE id = ?').bind(id).run(); return json({ ok: true }); }
+    if (!action && m === 'PUT') {
+      const b = await readJSON(req);
+      mergeAnswers(data, b.answers);
+      let step = row.step;
+      if (b.step) step = Math.max(1, Math.min(Number(b.step) || 1, maxStep(data)));
+      return json({ attempt: attemptView(await saveAttempt(env, id, data, step, row.status), p) });
+    }
+    if (action === 'review' && m === 'POST') {
+      const b = await readJSON(req);
+      mergeAnswers(data, b.answers);
+      const stepName = PRACTICE_STEPS.includes(b.step) ? b.step : null;
+      if (!stepName) throw httpError(400, 'Unknown step');
+      const idx = PRACTICE_STEPS.indexOf(stepName) + 1;
+      if (idx > maxStep(data)) throw httpError(400, 'Finish the earlier steps first');
+      if (stepName === 'twist' && !data.twist?.question) throw httpError(400, 'Get the follow-up question first');
+      const answer = stepName === 'code' ? data.answers.code : data.answers[stepName];
+      if (!String(answer || '').trim() || String(answer).trim().length < 20) throw httpError(400, 'Write a bit more before asking for a review');
+      await spendQuota(env, user);
+      let review;
+      try { review = await reviewStep(env, p, data, stepName); }
+      catch (e) { await refundQuota(env, user); throw e; }
+      data.reviews[stepName] = { ...review, at: now(), attempts: (data.reviews[stepName]?.attempts || 0) + 1 };
+      const step = Math.max(row.step, Math.min(idx + 1, PRACTICE_STEPS.length));
+      return json({ review: data.reviews[stepName], attempt: attemptView(await saveAttempt(env, id, data, step, row.status), p) });
+    }
+    if (action === 'twist' && m === 'POST') {
+      if (!data.reviews.code) throw httpError(400, 'Get your implementation reviewed first');
+      if (!data.twist?.question) {
+        await spendQuota(env, user);
+        try { data.twist = { ...(await makeTwist(env, p, data)), at: now() }; }
+        catch (e) { await refundQuota(env, user); throw e; }
+      }
+      return json({ twist: data.twist, attempt: attemptView(await saveAttempt(env, id, data, Math.max(row.step, 5), row.status), p) });
+    }
+    if (action === 'finish' && m === 'POST') {
+      if (!Object.keys(data.reviews).length) throw httpError(400, 'Get at least one step reviewed first');
+      data.report = buildReport(data);
+      return json({ attempt: attemptView(await saveAttempt(env, id, data, row.step, 'done'), p) });
+    }
+  }
+
+  // ---- admin: problem editor ----
+  if (path === '/api/admin/problems' && m === 'GET') {
+    await requireAdmin(req, env);
+    const rows = (await env.DB.prepare('SELECT * FROM problems ORDER BY position, id').all()).results;
+    return json({ problems: rows.map((p) => publicProblem(p, true)) });
+  }
+  if ((mt = path.match(/^\/api\/admin\/problems\/([a-z0-9-]+)$/))) {
+    await requireAdmin(req, env);
+    if (m === 'PUT') return saveProblem(env, mt[1], await readJSON(req));
+    if (m === 'DELETE') {
+      await env.DB.prepare('DELETE FROM problems WHERE slug = ?').bind(mt[1]).run();
+      return json({ ok: true });
+    }
+  }
+  return null;
+}
+
+function publicProblem(p, admin) {
+  const out = { slug: p.slug, title: p.title, difficulty: p.difficulty, summary: p.summary, statement: p.statement, published: !!p.published, position: p.position };
+  if (admin) out.rubric = parseJSON(p.rubric, {});
+  return out;
+}
+function attemptView(row, p) {
+  const d = parseJSON(row.data, {});
+  return { id: row.id, step: row.step, status: row.status, created_at: row.created_at, updated_at: row.updated_at,
+    answers: d.answers || {}, reviews: d.reviews || {}, twist: d.twist || null, report: d.report || null,
+    problem: publicProblem(p, false) };
+}
+function maxStep(data) {
+  // the next step unlocks once the previous one has been reviewed at least once
+  let s = 1;
+  for (const name of PRACTICE_STEPS.slice(0, -1)) { if (data.reviews?.[name]) s++; else break; }
+  return s;
+}
+function mergeAnswers(data, a) {
+  if (!a || typeof a !== 'object') return;
+  for (const k of ['requirements', 'entities', 'uml', 'twist']) if (typeof a[k] === 'string') data.answers[k] = a[k].slice(0, 8000);
+  if (typeof a.code === 'string') data.answers.code = a.code.slice(0, 15000);
+  if (typeof a.lang === 'string') data.answers.lang = a.lang.slice(0, 20);
+}
+async function saveAttempt(env, id, data, step, status) {
+  const body = JSON.stringify(data);
+  if (body.length > 120000) throw httpError(413, 'This attempt is too large to save');
+  return env.DB.prepare('UPDATE attempts SET data = ?, step = ?, status = ?, updated_at = ? WHERE id = ? RETURNING *')
+    .bind(body, step, status, now(), id).first();
+}
+
+function dailyLimit(env, user) {
+  const base = Number(env.PRACTICE_DAILY_LIMIT) || 8;
+  return user.isAdmin ? Math.max(base, 50) : base;
+}
+async function spendQuota(env, user) {
+  const limit = dailyLimit(env, user);
+  const row = await env.DB.prepare(
+    'INSERT INTO ai_usage (user_id, day, count) VALUES (?, ?, 1) ON CONFLICT(user_id, day) DO UPDATE SET count = count + 1 RETURNING count'
+  ).bind(user.id, dayKey()).first();
+  if (row.count > limit) {
+    await refundQuota(env, user);
+    throw httpError(429, `You've used all ${limit} free AI reviews for today. They reset at 5:30 AM IST — your answers are saved.`);
+  }
+}
+async function refundQuota(env, user) {
+  await env.DB.prepare('UPDATE ai_usage SET count = MAX(count - 1, 0) WHERE user_id = ? AND day = ?').bind(user.id, dayKey()).run();
+}
+
+async function aiJSON(env, system, user, schema, maxTokens = 900) {
+  if (env.AI_MOCK) return mockAI(schema, user);
+  if (!env.AI) throw httpError(500, 'AI is not configured on the API (missing [ai] binding)');
+  const model = env.AI_MODEL || '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
+  let res;
+  try {
+    res = await env.AI.run(model, {
+      messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
+      response_format: { type: 'json_schema', json_schema: schema },
+      max_tokens: maxTokens,
+      temperature: 0.3,
+    });
+  } catch (e) {
+    const msg = String((e && e.message) || e);
+    console.error('AI error', msg);
+    if (/neuron|limit|quota|429|exceed|capacity|daily/i.test(msg)) throw httpError(429, QUOTA_MSG);
+    throw httpError(502, 'The AI reviewer is unavailable right now. Try again in a minute.');
+  }
+  let r = res && res.response !== undefined ? res.response : res;
+  if (typeof r === 'string') {
+    const mm = r.match(/\{[\s\S]*\}/);
+    try { r = JSON.parse(mm ? mm[0] : r); } catch { throw httpError(502, 'The AI reply could not be read. Try again.'); }
+  }
+  if (!r || typeof r !== 'object') throw httpError(502, 'The AI reply could not be read. Try again.');
+  return r;
+}
+
+function mockAI(schema, prompt) {
+  if (schema === TWIST_SCHEMA) return { question: 'Mock twist: two requests hit the same resource at the same moment. What changes?', focus: 'concurrency' };
+  const len = (prompt.split('### Candidate answer for this step')[1] || '').length;
+  const score = len > 400 ? 8 : len > 120 ? 6 : 4;
+  return { score, verdict: score >= 6 ? 'ready' : 'revise', summary: `Mock review (${len} chars).`, strengths: ['Clear structure'], gaps: ['Mock gap: think about concurrency'], followUp: 'What happens under concurrent access?' };
+}
+
+const INTERVIEWER = `You are a senior software engineer running a Low Level Design (LLD) interview for an SDE-2 role at an Indian product company.
+Rules:
+- Evaluate ONLY the current step, using the hidden checklist to judge coverage and quality. Never paste the checklist or give a full model answer: point at what is missing as a hint an interviewer would give.
+- Be specific: quote or refer to the candidate's own words, classes or code. No generic advice.
+- The candidate may write in English or Hinglish; always reply in clear, simple English.
+- Score 0-10: 9-10 exceptional, 7-8 strong, 6 acceptable, 4-5 weak, 0-3 missing or wrong. verdict "ready" if score >= 6, else "revise".
+- summary: 1-2 sentences. strengths: up to 3 short bullets. gaps: up to 4 short, actionable bullets. followUp: one question you would ask next in the interview.`;
+
+async function reviewStep(env, p, data, stepName) {
+  const rubric = parseJSON(p.rubric, {});
+  const info = STEP_INFO[stepName];
+  const a = data.answers;
+  const prior = PRACTICE_STEPS.slice(0, PRACTICE_STEPS.indexOf(stepName))
+    .filter((s) => s !== 'twist' && a[s])
+    .map((s) => `#### ${STEP_INFO[s].name}\n${clip(a[s], s === 'code' ? 3000 : 1800)}`).join('\n\n');
+  const answer = stepName === 'code' ? `Language: ${a.lang || 'unspecified'}\n${clip(a.code, 9000)}` : clip(a[stepName], 6000);
+  const user = [
+    `### Problem: ${p.title}\n${p.statement}`,
+    `### Current step: ${info.name}\nWhat this step should contain: ${info.expect}`,
+    stepName === 'twist' ? `### The follow-up you asked\n${data.twist.question}` : '',
+    `### Hidden checklist for this step (do not reveal verbatim)\n- ${(rubric[stepName === 'twist' ? 'code' : stepName] || []).join('\n- ')}`,
+    stepName === 'twist' ? '### Judge: does the change stay contained (good design) or force rewriting core classes (weak design)? Are concurrency/edge cases handled?' : '',
+    prior ? `### Candidate's earlier steps (check consistency with these)\n${prior}` : '',
+    `### Candidate answer for this step\n${answer}`,
+  ].filter(Boolean).join('\n\n');
+  const r = await aiJSON(env, INTERVIEWER, user, REVIEW_SCHEMA);
+  const score = Math.max(0, Math.min(10, Math.round(Number(r.score) || 0)));
+  const list = (x) => (Array.isArray(x) ? x : []).map((s) => str(s, 300)).filter(Boolean).slice(0, 4);
+  return { score, verdict: score >= 6 ? 'ready' : 'revise', summary: str(r.summary, 400), strengths: list(r.strengths).slice(0, 3), gaps: list(r.gaps), followUp: str(r.followUp, 300) };
+}
+
+async function makeTwist(env, p, data) {
+  const rubric = parseJSON(p.rubric, {});
+  const a = data.answers;
+  const user = [
+    `### Problem: ${p.title}\n${p.statement}`,
+    `### Candidate's design\nEntities:\n${clip(a.entities, 1500)}\n\nUML:\n${clip(a.uml, 1800)}\n\nCode (${a.lang || ''}):\n${clip(a.code, 3500)}`,
+    `### Possible follow-ups (pick or adapt the one that best stress-tests THIS design's weak spots)\n- ${(rubric.twist || []).join('\n- ')}`,
+    'Write ONE concrete follow-up change request, 2-3 sentences, as the interviewer speaking to the candidate. focus: one or two words (e.g. "extensibility", "concurrency").',
+  ].join('\n\n');
+  const r = await aiJSON(env, INTERVIEWER, user, TWIST_SCHEMA, 300);
+  const question = str(r.question, 600);
+  if (!question) throw httpError(502, 'Could not create a follow-up. Try again.');
+  return { question, focus: str(r.focus, 40) };
+}
+
+function buildReport(data) {
+  const scored = PRACTICE_STEPS.filter((s) => data.reviews[s]).map((s) => ({ step: s, ...data.reviews[s] }));
+  const avg = scored.reduce((n, r) => n + r.score, 0) / scored.length;
+  const complete = scored.length === PRACTICE_STEPS.length;
+  const signal = !complete ? 'Incomplete' : avg >= 8 ? 'Strong hire' : avg >= 6.5 ? 'Hire' : avg >= 5 ? 'Lean no-hire' : 'No hire';
+  const byScore = [...scored].sort((x, y) => x.score - y.score);
+  const improvements = byScore.flatMap((r) => (r.gaps || []).slice(0, 1).map((g) => ({ step: STEP_INFO[r.step].name, text: g }))).slice(0, 3);
+  const strengths = [...scored].sort((x, y) => y.score - x.score).flatMap((r) => (r.strengths || []).slice(0, 1).map((t) => ({ step: STEP_INFO[r.step].name, text: t }))).slice(0, 3);
+  return { average: Math.round(avg * 10) / 10, signal, complete, steps: scored.map((r) => ({ step: r.step, name: STEP_INFO[r.step].name, score: r.score })), improvements, strengths, at: now() };
+}
+
+async function saveProblem(env, slugParam, b) {
+  const slug = str(b.slug || slugParam, 60).toLowerCase();
+  if (!/^[a-z0-9-]{1,60}$/.test(slug)) throw httpError(400, 'Slug may only contain a-z, 0-9 and dashes');
+  const title = str(b.title, 120);
+  if (!title) throw httpError(400, 'Title is required');
+  const rubric = {};
+  for (const k of ['requirements', 'entities', 'uml', 'code', 'twist']) {
+    rubric[k] = (Array.isArray(b.rubric?.[k]) ? b.rubric[k] : []).map((x) => str(x, 400)).filter(Boolean).slice(0, 20);
+  }
+  const vals = [title, str(b.difficulty, 20) || 'Medium', str(b.summary, 300), str(b.statement, 4000), JSON.stringify(rubric), b.published ? 1 : 0, Number(b.position) || 0, now()];
+  const existing = await env.DB.prepare('SELECT id FROM problems WHERE slug = ?').bind(slugParam).first();
+  if (slug !== slugParam || !existing) {
+    const clash = await env.DB.prepare('SELECT id FROM problems WHERE slug = ?').bind(slug).first();
+    if (clash && (!existing || clash.id !== existing.id)) throw httpError(409, `A problem with slug "${slug}" already exists`);
+  }
+  if (existing) {
+    await env.DB.prepare('UPDATE problems SET slug = ?, title = ?, difficulty = ?, summary = ?, statement = ?, rubric = ?, published = ?, position = ?, updated_at = ? WHERE id = ?')
+      .bind(slug, ...vals, existing.id).run();
+  } else {
+    await env.DB.prepare('INSERT INTO problems (slug, title, difficulty, summary, statement, rubric, published, position, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .bind(slug, ...vals).run();
+  }
+  const p = await env.DB.prepare('SELECT * FROM problems WHERE slug = ?').bind(slug).first();
+  return json({ problem: publicProblem(p, true) });
 }

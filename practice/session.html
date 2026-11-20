@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="../assets/theme.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock interview — YourTechBuddy</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../courses/courses.css">
+<style>
+  body{height:100vh;overflow:hidden}
+  .app{flex:1;display:grid;grid-template-columns:320px minmax(0,1fr);min-height:0}
+  /* left rail */
+  .rail{border-right:1px solid var(--border);background:var(--bg);display:flex;flex-direction:column;min-height:0;overflow:auto}
+  .rail .top{padding:16px 18px;border-bottom:1px solid var(--border)}
+  .rail .top a{font:12.5px var(--mono);color:var(--muted);text-decoration:none}
+  .rail h1{font:600 19px/1.3 var(--sans);margin:6px 0 4px}
+  .rail .meta{font:12.5px var(--mono);color:var(--muted);display:flex;gap:12px;flex-wrap:wrap}
+  .diff.Easy{color:var(--ok)} .diff.Medium{color:var(--warn)} .diff.Hard{color:var(--err)}
+  details.stmt{padding:12px 18px;border-bottom:1px solid var(--border)}
+  details.stmt summary{cursor:pointer;font:500 13px var(--mono);color:var(--muted)}
+  details.stmt p{white-space:pre-wrap;font-size:14px;line-height:1.6;margin:10px 0 0}
+  .steps{list-style:none;margin:0;padding:10px 0;flex:1}
+  .steps li button{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;width:100%;padding:10px 18px;background:none;border:0;text-align:left;cursor:pointer;border-left:3px solid transparent}
+  .steps li button:hover:not(:disabled){background:var(--panel2)}
+  .steps li button.on{background:var(--panel2);border-left-color:var(--accent)}
+  .steps li button:disabled{cursor:not-allowed;opacity:.5}
+  .steps .k{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);display:grid;place-items:center;font:600 12px var(--mono)}
+  .steps .done .k{border-color:var(--ok);color:var(--ok)}
+  .steps .t b{display:block;font-size:14px;font-weight:600}
+  .steps .t small{color:var(--muted);font-size:12.5px}
+  .steps .s{font:600 13px var(--mono)}
+  .s.hi{color:var(--ok)} .s.mid{color:var(--warn)} .s.lo{color:var(--err)}
+  .rail .foot{padding:14px 18px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;font:12.5px var(--mono);color:var(--muted)}
+
+  /* main */
+  .main{display:flex;flex-direction:column;min-height:0;overflow:auto}
+  .stage{padding:22px clamp(16px,3vw,32px) 40px;display:flex;flex-direction:column;gap:16px;max-width:1180px;width:100%}
+  .stage h2{font:600 22px var(--sans);margin:0}
+  .stage .hint{color:var(--muted);margin:2px 0 0;font-size:14.5px;max-width:80ch}
+  textarea.ed{width:100%;min-height:300px;resize:vertical;background:var(--panel);border:1.5px solid var(--border);border-radius:6px;padding:14px 16px;color:var(--text);font:14px/1.65 var(--mono);tab-size:4}
+  textarea.ed:focus{outline:none;border-color:var(--accent)}
+  .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+  .preview{background:var(--panel);border:1.5px solid var(--border);border-radius:6px;min-height:300px;padding:14px;overflow:auto;display:flex;align-items:flex-start;justify-content:center}
+  .preview .msg{color:var(--muted);font:13px var(--mono);align-self:center}
+  .preview svg{max-width:100%;height:auto}
+  .lbl{font:500 13px var(--mono);color:var(--muted);margin-bottom:6px;display:block}
+  #monaco{height:440px;border:1.5px solid var(--border);border-radius:6px;overflow:hidden}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .row .sp{flex:1}
+  .saved{font:12.5px var(--mono);color:var(--muted)}
+  select{background:var(--panel);border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font:14px var(--mono)}
+  .twistq{background:var(--panel);border:1.5px solid var(--accent);border-radius:6px;padding:14px 16px}
+  .twistq b{font:600 13px var(--mono);color:var(--accent);display:block;margin-bottom:6px}
+
+  /* review */
+  .review{background:var(--panel);border:1.5px solid var(--text);border-radius:6px}
+  .review .hd{display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1.5px solid var(--text)}
+  .score{font:700 30px/1 var(--mono)}
+  .score small{font-size:14px;color:var(--muted);font-weight:500}
+  .score.hi{color:var(--ok)} .score.mid{color:var(--warn)} .score.lo{color:var(--err)}
+  .review .hd p{margin:0;font-size:14.5px}
+  .review .bd{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  .review .bd > div{padding:12px 16px}
+  .review .bd > div + div{border-left:1px solid var(--border)}
+  .review h3{font:600 13px var(--mono);margin:0 0 6px;color:var(--muted)}
+  .review ul{margin:0;padding-left:18px;font-size:14px;line-height:1.55}
+  .review .fu{padding:12px 16px;border-top:1px solid var(--border);font-size:14.5px}
+  .review .fu b{font:600 13px var(--mono);color:var(--accent)}
+  .review .ft{display:flex;gap:10px;padding:12px 16px;border-top:1px solid var(--border);flex-wrap:wrap;align-items:center}
+  .err{color:var(--err);font-size:14px}
+
+  /* report */
+  .report{display:grid;gap:18px;max-width:900px}
+  .verdict{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap}
+  .verdict .sig{font:700 clamp(28px,4vw,40px)/1.1 var(--sans);letter-spacing:-.02em}
+  .verdict .avg{font:600 18px var(--mono);color:var(--muted)}
+  .bars{display:grid;gap:8px}
+  .bars .b{display:grid;grid-template-columns:200px 1fr 44px;gap:12px;align-items:center;font-size:14px}
+  .bars .track{height:10px;border:1px solid var(--border);border-radius:99px;background:var(--panel2);overflow:hidden}
+  .bars .track i{display:block;height:100%}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .box{background:var(--panel);border:1.5px solid var(--border);border-radius:6px;padding:14px 16px}
+  .box h3{font:600 14px var(--mono);margin:0 0 8px}
+  .box ul{margin:0;padding-left:18px;font-size:14.5px;line-height:1.6}
+  .box li small{color:var(--muted);font-family:var(--mono)}
+
+  .gate{max-width:520px;margin:60px auto;background:var(--panel);border:1.5px solid var(--border);border-radius:8px;padding:28px;text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center;color:var(--muted)}
+  .gate b{color:var(--text);font-size:18px}
+
+  @media (max-width:980px){
+    body{height:auto;overflow:auto}
+    .app{grid-template-columns:minmax(0,1fr)}
+    .rail,.main{min-width:0}
+    .rail{border-right:0;border-bottom:1px solid var(--border);overflow:visible}
+    .steps{display:flex;overflow-x:auto;padding:6px}
+    .steps li button{grid-template-columns:26px auto;border-left:0;border-bottom:3px solid transparent;padding:8px 10px;white-space:nowrap}
+    .steps li button.on{border-bottom-color:var(--accent)}
+    .steps .t small,.steps .s{display:none}
+    .split,.review .bd,.two{grid-template-columns:1fr}
+    .review .bd > div + div{border-left:0;border-top:1px solid var(--border)}
+    .bars .b{grid-template-columns:120px 1fr 40px}
+    #monaco{height:360px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="../"><div class="logo">YTB</div><b>yourtechbuddy</b></a>
+  <nav>
+    <a href="../courses/">courses</a>
+    <a href="./" class="active">practice</a>
+    <a href="../playground/">playground</a>
+  </nav>
+  <div id="auth"></div>
+</header>
+
+<div id="root" style="flex:1;display:flex;flex-direction:column;min-height:0"></div>
+
+<script src="../assets/config.js"></script>
+<script src="../assets/ytb.js"></script>
+<script>
+  const { esc } = YTB;
+  const root = document.getElementById('root');
+  const STEPS = [
+    { id: 'requirements', name: 'Requirements', short: 'Scope & questions',
+      hint: 'Start like a real interview: ask clarifying questions, then list functional and non-functional requirements and say what you are keeping out of scope.',
+      template: 'Clarifying questions:\n- \n\nFunctional requirements:\n- \n\nNon-functional requirements:\n- \n\nOut of scope:\n- ' },
+    { id: 'entities', name: 'Entities', short: 'Classes & relationships',
+      hint: 'List the core classes with their key attributes, and how they relate (is-a / has-a, one-to-many).',
+      template: 'Entities:\n- ClassName: attribute1, attribute2\n\nRelationships:\n- A has many B\n- C is a D' },
+    { id: 'uml', name: 'UML + patterns', short: 'Class diagram',
+      hint: 'Write a class diagram in Mermaid syntax (preview on the right), then name the design patterns you used and why.',
+      template: 'classDiagram\n  class ClassA {\n    -field: Type\n    +method(arg) ReturnType\n  }\n  class ClassB\n  ClassA "1" *-- "many" ClassB : has' },
+    { id: 'code', name: 'Implementation', short: 'Core classes in code',
+      hint: 'Implement the core classes and the key methods. Focus on design (interfaces, responsibilities, thread safety), not boilerplate.' },
+    { id: 'twist', name: 'The twist', short: 'Follow-up change',
+      hint: 'The interviewer changes the requirements based on your design. Explain what changes in your classes and code, and why the change stays small.',
+      template: 'What changes:\n- \n\nNew/changed classes:\n- \n\nWhy the rest of the design stays the same:\n- ' },
+  ];
+  const LANGS = { java: 'Java', python: 'Python', cpp: 'C++', go: 'Go', typescript: 'TypeScript', javascript: 'JavaScript', csharp: 'C#' };
+  const PATTERN_MARK = '%% ---- patterns ----';
+  let attempt = null, cur = 0, busy = false, saveTimer = null, monacoEd = null, mermaidMod = null, usage = null, view = 'step';
+
+  const cls = (s) => s >= 7 ? 'hi' : s >= 5 ? 'mid' : 'lo';
+  const gate = (html) => { root.innerHTML = `<div class="gate">${html}</div>`; };
+
+  (async function init() {
+    if (!YTB.apiOn) return gate('<b>Mock interviews need the API</b><span>It isn\'t configured on this site yet.</span>');
+    const q = new URLSearchParams(location.search);
+    if (!YTB.user) {
+      let p = null;
+      if (q.get('p')) { try { p = (await YTB.api('/api/practice/problems/' + encodeURIComponent(q.get('p')))).problem; } catch {} }
+      gate(`<b>${p ? esc(p.title) : 'Mock interview'}</b>${p ? `<span style="white-space:pre-wrap;text-align:left">${esc(p.statement)}</span>` : ''}<span>Sign in with Google to start. Your answers and reviews are saved to your account.</span><div id="gsi"></div>`);
+      return YTB.authOn && YTB.renderGoogleButton(document.getElementById('gsi'), { size: 'large' });
+    }
+    try {
+      if (q.get('id')) attempt = (await YTB.api('/api/practice/attempts/' + encodeURIComponent(q.get('id')))).attempt;
+      else if (q.get('p')) {
+        attempt = (await YTB.api('/api/practice/attempts', { method: 'POST', body: { slug: q.get('p') } })).attempt;
+        history.replaceState(null, '', '?id=' + attempt.id);
+      } else { location.href = './'; return; }
+    } catch (e) { return gate(`<b>Couldn't open this interview</b><span>${esc(e.message)}</span><a class="btn" href="./">Back to problems</a>`); }
+    try { usage = await YTB.api('/api/practice/usage'); } catch {}
+    cur = Math.min(attempt.step, 5) - 1;
+    if (attempt.status === 'done' && attempt.report) view = 'report';
+    render();
+  })();
+
+  /* ---------------- answers helpers ---------------- */
+  function splitUml(v) {
+    const i = (v || '').indexOf(PATTERN_MARK);
+    if (i < 0) return { diagram: v || '', patterns: '' };
+    return { diagram: v.slice(0, i).trimEnd(), patterns: v.slice(i + PATTERN_MARK.length).split('\n').map((l) => l.replace(/^%% ?/, '')).join('\n').trim() };
+  }
+  function joinUml(diagram, patterns) {
+    const p = (patterns || '').trim();
+    return p ? `${diagram.trimEnd()}\n\n${PATTERN_MARK}\n${p.split('\n').map((l) => '%% ' + l).join('\n')}` : diagram;
+  }
+  function collect() {
+    const s = STEPS[cur].id, a = attempt.answers;
+    if (s === 'uml') {
+      const d = document.getElementById('uml-d'), p = document.getElementById('uml-p');
+      if (d) a.uml = joinUml(d.value, p ? p.value : '');
+    } else if (s === 'code') {
+      if (monacoEd) a.code = monacoEd.getValue(); else { const t = document.getElementById('code-fb'); if (t) a.code = t.value; }
+      const l = document.getElementById('lang'); if (l) a.lang = l.value;
+    } else {
+      const t = document.getElementById('ans'); if (t) a[s] = t.value;
+    }
+  }
+  function saveSoon() {
+    clearTimeout(saveTimer);
+    const el = document.getElementById('saved'); if (el) el.textContent = 'Unsaved…';
+    saveTimer = setTimeout(saveNow, 900);
+  }
+  async function saveNow() {
+    clearTimeout(saveTimer);
+    collect();
+    try {
+      await YTB.api('/api/practice/attempts/' + attempt.id, { method: 'PUT', body: { answers: attempt.answers } });
+      const el = document.getElementById('saved'); if (el) el.textContent = 'Saved';
+    } catch (e) { const el = document.getElementById('saved'); if (el) el.textContent = 'Not saved: ' + e.message; }
+  }
+  window.addEventListener('beforeunload', () => { if (saveTimer) saveNow(); });
+
+  /* ---------------- render ---------------- */
+  function maxUnlocked() { let s = 1; for (const st of STEPS.slice(0, -1)) { if (attempt.reviews[st.id]) s++; else break; } return s; }
+
+  function render() {
+    const p = attempt.problem, unlocked = maxUnlocked();
+    const elapsed = Math.max(0, Math.floor(Date.now() / 1000 - attempt.created_at));
+    root.innerHTML = `
+      <div class="app">
+        <aside class="rail">
+          <div class="top">
+            <a href="./">‹ all problems</a>
+            <h1>${esc(p.title)}</h1>
+            <div class="meta"><span class="diff ${esc(p.difficulty)}">${esc(p.difficulty)}</span><span id="clock" title="Time since you started">${fmt(elapsed)}</span></div>
+          </div>
+          <details class="stmt" ${cur === 0 && view === 'step' ? 'open' : ''}><summary>Problem statement</summary><p>${esc(p.statement)}</p></details>
+          <ol class="steps">
+            ${STEPS.map((s, i) => {
+              const r = attempt.reviews[s.id];
+              return `<li><button data-go="${i}" class="${i === cur && view === 'step' ? 'on' : ''} ${r ? 'done' : ''}" ${i + 1 > unlocked ? 'disabled title="Get the previous step reviewed first"' : ''}>
+                <span class="k">${r ? '✓' : i + 1}</span>
+                <span class="t"><b>${s.name}</b><small>${s.short}</small></span>
+                <span class="s ${r ? cls(r.score) : ''}">${r ? r.score + '/10' : ''}</span>
+              </button></li>`;
+            }).join('')}
+          </ol>
+          <div class="foot">
+            ${usage ? `<span>AI reviews left today: ${Math.max(0, usage.limit - usage.used)}/${usage.limit}</span>` : ''}
+            ${Object.keys(attempt.reviews).length ? `<button class="btn" data-act="report">${attempt.report ? 'View report' : 'Finish & see report'}</button>` : ''}
+          </div>
+        </aside>
+        <main class="main"><div class="stage" id="stage"></div></main>
+      </div>`;
+    view === 'report' && attempt.report ? renderReport() : renderStep();
+  }
+
+  function renderStep() {
+    const s = STEPS[cur], a = attempt.answers, r = attempt.reviews[s.id];
+    const stage = document.getElementById('stage');
+    let editor = '';
+    if (s.id === 'uml') {
+      const u = splitUml(a.uml || s.template);
+      editor = `
+        <div class="split">
+          <div><span class="lbl">Class diagram (Mermaid)</span><textarea class="ed" id="uml-d" spellcheck="false" style="min-height:340px">${esc(u.diagram)}</textarea></div>
+          <div><span class="lbl">Preview</span><div class="preview" id="preview"><span class="msg">Rendering…</span></div></div>
+        </div>
+        <div><span class="lbl">Design patterns used, and why</span><textarea class="ed" id="uml-p" spellcheck="false" style="min-height:110px" placeholder="Strategy: lets the rule change without touching the main class&#10;Factory: …">${esc(u.patterns)}</textarea></div>`;
+    } else if (s.id === 'code') {
+      editor = `
+        <div class="row"><label class="lbl" for="lang" style="margin:0">Language</label>
+          <select id="lang">${Object.entries(LANGS).map(([k, v]) => `<option value="${k}" ${k === (a.lang || 'java') ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+        <div id="monaco"></div>
+        <textarea class="ed" id="code-fb" spellcheck="false" style="display:none;min-height:420px">${esc(a.code || '')}</textarea>`;
+    } else if (s.id === 'twist') {
+      editor = attempt.twist
+        ? `<div class="twistq"><b>Interviewer</b>${esc(attempt.twist.question)}</div>
+           <textarea class="ed" id="ans" spellcheck="false">${esc(a.twist || s.template)}</textarea>`
+        : `<div class="twistq"><b>Ready for the follow-up?</b>The interviewer will read your design and change a requirement, the way it happens in real interviews.</div>
+           <div><button class="btn primary" data-act="twist" ${busy ? 'disabled' : ''}>${busy ? 'Thinking…' : 'Get the follow-up question'}</button></div>`;
+    } else {
+      editor = `<textarea class="ed" id="ans" spellcheck="false">${esc(a[s.id] || s.template)}</textarea>`;
+    }
+    const canSubmit = s.id !== 'twist' || attempt.twist;
+    stage.innerHTML = `
+      <div><h2>${cur + 1}. ${s.name}</h2><p class="hint">${s.hint}</p></div>
+      ${editor}
+      ${canSubmit ? `<div class="row">
+        <button class="btn primary" data-act="review" ${busy ? 'disabled' : ''}>${busy ? 'Reviewing…' : r ? 'Submit again for review' : 'Submit for review'}</button>
+        <span class="saved" id="saved"></span><span class="sp"></span>
+        ${cur < 4 && r ? `<button class="btn" data-go="${cur + 1}">Next: ${STEPS[cur + 1].name}</button>` : ''}
+      </div>` : ''}
+      <div id="msg"></div>
+      ${r ? reviewHtml(r) : ''}`;
+    if (s.id === 'uml') { renderMermaid(); }
+    if (s.id === 'code') { mountMonaco(); }
+  }
+
+  function reviewHtml(r) {
+    const next = cur < 4;
+    return `
+      <section class="review" aria-live="polite">
+        <div class="hd"><span class="score ${cls(r.score)}">${r.score}<small>/10</small></span><p>${esc(r.summary)}</p></div>
+        <div class="bd">
+          <div><h3>What's good</h3><ul>${(r.strengths || []).map((x) => `<li>${esc(x)}</li>`).join('') || '<li>—</li>'}</ul></div>
+          <div><h3>What to improve</h3><ul>${(r.gaps || []).map((x) => `<li>${esc(x)}</li>`).join('') || '<li>Nothing major</li>'}</ul></div>
+        </div>
+        ${r.followUp ? `<div class="fu"><b>Interviewer asks:</b> ${esc(r.followUp)}</div>` : ''}
+        <div class="ft">
+          <span class="saved">${r.verdict === 'ready' ? 'Good enough to move on.' : 'Worth revising before moving on — or continue anyway.'}${r.attempts > 1 ? ` Reviewed ${r.attempts} times.` : ''}</span>
+          <span style="flex:1"></span>
+          ${next ? `<button class="btn ${r.verdict === 'ready' ? 'primary' : ''}" data-go="${cur + 1}">Continue to ${STEPS[cur + 1].name}</button>` : `<button class="btn primary" data-act="report">Finish & see report</button>`}
+        </div>
+      </section>`;
+  }
+
+  function renderReport() {
+    const R = attempt.report;
+    document.getElementById('stage').innerHTML = `
+      <div class="report">
+        <div><h2>Interview report</h2><p class="hint">${esc(attempt.problem.title)} · ${R.complete ? 'all 5 steps' : `${R.steps.length} of 5 steps reviewed`}</p></div>
+        <div class="verdict"><span class="sig">${esc(R.signal)}</span><span class="avg">average ${R.average}/10</span></div>
+        <div class="bars">${STEPS.map((s) => {
+          const st = R.steps.find((x) => x.step === s.id);
+          const col = st ? (st.score >= 7 ? 'var(--ok)' : st.score >= 5 ? 'var(--warn)' : 'var(--err)') : 'transparent';
+          return `<div class="b"><span>${s.name}</span><span class="track"><i style="width:${st ? st.score * 10 : 0}%;background:${col}"></i></span><span class="s ${st ? cls(st.score) : ''}" style="font-family:var(--mono)">${st ? st.score : '–'}</span></div>`;
+        }).join('')}</div>
+        <div class="two">
+          <div class="box"><h3>Strengths</h3><ul>${R.strengths.map((x) => `<li>${esc(x.text)} <small>(${esc(x.step)})</small></li>`).join('') || '<li>—</li>'}</ul></div>
+          <div class="box"><h3>Top things to improve</h3><ul>${R.improvements.map((x) => `<li>${esc(x.text)} <small>(${esc(x.step)})</small></li>`).join('') || '<li>—</li>'}</ul></div>
+        </div>
+        <div class="row">
+          ${!R.complete ? '<button class="btn primary" data-act="resume">Continue the interview</button>' : ''}
+          <a class="btn ${R.complete ? 'primary' : ''}" href="session.html?p=${encodeURIComponent(attempt.problem.slug)}">Retry this problem</a>
+          <a class="btn" href="./">Try another problem</a>
+          <a class="btn" href="../courses/watch.html?c=lld">Revise with the LLD course</a>
+        </div>
+      </div>`;
+  }
+
+  const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  setInterval(() => { const c = document.getElementById('clock'); if (c && attempt && attempt.status !== 'done') c.textContent = fmt(Math.floor(Date.now() / 1000 - attempt.created_at)); }, 1000);
+
+  /* ---------------- mermaid preview ---------------- */
+  let mermaidSeq = 0, mermaidTimer = null;
+  async function renderMermaid() {
+    const box = document.getElementById('preview'), src = document.getElementById('uml-d');
+    if (!box || !src) return;
+    try {
+      if (!mermaidMod) {
+        mermaidMod = (await import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs')).default;
+      }
+      mermaidMod.initialize({ startOnLoad: false, securityLevel: 'strict', theme: YTB.theme === 'light' ? 'neutral' : 'dark', fontFamily: 'IBM Plex Mono' });
+      const code = src.value.trim();
+      if (!code) { box.innerHTML = '<span class="msg">Write a classDiagram to see it here.</span>'; return; }
+      const { svg } = await mermaidMod.render('m' + (++mermaidSeq), code);
+      box.innerHTML = svg;
+    } catch (e) {
+      box.innerHTML = `<span class="msg">${mermaidMod ? 'Diagram has a syntax error — keep typing.' : 'Preview unavailable offline. You can still submit.'}</span>`;
+      document.querySelectorAll('[id^="dm"]').forEach((n) => n.remove());
+    }
+  }
+  window.addEventListener('ytb:theme', () => { if (STEPS[cur].id === 'uml') renderMermaid(); if (monacoEd) monaco.editor.setTheme(YTB.theme === 'light' ? 'vs' : 'vs-dark'); });
+
+  /* ---------------- monaco ---------------- */
+  const MONACO = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min';
+  function mountMonaco() {
+    const host = document.getElementById('monaco'), fb = document.getElementById('code-fb');
+    const lang = () => document.getElementById('lang').value;
+    const start = () => {
+      try {
+        monacoEd = monaco.editor.create(host, { value: attempt.answers.code || '', language: lang(), theme: YTB.theme === 'light' ? 'vs' : 'vs-dark',
+          fontFamily: "'IBM Plex Mono', monospace", fontSize: 14, minimap: { enabled: false }, automaticLayout: true, scrollBeyondLastLine: false, tabSize: 4 });
+        monacoEd.onDidChangeModelContent(saveSoon);
+      } catch { useFallback(); }
+    };
+    const useFallback = () => { monacoEd = null; host.style.display = 'none'; fb.style.display = 'block'; };
+    if (window.monaco) return start();
+    window.MonacoEnvironment = { getWorkerUrl: () => 'data:text/javascript;charset=utf-8,' + encodeURIComponent(`self.MonacoEnvironment={baseUrl:'${MONACO}/'};importScripts('${MONACO}/vs/base/worker/workerMain.js');`) };
+    const s = document.createElement('script');
+    s.src = MONACO + '/vs/loader.js';
+    s.onerror = useFallback;
+    s.onload = () => { require.config({ paths: { vs: MONACO + '/vs' } }); require(['vs/editor/editor.main'], start, useFallback); };
+    document.head.appendChild(s);
+    setTimeout(() => { if (!monacoEd && host.style.display !== 'none') useFallback(); }, 8000);
+  }
+
+  /* ---------------- events ---------------- */
+  root.addEventListener('input', (e) => {
+    if (e.target.matches('textarea.ed')) saveSoon();
+    if (e.target.id === 'uml-d') { clearTimeout(mermaidTimer); mermaidTimer = setTimeout(renderMermaid, 400); }
+  });
+  root.addEventListener('change', (e) => {
+    if (e.target.id === 'lang') { if (monacoEd) monaco.editor.setModelLanguage(monacoEd.getModel(), e.target.value); saveSoon(); }
+  });
+  root.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab' && e.target.matches('textarea.ed')) { e.preventDefault(); document.execCommand('insertText', false, '  '); }
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && e.target.matches('textarea.ed')) { e.preventDefault(); submitReview(); }
+  });
+  root.addEventListener('click', async (e) => {
+    const go = e.target.closest('[data-go]');
+    if (go && !go.disabled) { collect(); if (saveTimer) saveNow(); disposeEditor(); cur = +go.dataset.go; view = 'step'; render(); window.scrollTo(0, 0); return; }
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'review') return submitReview();
+    if (act === 'twist') return getTwist();
+    if (act === 'report') return finish();
+    if (act === 'resume') { view = 'step'; cur = Math.min(maxUnlocked(), 5) - 1; render(); }
+  });
+  function disposeEditor() { if (monacoEd) { monacoEd.dispose(); monacoEd = null; } }
+
+  function showError(msg) { const m = document.getElementById('msg'); if (m) m.innerHTML = `<p class="err">${esc(msg)}</p>`; }
+  async function refreshUsage() { try { usage = await YTB.api('/api/practice/usage'); } catch {} }
+
+  async function submitReview() {
+    if (busy) return;
+    collect(); clearTimeout(saveTimer);
+    const st = STEPS[cur], val = st.id === 'uml' ? splitUml(attempt.answers.uml).diagram : (attempt.answers[st.id] || '');
+    if (!val.trim() || (st.template && val.trim() === st.template.trim())) return showError('Write your own answer first — the starter text is just a guide.');
+    busy = true; setBusyUi();
+    try {
+      const r = await YTB.api(`/api/practice/attempts/${attempt.id}/review`, { method: 'POST', body: { step: STEPS[cur].id, answers: attempt.answers } });
+      attempt = { ...attempt, ...r.attempt, answers: attempt.answers };
+      await refreshUsage();
+      busy = false; disposeEditor(); render();
+      document.querySelector('.review')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) { busy = false; setBusyUi(); showError(e.message); }
+  }
+  function setBusyUi() {
+    const b = document.querySelector('[data-act="review"]');
+    if (b) { b.disabled = busy; b.textContent = busy ? 'Reviewing… (about 10 seconds)' : (attempt.reviews[STEPS[cur].id] ? 'Submit again for review' : 'Submit for review'); }
+  }
+  async function getTwist() {
+    if (busy) return;
+    busy = true; renderStep();
+    try {
+      const r = await YTB.api(`/api/practice/attempts/${attempt.id}/twist`, { method: 'POST' });
+      attempt = { ...attempt, ...r.attempt, answers: attempt.answers };
+      await refreshUsage();
+    } catch (e) { busy = false; renderStep(); return showError(e.message); }
+    busy = false; render();
+  }
+  async function finish() {
+    collect(); if (saveTimer) await saveNow();
+    try {
+      const r = await YTB.api(`/api/practice/attempts/${attempt.id}/finish`, { method: 'POST' });
+      attempt = { ...attempt, ...r.attempt, answers: attempt.answers };
+      disposeEditor(); view = 'report'; render();
+    } catch (e) { showError(e.message); }
+  }
+</script>
+</body>
+</html>

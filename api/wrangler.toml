@@ -5,6 +5,8 @@ workers_dev = true
 preview_urls = false
 
 [vars]
+# AI reviews per person per day (admins get 50)
+PRACTICE_DAILY_LIMIT = "8"
 # Sites allowed to call this API (comma-separated).
 ALLOWED_ORIGINS = "https://yourtechbuddy101.com,https://www.yourtechbuddy101.com,http://localhost:8000,http://127.0.0.1:8000,http://127.0.0.1:5501"
 # Google OAuth Web Client ID (public, safe to commit). Paste yours here.
@@ -19,3 +21,8 @@ GOOGLE_CLIENT_ID = "191165526401-dd71tv54d0f1pn45ud2jtg22i2b35fvn.apps.googleuse
 binding = "DB"
 database_name = "yourtechbuddy"
 database_id = "b228df7a-bad8-4724-bba3-2cbdc83c5194"
+
+# Workers AI (free daily allowance) for the LLD mock-interview reviewer.
+# Stay on the Workers Free plan and you can never be charged: over the limit, reviews just pause until 00:00 UTC.
+[ai]
+binding = "AI"
