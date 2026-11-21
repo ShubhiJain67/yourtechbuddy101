@@ -7,4 +7,6 @@
     t = window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   }
   document.documentElement.setAttribute('data-theme', t);
+  // collapsed sidebar (set by the toggle in ytb.js)
+  try { if (localStorage.getItem('ytb:side-mini') === '1') document.documentElement.classList.add('side-mini'); } catch (e) {}
 })();

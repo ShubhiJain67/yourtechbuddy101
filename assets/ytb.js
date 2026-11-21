@@ -181,11 +181,14 @@
     if (!el.isConnected) { gsiButtons.delete(el); return; }
     const dark = document.documentElement.getAttribute('data-theme') !== 'light';
     const inSidebar = !!el.closest('.sn');
-    const o = { theme: dark ? 'filled_blue' : 'outline', size: 'large', shape: 'pill', text: 'signin_with', logo_alignment: 'left', ...(inSidebar && el._gsiOpts.type !== 'icon' ? { size: 'medium', width: 168 } : {}), ...el._gsiOpts };
+    const mini = inSidebar && document.documentElement.classList.contains('side-mini') && matchMedia('(min-width: 901px)').matches;
+    const o = { theme: dark ? 'filled_blue' : 'outline', size: 'large', shape: 'pill', text: 'signin_with', logo_alignment: 'left', ...(inSidebar && el._gsiOpts.type !== 'icon' ? { size: 'medium', width: 168 } : {}), ...el._gsiOpts, ...(mini ? { type: 'icon', shape: 'circle', size: 'medium' } : {}) };
     el.innerHTML = '';
     google.accounts.id.renderButton(el, o);
   }
-  window.addEventListener('ytb:theme', () => { if (window.google && google.accounts) gsiButtons.forEach(drawGsi); });
+  const redrawGsi = () => { if (window.google && google.accounts) gsiButtons.forEach(drawGsi); };
+  window.addEventListener('ytb:theme', redrawGsi);
+  window.addEventListener('ytb:sidebar', redrawGsi);
 
   function alertBox(msg) {
     const d = document.createElement('div');
@@ -297,6 +300,7 @@
     idea: '<path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/>',
     admin: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
     puzzle: '<path d="M4 7h3a2 2 0 1 1 4 0h3v3a2 2 0 1 1 0 4v3h-3a2 2 0 1 0-4 0H4v-3a2 2 0 1 0 0-4z"/>',
+    chev: '<path d="m15 18-6-6 6-6"/>',
     search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
     play: '<path d="m7 4 13 8-13 8z"/>',
     layers: '<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>',
@@ -316,25 +320,26 @@
     const header = document.querySelector('body > header');
     if (!header || document.body.dataset.shell === 'off') return;
     const admin = !!(session && session.user && session.user.isAdmin);
-    const item = (path, label, ic, extra = '') => `<a class="sn-item ${isOn(path) ? 'on' : ''}" href="${ROOT}${path}">${icon(ic)}<span>${label}</span>${extra}</a>`;
+    const item = (path, label, ic, extra = '') => `<a class="sn-item ${isOn(path) ? 'on' : ''}" href="${ROOT}${path}" title="${label}">${icon(ic)}<span>${label}</span>${extra}</a>`;
     const pr = isOn('practice/');
     const sub = (t, label) => `<a class="sn-item sn-sub ${pr && trackParam === t && !/session/.test(here) ? 'on' : ''}" href="${ROOT}practice/?track=${t}">${label}</a>`;
     const sn = document.createElement('div');
     sn.className = 'sn';
     sn.innerHTML = `
-      <a class="sn-brand" href="${ROOT}"><img class="sn-logo" src="${ROOT}assets/logo.png" alt="" width="34" height="34"><span><b>YourTechBuddy</b><small>LLD &amp; HLD in Hindi</small></span></a>
-      <button class="sn-search" data-cmdk>${icon('search')}<span>Search</span><kbd>⌘K</kbd></button>
+      <div class="sn-top"><a class="sn-brand" href="${ROOT}" title="YourTechBuddy"><img class="sn-logo" src="${ROOT}assets/logo.png" alt="" width="34" height="34"><span><b>YourTechBuddy</b><small>LLD &amp; HLD in Hindi</small></span></a>
+        <button class="sn-collapse" data-side-toggle aria-label="Collapse sidebar" title="Collapse sidebar">${icon('chev')}</button></div>
+      <button class="sn-search" data-cmdk title="Search (⌘K)">${icon('search')}<span>Search</span><kbd>⌘K</kbd></button>
       ${item('', 'Home', 'home')}
       ${item('courses/', 'Courses', 'courses')}
       ${item('patterns/', 'Design patterns', 'pattern')}
-      <a class="sn-item ${pr && !(trackParam || /session/.test(here)) ? '' : ''} ${pr ? 'on' : ''}" href="${ROOT}practice/">${icon('practice')}<span>Mock interviews</span></a>
+      <a class="sn-item ${pr ? 'on' : ''}" href="${ROOT}practice/" title="Mock interviews">${icon('practice')}<span>Mock interviews</span></a>
       ${sub('lld', 'LLD · classes &amp; code')}
       ${sub('hld', 'HLD · system design')}
       ${item('playground/', 'Playground', 'code')}
       ${session ? item('me/', 'My learning', 'me') : ''}
       ${admin ? `<div class="sn-label">Studio</div>${item('planner/', 'Content planner', 'plan')}${item('ideas/', 'Ideas', 'idea')}${item('admin/problems.html', 'Interview problems', 'puzzle')}${item('admin/', 'Courses admin', 'admin')}` : ''}
       <div class="sn-foot">
-        <a class="sn-yt" href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener"><i></i>Watch on YouTube</a>
+        <a class="sn-yt" href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener" title="Watch on YouTube"><i></i><span>Watch on YouTube</span></a>
         <div class="sn-row"><span class="sn-slot"></span></div>
       </div>`;
     // the admin "problems" link would also match "admin/"; keep only the most specific one active
@@ -345,6 +350,7 @@
     const slot = sn.querySelector('.sn-slot');
     if (auth) slot.replaceWith(auth); else slot.remove();
     document.body.classList.add('shell');
+    if (document.documentElement.classList.contains('side-mini')) { const b = sn.querySelector('[data-side-toggle]'); b.title = 'Expand sidebar'; b.setAttribute('aria-label', 'Expand sidebar'); b.setAttribute('aria-expanded', 'false'); }
     const tb = document.createElement('nav');
     tb.className = 'tabbar';
     tb.setAttribute('aria-label', 'Main');
@@ -430,6 +436,19 @@
     } else if (e.key === 'Escape' && cmdkEl && !cmdkEl.hidden) closeCmdk();
   });
   document.addEventListener('click', (e) => { if (e.target.closest('[data-cmdk]')) { e.preventDefault(); openCmdk(); } });
+
+  /* Collapsible sidebar: an icon-only rail; remembered per browser. Shortcut: [ */
+  function setSideMini(on) {
+    document.documentElement.classList.toggle('side-mini', on);
+    LS.set('ytb:side-mini', on ? 1 : 0);
+    document.querySelectorAll('[data-side-toggle]').forEach((b) => { const t = on ? 'Expand sidebar' : 'Collapse sidebar'; b.title = t; b.setAttribute('aria-label', t); b.setAttribute('aria-expanded', String(!on)); });
+    window.dispatchEvent(new CustomEvent('ytb:sidebar', { detail: on }));
+  }
+  document.addEventListener('click', (e) => { if (e.target.closest('[data-side-toggle]')) setSideMini(!document.documentElement.classList.contains('side-mini')); });
+  document.addEventListener('keydown', (e) => {
+    const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '') || document.activeElement?.isContentEditable;
+    if (e.key === '[' && !typing && !e.metaKey && !e.ctrlKey && document.body.classList.contains('shell')) setSideMini(!document.documentElement.classList.contains('side-mini'));
+  });
   const thumb = (id, q = 'mqdefault') => `https://i.ytimg.com/vi/${encodeURIComponent(id)}/${q}.jpg`;
 
   window.YTB = {

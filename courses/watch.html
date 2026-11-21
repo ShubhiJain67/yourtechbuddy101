@@ -13,6 +13,20 @@
 <link rel="stylesheet" href="courses.css">
 <style>
   .layout{display:grid;grid-template-columns:340px minmax(0,1fr);gap:0;flex:1;min-height:0}
+  /* collapsible lesson list (desktop) */
+  .ah-top{display:flex;align-items:flex-start;gap:8px}
+  .ah-top h2{flex:1;min-width:0}
+  .list-toggle{width:28px;height:28px;flex:none;border:1px solid transparent;border-radius:7px;background:none;color:var(--faint);display:grid;place-items:center;margin:-4px -6px 0 0}
+  .list-toggle:hover{background:var(--panel2);color:var(--text);border-color:var(--border)}
+  .list-toggle svg{width:16px;height:16px}
+  .lessons-open{display:none;margin-bottom:12px}
+  @media (max-width:980px){.list-toggle{display:none}}
+  @media (min-width:981px){
+    .layout.lessons-hidden{grid-template-columns:minmax(0,1fr)}
+    .layout.lessons-hidden > aside{display:none}
+    .layout.lessons-hidden .lessons-open{display:inline-flex}
+    .layout.lessons-hidden .stage{max-width:1100px}
+  }
   .stage{padding:24px clamp(16px,3vw,32px) 40px;min-width:0;max-width:960px}
   .player-wrap{position:relative;aspect-ratio:16/9;width:100%;max-width:min(880px,calc((100vh - 290px) * 16 / 9));min-width:min(100%,480px);background:#000;border-radius:4px;overflow:hidden;border:1.5px solid var(--text)}
   .player-wrap > div, .player-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
@@ -80,7 +94,7 @@
   <div id="auth"></div>
 </header>
 
-<div class="layout">
+<div class="layout" id="layout">
   <main class="stage">
     <div class="player-wrap">
       <div id="player"></div>
@@ -91,6 +105,7 @@
       </div>
     </div>
 
+    <button class="btn sm lessons-open" data-lessons-toggle aria-label="Show lesson list">☰ Lessons</button>
     <div class="crumb"><a href="./">Courses</a> / <span id="crumb-course"></span> / <span id="crumb-sec"></span></div>
     <h1 id="title">Loading…</h1>
 
@@ -115,7 +130,7 @@
 
   <aside>
     <div class="aside-head">
-      <h2 id="course-title"></h2>
+      <div class="ah-top"><h2 id="course-title"></h2><button class="list-toggle" data-lessons-toggle aria-label="Hide lesson list" title="Hide lesson list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button></div>
       <div class="progress"><i id="bar" style="width:0%"></i></div>
       <div class="meta"><span id="done-count"></span><span id="pct"></span></div>
     </div>
@@ -368,6 +383,11 @@
     showLessonMock(l.title);
     showLessonCode(l.title);
   }
+  /* ---------- Collapsible lesson list (remembered) ---------- */
+  const setListHidden = (hidden) => { $('layout').classList.toggle('lessons-hidden', hidden); YTB.LS.set('ytb:lessons-hidden', hidden ? 1 : 0); };
+  setListHidden(!!YTB.LS.get('ytb:lessons-hidden', 0));
+  document.addEventListener('click', (e) => { if (e.target.closest('[data-lessons-toggle]')) setListHidden(!$('layout').classList.contains('lessons-hidden')); });
+
   /* ---------- Mock interview for this lesson (only when one exists for this topic) ---------- */
   let probList = null, mockFor = null;
   async function showLessonMock(title) {
