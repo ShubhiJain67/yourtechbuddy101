@@ -100,8 +100,8 @@
         <button class="btn primary" id="next">Next →</button>
       </div>
       <div class="more3">
-        <a class="btn ghost" href="../practice/">Mock interview</a>
-        <a class="btn ghost" id="practice" href="../playground/">Practise in Playground</a>
+        <a class="btn ghost" id="mock" hidden>Mock interview</a>
+        <a class="btn ghost" id="practice" hidden>Practise in Playground</a>
         <a class="btn ghost" id="lesson-code" href="#lcode" hidden>Jump to code ↓</a>
         <a class="btn ghost" id="on-yt" target="_blank" rel="noopener">YouTube ↗</a>
       </div>
@@ -360,10 +360,31 @@
     $('mark').classList.toggle('done', !!isDone);
     $('on-yt').style.display = l.youtube ? '' : 'none';
     if (l.youtube) $('on-yt').href = `https://www.youtube.com/watch?v=${encodeURIComponent(l.youtube)}` + (course.playlist ? `&list=${course.playlist}` : '');
-    const lang = l.practice || course.practice;
-    $('practice').href = lang ? `../playground/#lang=${encodeURIComponent(lang)}` : '../playground/';
+    // Only lesson-specific actions: a playground language set on this lesson, and a mock interview for this exact topic
+    $('practice').hidden = !l.practice;
+    if (l.practice) $('practice').href = `../playground/#lang=${encodeURIComponent(l.practice)}`;
+    showLessonMock(l.title);
     showLessonCode(l.title);
   }
+  /* ---------- Mock interview for this lesson (only when one exists for this topic) ---------- */
+  let probList = null, mockFor = null;
+  const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  async function showLessonMock(title) {
+    mockFor = title; $('mock').hidden = true;
+    if (!YTB.apiOn || /pattern/i.test(title)) return; // pattern lessons use a design as an example; they aren't that design
+    if (!probList) probList = YTB.api('/api/practice/problems').then((r) => r.problems).catch(() => []);
+    const ps = await probList;
+    if (mockFor !== title) return;
+    const t = norm(title);
+    const keys = (p) => [norm(p.slug), norm(p.title.replace(/\(.*\)/, ''))].filter((k) => k.length >= 4);
+    const hits = ps.filter((p) => keys(p).some((k) => t.includes(k)));
+    const p = hits.find((x) => (x.track || 'lld') === 'lld') || hits[0];
+    if (!p) return;
+    $('mock').href = `../practice/session.html?p=${encodeURIComponent(p.slug)}`;
+    $('mock').textContent = `Mock interview: ${p.title.replace(/\s*\(.*\)$/, '')}`;
+    $('mock').hidden = false;
+  }
+
   /* ---------- Code for this lesson (live from the course repo on GitHub) ---------- */
   let codeFor = null;
   async function showLessonCode(title) {
