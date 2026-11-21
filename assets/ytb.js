@@ -16,6 +16,7 @@
   };
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   CFG.codeRepo = CFG.codeRepo || 'ShubhiJain67/low-level-design-101'; // GitHub repo with the LLD course code
+  CFG.codeCourse = CFG.codeCourse || 'lld'; // the course whose lessons get code from that repo
 
   /* ---------------- Small shared helpers (used across pages; don't copy them) ---------------- */
   const scripts = {};
