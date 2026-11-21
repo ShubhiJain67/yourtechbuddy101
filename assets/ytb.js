@@ -330,10 +330,7 @@
     // Topic sections: each has its own learning resources and mock interviews. Add a topic here.
     const SECTIONS = [
       { key: 'dsa', label: 'DSA', full: 'Data structures & algorithms', ic: 'bars', href: 'dsa/', course: 'dsa', on: () => isOn('dsa/'),
-        kids: () => `<div class="sn-grp" data-list="dsa">
-          <div class="sn-grp-row"><a class="sn-item sn-sub" href="${ROOT}dsa/">Algorithms</a>
-            <button class="sn-grp-tog" data-grp-toggle="dsa" aria-label="Show algorithms" aria-expanded="false">${icon('chev')}</button></div>
-          <div class="sn-probs" id="sn-list-dsa"></div></div>` },
+        kids: () => `<div class="sn-algos" data-list="dsa"></div>` },
       { key: 'lld', label: 'LLD', full: 'Low level design', ic: 'layers', href: 'courses/watch.html?c=lld', course: 'lld',
         kids: () => kid('patterns/', 'Design patterns', isOn('patterns/')) + sub('lld', 'Mock interviews') },
       { key: 'hld', label: 'HLD', full: 'High level design', ic: 'server', href: 'practice/?track=hld', course: 'hld',
@@ -418,15 +415,11 @@
   let currentProblem = new URLSearchParams(location.search).get('p');
   // every DSA algorithm under DSA; each opens its own page
   async function fillDsa(sn) {
-    const g = sn.querySelector('.sn-grp[data-list="dsa"]'); if (!g) return;
+    const g = sn.querySelector('[data-list="dsa"]'); if (!g) return;
     await loadScript(ROOT + 'assets/dsa.js').catch(() => {});
     const D = window.YTBDSA; if (!D) return;
     const onDsa = isOn('dsa/'), cur = onDsa ? (new URLSearchParams(location.search).get('t') || D.list[0].key) : null;
-    const open = new Set(LS.get('ytb:sn-open', []));
-    if (onDsa) { open.add('dsa'); LS.set('ytb:sn-open', [...open]); }
-    g.classList.toggle('open', open.has('dsa'));
-    g.querySelector('[data-grp-toggle]').setAttribute('aria-expanded', String(open.has('dsa')));
-    g.querySelector('.sn-probs').innerHTML = D.cats.map((c) => `<span class="sn-cat">${esc(c)}</span>` + D.list.filter((t) => t.cat === c)
+    g.innerHTML = D.cats.map((c) => `<span class="sn-cat">${esc(c)}</span>` + D.list.filter((t) => t.cat === c)
       .map((t) => `<a class="sn-prob ${t.key === cur ? 'on' : ''}" href="${ROOT}dsa/?t=${t.key}" data-dsa="${t.key}"><span>${esc(t.name)}</span></a>`).join('')).join('');
     // on the DSA page, switching topics updates the highlight
     window.YTB_markDsa = (key) => g.querySelectorAll('[data-dsa]').forEach((a) => a.classList.toggle('on', a.dataset.dsa === key));
