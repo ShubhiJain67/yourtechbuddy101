@@ -435,7 +435,9 @@
     $('practice').hidden = !l.practice;
     if (l.practice) $('practice').href = `../playground/#lang=${encodeURIComponent(l.practice)}`;
     showLessonMock(l.title);
-    showLessonCode(l.title);
+    // lesson code comes from the LLD course repo, so only that course shows it
+    if (course.slug === (YTB.config.codeCourse || 'lld')) showLessonCode(l.title);
+    else { $('lesson-code').hidden = true; $('lcode').hidden = true; }
   }
   /* ---------- Module quizzes: courses/quizzes/<course>.json, matched to modules by name ---------- */
   let quizData = null, passPct = 70, quizOn = null;

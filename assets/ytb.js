@@ -416,6 +416,8 @@
   // every DSA algorithm under DSA; each opens its own page
   async function fillDsa(sn) {
     const g = sn.querySelector('[data-list="dsa"]'); if (!g) return;
+    // the video course page has its own lesson list on the left, so the sidebar doesn't repeat the algorithms there
+    if (here === ROOT + 'courses/watch.html') { g.remove(); return; }
     await loadScript(ROOT + 'assets/dsa.js').catch(() => {});
     const D = window.YTBDSA; if (!D) return;
     const onDsa = isOn('dsa/'), cur = onDsa ? (new URLSearchParams(location.search).get('t') || D.list[0].key) : null;
