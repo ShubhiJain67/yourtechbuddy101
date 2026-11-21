@@ -69,6 +69,7 @@
           <li>You get suggestions by reply email, at the address you signed in with.</li>
         </ol>
       </div>
+      <div id="book"></div>
       <div class="panel past" id="past" hidden></div>
     </aside>
   </div>
@@ -159,6 +160,7 @@
     else if (!st.canSend) main.innerHTML = `<div class="gate"><h2>You've sent one today</h2><p>Replies go to <b>${esc(st.email)}</b>. You can send another resume tomorrow.</p></div>`;
     else drawForm(st);
   }
+  $('book').innerHTML = YTB.bookStrip({ title: 'Prefer to go through it live?', text: 'Book a 30-minute live resume review over video.' });
   load();
 </script>
 </body>

@@ -104,6 +104,7 @@
   <section id="v-choose" hidden>
     <div class="ph"><div><h1>Mock interviews</h1><p>Practise a real interview round, one step at a time. An AI interviewer scores every step, points out what's missing and throws in a follow-up twist. Pick the type of round.</p></div></div>
     <div class="choose" id="rounds"></div>
+    <div id="book" style="margin-top:22px"></div>
     <div id="recent-all"></div>
   </section>
 
@@ -271,6 +272,7 @@
       show();
     }
   })();
+  document.getElementById('book').innerHTML = YTB.bookStrip({ title: 'Want a mock with a real interviewer?', text: 'Book a 60-minute LLD or DSA mock interview over video, with feedback at the end.' });
 </script>
 </body>
 </html>

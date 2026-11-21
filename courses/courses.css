@@ -323,3 +323,12 @@ footer a:hover{color:var(--text)}
 .sbar.done{background:var(--ok)} .sbar.done span{color:var(--on-accent)}
 @media (prefers-reduced-motion:reduce){.sbar{transition:none}}
 @media (max-width:640px){ .sbars{height:170px;gap:3px} .sbar span{font-size:10px} }
+
+/* "Book a 1:1" strip (home, practice, resume) */
+.book-strip{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:18px 22px}
+.book-strip .ic{width:42px;height:42px;flex:none;border-radius:12px;background:var(--accent-soft);display:grid;place-items:center;color:var(--accent)}
+.book-strip .ic svg{width:21px;height:21px}
+.book-strip h3{margin:0;font:600 16px var(--sans)}
+.book-strip p{margin:2px 0 0;color:var(--muted);font-size:14px;max-width:60ch}
+.book-strip .sp{flex:1}
+@media (max-width:640px){ .book-strip .btn{width:100%;justify-content:center} }

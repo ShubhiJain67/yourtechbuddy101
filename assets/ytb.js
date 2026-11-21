@@ -16,6 +16,7 @@
   };
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   CFG.codeRepo = CFG.codeRepo || 'ShubhiJain67/low-level-design-101'; // GitHub repo with the LLD course code
+  CFG.topmate = CFG.topmate || 'https://topmate.io/shubhijain'; // where 1:1 sessions are booked
 
   /* ---------------- Small shared helpers (used across pages; don't copy them) ---------------- */
   const scripts = {};
@@ -197,6 +198,11 @@
     setTimeout(() => d.remove(), 5000);
   }
 
+  /* "Book a 1:1" strip used on several pages: YTB.bookStrip({ title, text, cta }) */
+  function bookStrip({ title = 'Talk it through 1:1', text = 'Book a video session for mock interviews, resume reviews or career guidance.', cta = 'Book on Topmate' } = {}) {
+    return `<div class="panel book-strip"><span class="ic">${icon('plan')}</span><div><h3>${esc(title)}</h3><p>${esc(text)}</p></div><span class="sp"></span><a class="btn" href="${esc(CFG.topmate)}" target="_blank" rel="noopener">${esc(cta)} ↗</a></div>`;
+  }
+
   /* Header auth area: Sign-in button, or avatar menu (My courses / Admin / Sign out). */
   function renderAuth(el) {
     if (!el || !authOn) return;
@@ -359,6 +365,7 @@
       <a class="sn-item ${here === ROOT + 'courses/' ? 'on' : ''}" href="${ROOT}courses/" title="All courses">${icon('courses')}<span>All courses</span></a>
       ${item('playground/', 'Playground', 'code')}
       ${item('resume/', 'Resume review', 'doc')}
+      <a class="sn-item" href="${esc(CFG.topmate)}" target="_blank" rel="noopener" title="Book a 1:1 session">${icon('plan')}<span>Book a 1:1 ↗</span></a>
       ${session ? item('me/', 'My learning', 'me') : ''}
       ${admin ? `<div class="sn-label">Studio</div>${item('planner/', 'Content planner', 'plan')}${item('ideas/', 'Ideas', 'idea')}${item('admin/problems.html', 'Interview problems', 'puzzle')}${item('admin/', 'Courses admin', 'admin')}` : ''}
       <div class="sn-foot">
@@ -415,6 +422,7 @@
       { g: 'Pages', t: 'HLD mock interviews', u: ROOT + 'practice/?track=hld', ic: 'server' },
       { g: 'Pages', t: 'Code playground', u: ROOT + 'playground/', ic: 'code' },
       { g: 'Pages', t: 'Resume review', u: ROOT + 'resume/', ic: 'doc' },
+      { g: 'Pages', t: 'Book a 1:1 session (Topmate)', u: CFG.topmate, ic: 'plan' },
     ];
     if (session) items.push({ g: 'Pages', t: 'My learning', u: ROOT + 'me/', ic: 'me' });
     if (session && session.user.isAdmin) items.push({ g: 'Studio', t: 'Content planner', u: ROOT + 'planner/', ic: 'plan' }, { g: 'Studio', t: 'Ideas', u: ROOT + 'ideas/', ic: 'idea' }, { g: 'Studio', t: 'Interview problems', u: ROOT + 'admin/problems.html', ic: 'puzzle' }, { g: 'Studio', t: 'Courses admin', u: ROOT + 'admin/', ic: 'admin' });
@@ -518,7 +526,7 @@
     get session() { return session; },
     get user() { return session && session.user; },
     get isAdmin() { return !!(session && session.user && session.user.isAdmin); },
-    getCourses, getCourse, progress, renderAuth, renderGoogleButton, signOut, toast: alertBox, loadScript, b64url, match, words,
+    bookStrip, getCourses, getCourse, progress, renderAuth, renderGoogleButton, signOut, toast: alertBox, loadScript, b64url, match, words,
     markProblem: (slug) => window.YTB_markProblem && window.YTB_markProblem(slug), // pages can listen for the current problem
     get theme() { return getTheme(); }, setTheme, icon, thumb, openCmdk,
   };

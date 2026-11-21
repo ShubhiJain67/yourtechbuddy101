@@ -120,6 +120,13 @@
   .prow .go{color:var(--faint);transition:transform .15s,color .15s}
   .prow:hover .go{color:var(--accent);transform:translateX(3px)}
 
+  .tm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+  .tm{display:flex;flex-direction:column;gap:6px;padding:16px 18px;text-decoration:none;color:var(--text);transition:border-color .12s,transform .12s}
+  .tm:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .tm b{font-size:15px;font-weight:600}
+  .tm span{font-size:13px;color:var(--muted)}
+  .tm i{font-style:normal;margin-top:auto;padding-top:6px;font-size:13.5px;font-weight:600;color:var(--accent)}
+  @media (prefers-reduced-motion:reduce){.tm{transition:none}.tm:hover{transform:none}}
   .cta-strip{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:20px 24px;margin-top:34px}
   .cta-strip .ic{width:44px;height:44px;border-radius:12px;background:var(--panel2);display:grid;place-items:center;color:var(--accent)}
   .cta-strip .ic svg{width:22px;height:22px}
@@ -220,6 +227,9 @@
   <div class="sec-h"><h2>Courses</h2><span class="sp"></span><a class="more" href="courses/">See all</a></div>
   <div class="cgrid" id="cgrid"></div>
 
+  <div class="sec-h"><h2>1:1 sessions</h2><span class="sp"></span><a class="more" id="tm-all" target="_blank" rel="noopener">See all on Topmate ↗</a></div>
+  <div class="tm-grid" id="tm-grid"></div>
+
   <div class="panel cta-strip">
     <span class="ic" id="pg-ic"></span>
     <div><h3>Write and run code in your browser</h3><p>Java, Python, C++, Go, JavaScript. No install, share a link to your code.</p></div>
@@ -270,6 +280,16 @@
   }
   document.querySelector('.sxtabs').addEventListener('click', (e) => { const b = e.target.closest('[data-sx]'); if (b) showSort(b.dataset.sx); });
   showSort('bubble-sort');
+
+  /* ================= 1:1 sessions (booked on Topmate; prices live there) ================= */
+  const SESSIONS = [
+    ['Mock interview: Low Level Design', 'Video call · 60 min'],
+    ['Mock interview: DSA', 'Video call · 60 min'],
+    ['Live resume review', 'Video call · 30 min'],
+    ['Career guidance', 'Video call · 30 min'],
+  ];
+  document.getElementById('tm-all').href = YTB.config.topmate;
+  document.getElementById('tm-grid').innerHTML = SESSIONS.map(([t, d]) => `<a class="panel tm" href="${esc(YTB.config.topmate)}" target="_blank" rel="noopener"><b>${esc(t)}</b><span>${esc(d)}</span><i>Book ↗</i></a>`).join('');
 
   /* tabs class is shared; the explorer's own tablist uses .ptabs for its handlers */
 
