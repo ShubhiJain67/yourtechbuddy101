@@ -10,12 +10,15 @@ PRACTICE_DAILY_LIMIT = "16"
 # Sites allowed to call this API (comma-separated).
 ALLOWED_ORIGINS = "https://yourtechbuddy101.com,https://www.yourtechbuddy101.com,http://localhost:8000,http://127.0.0.1:8000,http://127.0.0.1:5501"
 # Google OAuth Web Client ID (public, safe to commit). Paste yours here.
+# Where resume review requests are emailed. With Resend's free plan and no domain set up, this must be the email you signed up to Resend with.
+RESUME_TO = "yourtechbuddy101@gmail.com"
 GOOGLE_CLIENT_ID = "191165526401-dd71tv54d0f1pn45ud2jtg22i2b35fvn.apps.googleusercontent.com"
 
 # Secrets (NOT in this file — set with `npx wrangler secret put NAME`):
 #   SESSION_SECRET   random string used to sign login sessions
 #   ADMIN_EMAILS     comma-separated Google emails that get admin access
 #   YOUTUBE_API_KEY  YouTube Data API v3 key (for playlist import + durations)
+#   RESEND_API_KEY   Resend API key (free plan) for emailing resume review requests
 
 [[d1_databases]]
 binding = "DB"

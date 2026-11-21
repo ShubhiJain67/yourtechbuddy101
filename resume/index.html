@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" type="image/png" href="../assets/favicon.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<script src="../assets/theme.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resume review — YourTechBuddy</title>
+<meta name="description" content="Upload your resume, say what you want feedback on, and get suggestions back by email. Free.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../courses/courses.css">
+<style>
+  .rv{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:22px;align-items:start}
+  .rv-form{padding:22px 24px;display:flex;flex-direction:column;gap:16px}
+  .rv-form label.f{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600}
+  .rv-form label.f small{font-weight:400;color:var(--muted)}
+  .rv-form input[type=text],.rv-form select,.rv-form textarea{width:100%;padding:10px 12px;border:1px solid var(--border-strong);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font:15px var(--sans)}
+  .rv-form textarea{min-height:120px;resize:vertical;line-height:1.5}
+  .rv-form input:focus,.rv-form select:focus,.rv-form textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .drop{display:flex;align-items:center;gap:14px;padding:18px;border:1.5px dashed var(--border-strong);border-radius:var(--r);background:var(--panel2);cursor:pointer;transition:border-color .12s,background .12s}
+  .drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+  .drop:focus-within{border-color:var(--accent)}
+  .drop svg{width:30px;height:30px;flex:none;color:var(--accent)}
+  .drop b{display:block;font-size:15px}
+  .drop span{font-size:13.5px;color:var(--muted)}
+  .drop.has b{color:var(--accent)}
+  .drop input{position:absolute;opacity:0;width:1px;height:1px}
+  .fine{font-size:13px;color:var(--muted);margin:0;line-height:1.5}
+  .err{color:var(--err);font-size:14px;margin:0}
+  .rv-side{display:flex;flex-direction:column;gap:16px}
+  .how{padding:20px 22px}
+  .how h2{margin:0 0 12px;font:600 16px var(--sans)}
+  .how ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:10px;line-height:1.5;font-size:14.5px}
+  .past{padding:18px 22px}
+  .past h2{margin:0 0 10px;font:600 15px var(--sans)}
+  .past ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+  .past li{display:flex;justify-content:space-between;gap:12px;font-size:14px}
+  .past li span{color:var(--muted);white-space:nowrap}
+  .done{padding:28px;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+  .done h2{margin:0;font:600 22px var(--sans)}
+  .done p{margin:0;color:var(--muted);line-height:1.55;max-width:52ch}
+  .gate{padding:28px;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+  .gate h2{margin:0;font:600 20px var(--sans)}
+  .gate p{margin:0;color:var(--muted);line-height:1.55}
+  @media (max-width:900px){ .rv{grid-template-columns:minmax(0,1fr)} .row2{grid-template-columns:minmax(0,1fr)} .rv-form{padding:18px} }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="../"><div class="logo">YTB</div><b>yourtechbuddy</b></a>
+  <nav><a href="../courses/">courses</a><a href="../practice/">practice</a><a href="../playground/">playground</a></nav>
+  <div id="auth"></div>
+</header>
+
+<main class="page">
+  <div class="ph"><div><h1>Resume review</h1><p>Upload your resume, say what you want feedback on, and get suggestions back by email. Free.</p></div></div>
+  <div class="rv">
+    <section class="panel" id="main" aria-live="polite"><div class="skel" style="height:420px;margin:20px"></div></section>
+    <aside class="rv-side">
+      <div class="panel how">
+        <h2>How it works</h2>
+        <ol>
+          <li>Sign in, upload your resume as a PDF or Word file (up to 2 MB) and tell us the role you're aiming for.</li>
+          <li>It's emailed to YourTechBuddy along with your note. Your file isn't stored on this site.</li>
+          <li>You get suggestions by reply email, at the address you signed in with.</li>
+        </ol>
+      </div>
+      <div class="panel past" id="past" hidden></div>
+    </aside>
+  </div>
+</main>
+
+<footer><a href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a> · <a href="../privacy.html">Privacy</a></footer>
+
+<script src="../assets/config.js"></script>
+<script src="../assets/ytb.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id), esc = YTB.esc, main = $('main');
+  const MAX = 2 * 1024 * 1024, OK = /\.(pdf|docx?)$/i;
+  const fmtDate = (s) => new Date(s * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  const kb = (n) => n > 1024 * 1024 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+  let file = null;
+
+  function drawPast(list) {
+    $('past').hidden = !list.length;
+    $('past').innerHTML = `<h2>Sent before</h2><ul>${list.map((r) => `<li><b>${esc(r.role || r.filename)}</b><span>${fmtDate(r.created_at)}</span></li>`).join('')}</ul>`;
+  }
+
+  function drawForm(st) {
+    main.innerHTML = `<form class="rv-form" id="f" novalidate>
+      <div class="row2">
+        <label class="f">Role you're aiming for <input type="text" id="role" maxlength="120" placeholder="e.g. SDE 2, backend" required></label>
+        <label class="f">Experience <select id="level">
+          <option value="">Choose one</option><option>Student / fresher</option><option>0–2 years</option><option>2–5 years</option><option>5–8 years</option><option>8+ years</option></select></label>
+      </div>
+      <label class="f">What should the review focus on? <small>Projects, impact, ATS keywords, switching domains… the more specific, the better the feedback.</small>
+        <textarea id="msg" maxlength="3000" placeholder="I'm applying for backend roles at product companies and not getting shortlisted. Is my experience section strong enough?" required></textarea></label>
+      <label class="drop" id="drop">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 18v-6M9 15l3-3 3 3"/></svg>
+        <div><b id="drop-t">Choose your resume</b><span id="drop-s">PDF or Word, up to 2 MB. You can also drop it here.</span></div>
+        <input type="file" id="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+      </label>
+      <p class="err" id="err" hidden></p>
+      <div class="acts"><button class="btn primary" id="send" type="submit">Send for review</button></div>
+      <p class="fine">Replies go to <b>${esc(st.email)}</b>. By sending, you agree that your resume and note are emailed to YourTechBuddy for review. One request a day.</p>
+    </form>`;
+    const drop = $('drop'), input = $('file');
+    const pick = (f) => {
+      showErr('');
+      if (!f) return;
+      if (!OK.test(f.name)) return showErr('Upload a PDF or Word file (.pdf, .doc, .docx).');
+      if (f.size > MAX) return showErr(`That file is ${kb(f.size)}. The limit is 2 MB, so export a smaller PDF and try again.`);
+      file = f; drop.classList.add('has');
+      $('drop-t').textContent = f.name; $('drop-s').textContent = `${kb(f.size)} · click to choose a different file`;
+    };
+    input.addEventListener('change', () => pick(input.files[0]));
+    ['dragenter', 'dragover'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add('over'); }));
+    ['dragleave', 'drop'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
+    drop.addEventListener('drop', (e) => pick(e.dataTransfer.files[0]));
+    $('f').addEventListener('submit', send);
+  }
+  function showErr(m) { const e = $('err'); if (!e) return; e.hidden = !m; e.textContent = m; }
+
+  const toB64 = (f) => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = no; r.readAsDataURL(f); });
+
+  async function send(e) {
+    e.preventDefault();
+    const role = $('role').value.trim(), msg = $('msg').value.trim();
+    if (!role) { $('role').focus(); return showErr('Add the role you\'re aiming for.'); }
+    if (!msg) { $('msg').focus(); return showErr('Say what you want feedback on.'); }
+    if (!file) return showErr('Choose your resume file.');
+    const btn = $('send'); btn.disabled = true; btn.textContent = 'Sending…'; showErr('');
+    try {
+      const data = await toB64(file);
+      const r = await YTB.api('/api/resume', { method: 'POST', body: { role, level: $('level').value, message: msg, file: { name: file.name, data } } });
+      main.innerHTML = `<div class="done"><span class="chip">Sent</span><h2>Your resume is on its way.</h2>
+        <p>Suggestions will come back by email to <b>${esc(r.email)}</b>. Keep an eye on your inbox, and your spam folder just in case.</p>
+        <a class="btn" href="../">Back to home</a></div>`;
+      load(false);
+    } catch (err) { showErr(err.message || 'Something went wrong. Try again.'); btn.disabled = false; btn.textContent = 'Send for review'; }
+  }
+
+  async function load(drawMain = true) {
+    if (!YTB.apiOn) { main.innerHTML = '<div class="gate"><h2>Not available yet</h2><p>Resume reviews need the site\'s API, which isn\'t set up here.</p></div>'; return; }
+    if (!YTB.user) {
+      main.innerHTML = `<div class="gate"><h2>Sign in to send your resume</h2><p>Signing in means the reply reaches you: suggestions are emailed to the Google account you sign in with.</p><div id="gsi"></div></div>`;
+      if (YTB.authOn) YTB.renderGoogleButton($('gsi'), { size: 'large' });
+      return;
+    }
+    let st;
+    try { st = await YTB.api('/api/resume'); } catch (e) { main.innerHTML = `<div class="gate"><h2>Couldn't load this page</h2><p>${esc(e.message)}</p></div>`; return; }
+    drawPast(st.requests || []);
+    if (!drawMain) return;
+    if (!st.ready) main.innerHTML = '<div class="gate"><h2>Opening soon</h2><p>Resume reviews aren\'t switched on yet. Check back shortly.</p></div>';
+    else if (!st.canSend) main.innerHTML = `<div class="gate"><h2>You've sent one today</h2><p>Replies go to <b>${esc(st.email)}</b>. You can send another resume tomorrow.</p></div>`;
+    else drawForm(st);
+  }
+  load();
+</script>
+</body>
+</html>

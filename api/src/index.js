@@ -4,6 +4,8 @@
 //           GET  /api/courses                 published courses (admins: ?all=1 includes drafts)
 //           GET  /api/courses/:slug
 //           GET  /api/videos/links?ids=a,b    GitHub links found in those videos' YouTube descriptions
+// Resume:   GET  /api/resume                  your past requests + whether you can send today (signed in)
+//           POST /api/resume                  { role, level, message, file: { name, data(base64) } } -> emailed to RESUME_TO
 // Auth:     POST /api/auth/google             { credential }  -> { token, user }
 //           GET  /api/me
 //           GET  /api/progress                -> { progress: { [courseId]: [videoId] } }
@@ -82,6 +84,12 @@ async function route(req, env) {
     return mergeProgress(env, user, await readJSON(req));
   }
 
+  if (path === '/api/resume') {
+    const user = await requireUser(req, env);
+    if (m === 'GET') return resumeStatus(env, user);
+    if (m === 'POST') return resumeSend(env, user, await readJSON(req, 3_500_000));
+  }
+
   if (path.startsWith('/api/practice/') || path.startsWith('/api/admin/problems')) {
     const res = await practiceRoutes(req, env, path, m, url);
     if (res) return res;
@@ -122,9 +130,9 @@ function httpError(status, message) {
   e.status = status;
   return e;
 }
-async function readJSON(req) {
+async function readJSON(req, max = 1_000_000) {
   const text = await req.text();
-  if (text.length > 1_000_000) throw httpError(413, 'Body too large');
+  if (text.length > max) throw httpError(413, 'Body too large');
   try { return JSON.parse(text || '{}'); } catch { throw httpError(400, 'Invalid JSON'); }
 }
 const now = () => Math.floor(Date.now() / 1000);
@@ -500,6 +508,52 @@ async function videoDetails(env, ids) {
     for (const v of j.items || []) out[v.id] = { title: v.snippet.title, duration: isoDuration(v.contentDetails.duration) };
   }
   return out;
+}
+
+/* ------------------------- Resume review (emailed, file never stored) ------------------------- */
+const RESUME_MAX = 2 * 1024 * 1024;
+const RESUME_TYPES = { pdf: 'application/pdf', doc: 'application/msword', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' };
+const dayStart = () => Math.floor(Date.now() / 86400000) * 86400;
+async function resumeStatus(env, user) {
+  const { results } = await env.DB.prepare('SELECT id, role, filename, created_at FROM resume_requests WHERE user_id = ? ORDER BY created_at DESC LIMIT 10').bind(user.id).all();
+  const sentToday = results.some((r) => r.created_at >= dayStart());
+  return json({ requests: results, canSend: user.isAdmin || !sentToday, email: user.email, ready: !!(env.RESEND_API_KEY && env.RESUME_TO) });
+}
+async function resumeSend(env, user, b) {
+  if (!env.RESEND_API_KEY || !env.RESUME_TO) throw httpError(503, 'Resume reviews are not switched on yet. Please try again later.');
+  const last = await env.DB.prepare('SELECT created_at FROM resume_requests WHERE user_id = ? ORDER BY created_at DESC LIMIT 1').bind(user.id).first();
+  if (!user.isAdmin && last && last.created_at >= dayStart()) throw httpError(429, 'You can send one resume a day. Try again tomorrow.');
+  const role = str(b.role, 120), level = str(b.level, 40), message = str(b.message, 3000);
+  const f = b.file || {}, name = str(f.name, 120).replace(/[^\w .()-]/g, '_') || 'resume';
+  const ext = (name.match(/\.([a-z0-9]+)$/i) || [])[1]?.toLowerCase();
+  if (!RESUME_TYPES[ext]) throw httpError(400, 'Upload a PDF or Word file (.pdf, .doc, .docx).');
+  const data = String(f.data || '').replace(/^data:[^,]*,/, '');
+  let bytes;
+  try { bytes = Uint8Array.from(atob(data), (c) => c.charCodeAt(0)); } catch { throw httpError(400, 'The file could not be read. Try again.'); }
+  if (!bytes.length) throw httpError(400, 'The file is empty.');
+  if (bytes.length > RESUME_MAX) throw httpError(413, 'The file is over 2 MB. Export a smaller PDF and try again.');
+  const head = String.fromCharCode(...bytes.slice(0, 4));
+  const okMagic = ext === 'pdf' ? head === '%PDF' : ext === 'docx' ? head.startsWith('PK') : bytes[0] === 0xd0 && bytes[1] === 0xcf;
+  if (!okMagic) throw httpError(400, `That file doesn't look like a real .${ext}.`);
+  const who = user.name || user.email;
+  const rows = [['Name', who], ['Email', user.email], ['Target role', role || '—'], ['Experience', level || '—']];
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const html = `<p>New resume review request from yourtechbuddy101.com. Reply to this email to answer ${esc(who)} directly.</p>
+    <table cellpadding="6" style="border-collapse:collapse">${rows.map(([k, v]) => `<tr><td style="color:#666">${k}</td><td><b>${esc(v)}</b></td></tr>`).join('')}</table>
+    <p style="color:#666;margin-bottom:4px">What they want feedback on:</p><p style="white-space:pre-wrap;margin-top:0">${esc(message || '—')}</p>`;
+  const text = `New resume review request. Reply to this email to answer ${who} directly.\n\n${rows.map(([k, v]) => `${k}: ${v}`).join('\n')}\n\nWhat they want feedback on:\n${message || '-'}`;
+  const r = await fetch(env.RESEND_URL || 'https://api.resend.com/emails', { // RESEND_URL only for local testing
+    method: 'POST',
+    headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' },
+    body: JSON.stringify({
+      from: env.RESUME_FROM || 'YourTechBuddy <onboarding@resend.dev>', to: env.RESUME_TO.split(',').map((s) => s.trim()), reply_to: user.email,
+      subject: `Resume review: ${who}${role ? ' · ' + role : ''}`, html, text, attachments: [{ filename: name, content: data }],
+    }),
+  });
+  if (!r.ok) { console.log('resend failed', r.status, await r.text().catch(() => '')); throw httpError(502, "Couldn't send your resume right now. Please try again in a few minutes."); }
+  await env.DB.prepare('INSERT INTO resume_requests (user_id, role, level, message, filename, size, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    .bind(user.id, role, level, message, name, bytes.length, now()).run();
+  return json({ ok: true, email: user.email });
 }
 
 /* GitHub links from video descriptions, so editing a description on YouTube updates the site. Cached 6h per video. */
