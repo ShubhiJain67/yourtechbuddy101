@@ -86,6 +86,16 @@ kbd{font:500 11px var(--mono);border:1px solid var(--border);border-bottom-width
 .sn-prob .d{width:7px;height:7px;border-radius:50%;flex:none;background:var(--border-strong)}
 .sn-prob .d.Easy{background:var(--ok)} .sn-prob .d.Medium{background:var(--warn)} .sn-prob .d.Hard{background:var(--err)}
 .sn-none{display:block;padding:5px 8px;font-size:12.5px;color:var(--faint)}
+/* topic sections (DSA / LLD / HLD) with their resources underneath */
+.sn-sec{margin-top:2px}
+.sn a.sn-sec-a{flex:1;min-width:0}
+.sn a.sn-sec-a > span{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+.sn a.sn-sec-a small{font:400 11.5px var(--sans);color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sn-sec.has-on > .sn-grp-row a.sn-sec-a{color:var(--text)}
+.sn-sec.has-on > .sn-grp-row a.sn-sec-a svg{color:var(--accent)}
+.sn-kids{display:none;padding-bottom:4px}
+.sn-sec.open > .sn-kids{display:block}
+.sn-sec.open > .sn-grp-row .sn-grp-tog svg{transform:rotate(90deg)}
 .sn-foot{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding-top:14px;border-top:1px solid var(--border)}
 .sn-row{display:flex;align-items:center;gap:8px}
 .sn-row #auth{flex:1;min-width:0}
@@ -107,6 +117,7 @@ kbd{font:500 11px var(--mono);border:1px solid var(--border);border-bottom-width
   html.side-mini .sn a.sn-item .ct,
   html.side-mini .sn-search span,html.side-mini .sn-search kbd,
   html.side-mini .sn-label,html.side-mini .sn a.sn-sub,html.side-mini .sn-grp,
+  html.side-mini .sn-kids,html.side-mini .sn-sec .sn-grp-tog,
   html.side-mini .sn-yt > span{display:none}
   html.side-mini .sn-search{justify-content:center;padding:9px 0}
   html.side-mini .sn a.sn-item{justify-content:center;padding:10px 0}
@@ -135,7 +146,7 @@ kbd{font:500 11px var(--mono);border:1px solid var(--border);border-bottom-width
   .tabbar button svg{width:21px;height:21px}
   body.drawer-open .tabbar button{color:var(--accent)}
   /* the sidebar's problem groups only live in the drawer on phones */
-  body:not(.drawer-open) .sn-grp{display:none}
+  body:not(.drawer-open) .sn-grp,body:not(.drawer-open) .sn-sec{display:none}
   /* drawer */
   .sn-backdrop{display:none}
   body.drawer-open{padding-top:56px;overflow:hidden}

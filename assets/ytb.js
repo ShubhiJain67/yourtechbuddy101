@@ -324,6 +324,27 @@
     const admin = !!(session && session.user && session.user.isAdmin);
     const item = (path, label, ic, extra = '') => `<a class="sn-item ${isOn(path) ? 'on' : ''}" href="${ROOT}${path}" title="${label}">${icon(ic)}<span>${label}</span>${extra}</a>`;
     const pr = isOn('practice/');
+    const qs = new URLSearchParams(location.search);
+    const courseOn = (slug) => here === ROOT + 'courses/watch.html' && qs.get('c') === slug;
+    const kid = (href, label, on) => `<a class="sn-item sn-sub ${on ? 'on' : ''}" href="${ROOT}${href}">${label}</a>`;
+    // Topic sections: each has its own learning resources and mock interviews. Add a topic here.
+    const SECTIONS = [
+      { key: 'dsa', label: 'DSA', full: 'Data structures & algorithms', ic: 'bars', href: 'dsa/', course: 'dsa',
+        kids: () => kid('dsa/', 'Sorting algorithms', isOn('dsa/')) },
+      { key: 'lld', label: 'LLD', full: 'Low level design', ic: 'layers', href: 'courses/watch.html?c=lld', course: 'lld',
+        kids: () => kid('patterns/', 'Design patterns', isOn('patterns/')) + sub('lld', 'Mock interviews') },
+      { key: 'hld', label: 'HLD', full: 'High level design', ic: 'server', href: 'practice/?track=hld', course: 'hld',
+        kids: () => sub('hld', 'Mock interviews') },
+    ];
+    const secOpen = LS.get('ytb:sn-sec', {});
+    const section = (s) => {
+      const kids = `<span data-course-slot="${s.course}"></span>` + s.kids();
+      const on = /class="[^"]*\bon\b/.test(kids) || courseOn(s.course) || (pr && trackParam === s.key);
+      return `<div class="sn-sec ${secOpen[s.key] !== false ? 'open' : ''} ${on ? 'has-on' : ''}" data-sec="${s.key}">
+        <div class="sn-grp-row"><a class="sn-item sn-sec-a" href="${ROOT}${s.href}" title="${s.full}">${icon(s.ic)}<span>${s.label}<small>${s.full}</small></span></a>
+          <button class="sn-grp-tog" data-sec-toggle="${s.key}" aria-label="Show ${s.label}" aria-expanded="${secOpen[s.key] !== false}">${icon('chev')}</button></div>
+        <div class="sn-kids">${kids}</div></div>`;
+    };
     const sub = (t, label) => `<div class="sn-grp" data-track="${t}">
         <div class="sn-grp-row"><a class="sn-item sn-sub ${pr && trackParam === t && !/session/.test(here) ? 'on' : ''}" href="${ROOT}practice/?track=${t}">${label}</a>
           <button class="sn-grp-tog" data-grp-toggle="${t}" aria-label="Show ${t.toUpperCase()} problems" aria-expanded="false">${icon('chev')}</button></div>
@@ -334,12 +355,9 @@
       <div class="sn-top"><a class="sn-brand" href="${ROOT}" title="YourTechBuddy"><img class="sn-logo" src="${ROOT}assets/logo.png" alt="" width="34" height="34"><span><b>YourTechBuddy</b><small>Learn · build · practise</small></span></a></div>
       <button class="sn-search" data-cmdk title="Search (⌘K)">${icon('search')}<span>Search</span><kbd>⌘K</kbd></button>
       ${item('', 'Home', 'home')}
-      ${item('courses/', 'Courses', 'courses')}
-      ${item('patterns/', 'Design patterns', 'pattern')}
-      ${item('dsa/', 'DSA', 'bars')}
-      <a class="sn-item ${pr ? 'on' : ''}" href="${ROOT}practice/" title="Mock interviews">${icon('practice')}<span>Mock interviews</span></a>
-      ${sub('lld', 'LLD · classes &amp; code')}
-      ${sub('hld', 'HLD · system design')}
+      ${SECTIONS.map(section).join('')}
+      <div class="sn-label">More</div>
+      <a class="sn-item ${here === ROOT + 'courses/' ? 'on' : ''}" href="${ROOT}courses/" title="All courses">${icon('courses')}<span>All courses</span></a>
       ${item('playground/', 'Playground', 'code')}
       ${session ? item('me/', 'My learning', 'me') : ''}
       ${admin ? `<div class="sn-label">Studio</div>${item('planner/', 'Content planner', 'plan')}${item('ideas/', 'Ideas', 'idea')}${item('admin/problems.html', 'Interview problems', 'puzzle')}${item('admin/', 'Courses admin', 'admin')}` : ''}
@@ -364,13 +382,25 @@
     tb.className = 'tabbar';
     tb.setAttribute('aria-label', 'Main');
     const tab = (path, label, ic) => `<a class="${isOn(path) ? 'on' : ''}" href="${ROOT}${path}">${icon(ic)}${label}</a>`;
-    tb.innerHTML = tab('', 'Home', 'home') + tab('courses/', 'Courses', 'courses') + tab('practice/', 'Interviews', 'practice') + tab('patterns/', 'Patterns', 'pattern')
+    const secTab = (s) => `<a class="${sn.querySelector(`[data-sec="${s.key}"]`).classList.contains('has-on') ? 'on' : ''}" href="${ROOT}${s.href}">${icon(s.ic)}${s.label}</a>`;
+    tb.innerHTML = tab('', 'Home', 'home') + SECTIONS.map(secTab).join('')
       + `<button data-drawer aria-label="Menu" aria-expanded="false">${icon('menu')}Menu</button>`;
     // phones: the full sidebar slides out as a drawer from the Menu tab
     const backdrop = document.createElement('div'); backdrop.className = 'sn-backdrop'; backdrop.setAttribute('data-drawer-close', '');
     document.body.appendChild(backdrop);
     document.body.appendChild(tb);
     fillProblemGroups(sn);
+    sn.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-sec-toggle]'); if (!b) return;
+      const s = b.closest('.sn-sec'), open = !s.classList.contains('open');
+      s.classList.toggle('open', open); b.setAttribute('aria-expanded', String(open));
+      const st = LS.get('ytb:sn-sec', {}); st[b.dataset.secToggle] = open; LS.set('ytb:sn-sec', st);
+    });
+    // a topic's video course shows up under it as soon as the course exists
+    getCourses().then((cs) => cs.forEach((c) => {
+      const slot = sn.querySelector(`[data-course-slot="${c.slug}"]`); if (!slot) return;
+      slot.outerHTML = kid(`courses/watch.html?c=${encodeURIComponent(c.slug)}`, 'Video course', courseOn(c.slug));
+    })).catch(() => {});
   }
 
   /* Interview problems listed in the sidebar under each track, as collapsible groups. Cached so the sidebar is instant. */
