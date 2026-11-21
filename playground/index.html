@@ -464,7 +464,8 @@ function updateLangUI() {
     l.runner === 'py' ? (pyVersion ? `Python ${pyVersion} · in browser` : 'Python · in browser') :
     (l.compiler ? l.compiler.display : 'Compiled on Wandbox');
   if (l.runner === 'py') warmPython();
-  if (l.runner === 'wandbox') pickCompiler(l).then(updateLangUI).catch(() => {});
+  // look the compiler up once, then redraw; redrawing must not trigger another lookup (that looped forever and froze the page)
+  if (l.runner === 'wandbox' && !l.compiler) pickCompiler(l).then(updateLangUI).catch(() => {});
 }
 
 sel.addEventListener('change', () => {
