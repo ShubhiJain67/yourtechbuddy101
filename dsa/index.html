@@ -53,15 +53,6 @@
 
   /* visualizer */
   .viz{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:14px 14px 10px;display:flex;flex-direction:column;gap:10px}
-  .bars{display:flex;align-items:flex-end;gap:6px;height:220px;padding:0 4px}
-  .bar{flex:1;min-width:0;border-radius:6px 6px 2px 2px;background:var(--panel3);position:relative;transition:height .18s ease,background .12s}
-  .bar span{position:absolute;left:0;right:0;bottom:6px;text-align:center;font:600 12px var(--mono);color:var(--text)}
-  .bar.cmp{background:var(--accent)} .bar.cmp span{color:var(--on-accent)}
-  .bar.swap{background:var(--err)} .bar.swap span{color:#fff}
-  .bar.pivot{background:#d9a441} .bar.pivot span{color:#1b1b1b}
-  .bar.range{background:var(--accent-soft);outline:1px solid var(--accent)}
-  .bar.done{background:var(--ok)} .bar.done span{color:var(--on-accent)}
-  @media (prefers-reduced-motion:reduce){.bar{transition:none}}
   .vnote{min-height:22px;font-size:14.5px;color:var(--text)}
   .vctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .vctl .sp{flex:1}
@@ -85,7 +76,6 @@
   .lang button{border:0;background:none;padding:5px 13px;border-radius:99px;font:500 13px var(--sans);color:var(--text);cursor:pointer}
   .lang button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
   .codebox h3{margin:0 0 8px;font:600 15px var(--sans)}
-  @media (max-width:640px){ .bars{height:170px;gap:3px} .bar span{font-size:10px} }
 
   @media (max-width:900px){
     .pl{grid-template-columns:minmax(0,1fr)}
@@ -168,42 +158,8 @@
   const list = D.list.slice().sort((a, b) => D.cats.indexOf(a.cat) - D.cats.indexOf(b.cat));
   let cur = null, q = '';
 
-  /* ---------- visualizer ---------- */
-  let frames = null, timer = null, base = [];
-  const fresh = () => { const n = innerWidth < 640 ? 9 : 12; return Array.from({ length: n }, () => 1 + Math.floor(Math.random() * 30)); };
-  function drawFrame(f) {
-    const max = Math.max(...f.a, 1);
-    $('bars').innerHTML = f.a.map((v, i) => `<div class="bar ${f.mark?.[i] || ''}" style="height:${Math.max(8, v / max * 100)}%"><span>${v}</span></div>`).join('');
-    $('vnote').textContent = f.note || '';
-  }
-  function reset(newArr) {
-    stop();
-    if (newArr || !base.length) base = fresh();
-    if (!cur.viz) return;
-    frames = D.viz[cur.viz](base.slice());
-    const first = frames.next();
-    drawFrame(first.done ? { a: base } : first.value);
-    if (first.done) frames = null;
-    $('vnote').textContent = 'Press Play to watch it run, or Step through it.';
-  }
-  function step() {
-    if (!frames) reset();
-    const r = frames.next();
-    if (r.done) { frames = null; stop(); $('play').textContent = '↺ Replay'; return false; }
-    drawFrame(r.value); return true;
-  }
-  const delay = () => [900, 600, 380, 200, 80][+$('speed').value - 1];
-  function play() {
-    if (timer) return stop();
-    if (!frames) reset();
-    $('play').textContent = '❚❚ Pause';
-    const tick = () => { if (step()) timer = setTimeout(tick, delay()); };
-    tick();
-  }
-  function stop() { clearTimeout(timer); timer = null; $('play').textContent = '▶ Play'; }
-  $('play').addEventListener('click', play);
-  $('stepb').addEventListener('click', () => { stop(); step(); });
-  $('shuffle').addEventListener('click', () => reset(true));
+  /* ---------- visualizer (shared player in assets/dsa.js) ---------- */
+  const viz = D.player({ bars: $('bars'), note: $('vnote'), play: $('play'), step: $('stepb'), shuffle: $('shuffle'), speed: $('speed') });
 
   /* ---------- comparison table ---------- */
   function drawCompare() {
@@ -276,7 +232,7 @@
     $('cat').textContent = t.cat; $('name').textContent = t.name; $('intent').textContent = t.intent; $('when').textContent = t.when;
     document.title = `${t.name} — DSA — YourTechBuddy`;
     $('viz').hidden = !t.viz; $('cmpwrap').hidden = !!t.viz;
-    if (t.viz) reset(); else { stop(); drawCompare(); }
+    if (t.viz) viz.load(t); else { viz.stop(); drawCompare(); }
     $('cx').hidden = !t.cx;
     if (t.cx) $('cx').innerHTML = [['Best', t.cx.best], ['Average', t.cx.avg], ['Worst', t.cx.worst], ['Space', t.cx.space], ['Stable', t.cx.stable ? 'Yes' : 'No'], ['In place', t.cx.inPlace ? 'Yes' : 'No']].map(([k, v]) => `<div><small>${k}</small><b>${v}</b></div>`).join('');
     drawVideo(t);
@@ -310,7 +266,7 @@
     if (/INPUT|TEXTAREA|SELECT|BUTTON/.test(document.activeElement?.tagName || '') && e.key === ' ') return;
     if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '')) return;
     if (e.key === 'ArrowRight') move(1); else if (e.key === 'ArrowLeft') move(-1);
-    else if (e.key === ' ' && cur.viz) { e.preventDefault(); play(); }
+    else if (e.key === ' ' && cur.viz) { e.preventDefault(); viz.play(); }
   });
   show(new URLSearchParams(location.search).get('t') || 'bubble-sort');
 </script>

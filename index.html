@@ -74,6 +74,10 @@
   .explorer .tabs{width:100%;display:flex}
   .explorer .tabs button{flex:1;padding:6px 8px;font-size:13px}
   #dg{width:100%;height:auto;display:block;overflow:visible;margin:4px 0}
+  .sx{margin-top:22px}
+  .sx .bars{height:200px;margin-top:4px}
+  .sx .acts{justify-content:flex-start}
+  .sx .acts #sx-watch{margin-left:auto}
   .info{min-height:46px;margin:6px 0 12px;padding:9px 12px;background:var(--panel2);border-radius:var(--r-sm);font-size:14px;line-height:1.5}
   .info b{font:600 13.5px var(--mono);color:var(--accent)}
   .info .tip{color:var(--muted)}
@@ -178,6 +182,26 @@
     </div>
   </section>
 
+  <section class="panel explorer sx" aria-label="Sorting algorithms, live">
+    <div class="top">
+      <h2>Sorting algorithms, live</h2><span class="live">interactive</span><a class="more-all" id="sx-all" href="dsa/">All algorithms →</a>
+      <div class="tabs sxtabs" role="tablist" aria-label="Choose a sorting algorithm">
+        <button role="tab" data-sx="bubble-sort" aria-selected="true">Bubble</button>
+        <button role="tab" data-sx="insertion-sort" aria-selected="false">Insertion</button>
+        <button role="tab" data-sx="merge-sort" aria-selected="false">Merge</button>
+        <button role="tab" data-sx="quick-sort" aria-selected="false">Quick</button>
+      </div>
+    </div>
+    <div class="bars" id="sx-bars" role="img" aria-label="Array being sorted"></div>
+    <div class="info" id="sx-note" aria-live="polite"></div>
+    <div class="acts">
+      <button class="btn sm primary" id="sx-play">▶ Play</button>
+      <button class="btn sm" id="sx-step">Step</button>
+      <button class="btn sm" id="sx-new">New array</button>
+      <a class="btn sm" id="sx-watch" target="_blank" rel="noopener">Video explanation ↗</a>
+    </div>
+  </section>
+
   <div id="resume-wrap"></div>
 
 
@@ -206,6 +230,7 @@
 <script src="assets/ytb.js"></script>
 <script src="assets/tracks.js"></script>
 <script src="assets/patterns.js"></script>
+<script src="assets/dsa.js"></script>
 <script>
   const esc = YTB.esc;
   /* ================= Pattern explorer (engine + all 23 patterns in assets/patterns.js) ================= */
@@ -226,6 +251,20 @@
     const k = HOME_KEYS[(i + HOME_KEYS.length) % HOME_KEYS.length]; explorer.show(k); document.querySelector(`[data-pat="${k}"]`).focus();
   });
   explorer.show('strategy');
+
+  /* ================= Sorting explorer (topics + player in assets/dsa.js) ================= */
+  const SX = YTBDSA.player({ bars: document.getElementById('sx-bars'), note: document.getElementById('sx-note'),
+    play: document.getElementById('sx-play'), step: document.getElementById('sx-step'), shuffle: document.getElementById('sx-new') }, { size: () => (innerWidth < 640 ? 8 : 14) });
+  function showSort(key) {
+    const t = YTBDSA.get(key);
+    document.querySelectorAll('.sxtabs [data-sx]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.sx === key)));
+    document.getElementById('sx-all').href = `dsa/?t=${key}`;
+    const lang = YTB.LS.get('ytb:lang', 'hi'), id = t.videos[lang] || Object.values(t.videos)[0];
+    document.getElementById('sx-watch').href = `https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;
+    SX.load(t);
+  }
+  document.querySelector('.sxtabs').addEventListener('click', (e) => { const b = e.target.closest('[data-sx]'); if (b) showSort(b.dataset.sx); });
+  showSort('bubble-sort');
 
   /* tabs class is shared; the explorer's own tablist uses .ptabs for its handlers */
 

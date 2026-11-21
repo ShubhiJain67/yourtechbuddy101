@@ -311,3 +311,15 @@ footer a:hover{color:var(--text)}
 }
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* sorting bars (DSA page + home) */
+.bars{display:flex;align-items:flex-end;gap:6px;height:220px;padding:0 4px}
+.bar{flex:1;min-width:0;border-radius:6px 6px 2px 2px;background:var(--panel3);position:relative;transition:height .18s ease,background .12s}
+.bar span{position:absolute;left:0;right:0;bottom:6px;text-align:center;font:600 12px var(--mono);color:var(--text)}
+.bar.cmp{background:var(--accent)} .bar.cmp span{color:var(--on-accent)}
+.bar.swap{background:var(--err)} .bar.swap span{color:#fff}
+.bar.pivot{background:#d9a441} .bar.pivot span{color:#1b1b1b}
+.bar.range{background:var(--accent-soft);outline:1px solid var(--accent)}
+.bar.done{background:var(--ok)} .bar.done span{color:var(--on-accent)}
+@media (prefers-reduced-motion:reduce){.bar{transition:none}}
+@media (max-width:640px){ .bars{height:170px;gap:3px} .bar span{font-size:10px} }

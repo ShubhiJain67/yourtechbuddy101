@@ -149,7 +149,7 @@
         if (lo === hi) { done[lo] = 'done'; return; }
         const p = a[hi]; let i = lo;
         for (let j = lo; j < hi; j++) {
-          yield { a, mark: { ...done, [hi]: 'pivot', [j]: 'cmp', [i]: 'range' }, note: `Pivot ${p}. Is ${a[j]} smaller?` };
+          yield { a, mark: { ...done, [hi]: 'pivot', [i]: 'range', [j]: 'cmp' }, note: `Pivot ${p}. Is ${a[j]} smaller?` };
           if (a[j] < p) { [a[i], a[j]] = [a[j], a[i]]; if (i !== j) yield { a, mark: { ...done, [hi]: 'pivot', [i]: 'swap', [j]: 'swap' }, note: `Yes, swap ${a[i]} to the left side` }; i++; }
         }
         [a[i], a[hi]] = [a[hi], a[i]]; done[i] = 'done';
@@ -205,7 +205,7 @@
     *partition(a) {
       const n = a.length, hi = n - 1, p = a[hi]; let i = 0;
       for (let j = 0; j < hi; j++) {
-        yield { a, mark: { [hi]: 'pivot', [j]: 'cmp', [i]: 'range' }, note: `Pivot ${p}. Is ${a[j]} smaller?` };
+        yield { a, mark: { [hi]: 'pivot', [i]: 'range', [j]: 'cmp' }, note: `Pivot ${p}. Is ${a[j]} smaller?` };
         if (a[j] < p) { [a[i], a[j]] = [a[j], a[i]]; if (i !== j) yield { a, mark: { [hi]: 'pivot', [i]: 'swap', [j]: 'swap' }, note: `Yes, swap ${a[i]} into the smaller side` }; i++; }
       }
       [a[i], a[hi]] = [a[hi], a[i]];
@@ -238,5 +238,45 @@
     },
   };
 
-  window.YTBDSA = { list: T, cats: ['Sorting', 'Building blocks', 'Problems'], viz: V };
+  /* A bar-chart player for any topic's visualizer. els: { bars, note, play, step, shuffle, speed } (speed optional). */
+  function player(els, { size = () => (innerWidth < 640 ? 9 : 12) } = {}) {
+    let topic = null, frames = null, timer = null, base = [];
+    const fresh = () => Array.from({ length: size() }, () => 1 + Math.floor(Math.random() * 30));
+    const draw = (f) => {
+      const max = Math.max(...f.a, 1);
+      els.bars.innerHTML = f.a.map((v, i) => `<div class="bar ${f.mark?.[i] || ''}" style="height:${Math.max(8, v / max * 100)}%"><span>${v}</span></div>`).join('');
+      els.note.textContent = f.note || '';
+    };
+    const stop = () => { clearTimeout(timer); timer = null; els.play.textContent = '▶ Play'; };
+    function reset(newArr) {
+      stop();
+      if (newArr || !base.length) base = fresh();
+      if (!topic || !topic.viz) return;
+      frames = V[topic.viz](base.slice());
+      const first = frames.next();
+      draw(first.done ? { a: base } : first.value);
+      if (first.done) frames = null;
+      els.note.textContent = 'Press Play to watch it run, or Step through it.';
+    }
+    function step() {
+      if (!frames) reset();
+      const r = frames.next();
+      if (r.done) { frames = null; stop(); els.play.textContent = '↺ Replay'; return false; }
+      draw(r.value); return true;
+    }
+    const delay = () => [900, 600, 380, 200, 80][(els.speed ? +els.speed.value : 3) - 1];
+    function play() {
+      if (timer) return stop();
+      if (!frames) reset();
+      els.play.textContent = '❚❚ Pause';
+      const tick = () => { if (step()) timer = setTimeout(tick, delay()); };
+      tick();
+    }
+    els.play.addEventListener('click', play);
+    els.step.addEventListener('click', () => { stop(); step(); });
+    els.shuffle.addEventListener('click', () => reset(true));
+    return { load(t) { topic = t; reset(); }, play, stop };
+  }
+
+  window.YTBDSA = { list: T, cats: ['Sorting', 'Building blocks', 'Problems'], viz: V, player, get: (k) => T.find((t) => t.key === k) };
 })();
