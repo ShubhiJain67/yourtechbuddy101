@@ -24,7 +24,8 @@
   .crumb a{color:var(--muted)}
   h1{font-size:clamp(20px,2.4vw,26px);margin:0 0 16px;letter-spacing:-.015em}
   .lcode{margin-top:28px;padding-top:22px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:14px;scroll-margin-top:16px}
-  .lcode-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .lcode-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;order:2}
+  #lcode-view{order:1}
   .lcode-h h2{margin:0;font:600 18px var(--sans)}
   .actions{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
   .nav3,.more3{display:flex;gap:8px;flex-wrap:wrap}
@@ -106,8 +107,8 @@
         <a class="btn ghost" id="on-yt" target="_blank" rel="noopener">YouTube ↗</a>
       </div>
     </div>
-    <section class="lcode" id="lcode" hidden aria-labelledby="lcode-h">
-      <div class="lcode-h"><h2 id="lcode-h">Code for this lesson</h2><span class="chip" id="lcode-topic"></span></div>
+    <section class="lcode" id="lcode" hidden aria-label="Code and notes for this lesson">
+      <div class="lcode-h"><span class="chip" id="lcode-topic"></span></div>
       <div id="lcode-view"><div class="skel" style="height:280px"></div></div>
     </section>
   </main>
@@ -399,7 +400,7 @@
     try {
       const [item, index] = await Promise.all([LLDCode.item(t.id), LLDCode.load()]);
       if (codeFor !== title) return;
-      LLDView.mount($('lcode-view'), { item, live: !!(index && index.live), fullLink: LLDCode.url(t.id), height: '520px' });
+      LLDView.mount($('lcode-view'), { item, live: !!(index && index.live), height: '520px', bigTabs: true, labels: { code: 'Code for this lesson', notes: 'Notes' } });
     } catch (e) { $('lcode-view').innerHTML = `<p class="note">Couldn't load the code right now. <a href="${LLDCode.url(t.id)}">Open it on the code page</a>.</p>`; }
   }
 

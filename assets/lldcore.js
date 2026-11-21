@@ -50,18 +50,21 @@
     if (variantDir) files.forEach((f) => { const r = f.path.slice(variantDir.length + 1); if (r.includes('/')) localRoots.add(r.split('/')[0]); });
     const localImport = new RegExp(`^import\\s+(static\\s+)?(${[...localRoots].map((x) => x.replace(/[-]/g, '\\-')).join('|')})\\.[\\w.*]+\\s*;\\s*$`, 'gm');
     const imports = new Set(), bodies = [];
-    let mainClass = null;
-    for (const f of files) {
+    let mainClass = null, mainIdx = -1;
+    files.forEach((f, i) => {
       let s = f.content.replace(/\r\n/g, '\n').replace(/^\s*package\s+[\w.]+\s*;\s*$/m, '').replace(localImport, '');
       s = s.replace(/^import\s+[\w.*\s]+;\s*$/gm, (m) => { imports.add(m.trim()); return ''; });
+      // no top-level type may be public: Wandbox saves the file as prog.java
       s = s.replace(/^public\s+((?:(?:abstract|final|sealed|non-sealed)\s+)*(?:class|interface|enum|record|@interface)\s)/gm, '$1');
-      if (hasMain(s) && !mainClass) { const m = s.match(/^(?:(?:abstract|final)\s+)*class\s+(\w+)/m); if (m) mainClass = m[1]; }
+      if (hasMain(s) && !mainClass) { const m = s.match(/^(?:(?:abstract|final)\s+)*class\s+(\w+)/m); if (m) { mainClass = m[1]; mainIdx = i; } }
       bodies.push(`// ===== ${f.path} =====\n${s.trim()}\n`);
-    }
+    });
     if (!mainClass) return { ok: false, why: 'no main method' };
-    let code = [...imports].sort().join('\n') + (imports.size ? '\n\n' : '') + bodies.join('\n');
-    if (mainClass === 'Main') code = code.replace(/^((?:(?:abstract|final)\s+)*)class\s+Main\b/m, 'public $1class Main');
-    else code += `\n// Entry point for the playground\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        ${mainClass}.main(args);\n    }\n}\n`;
+    // the class with main() goes FIRST: Java's single-file launcher (java prog.java) runs the first class in the file
+    let first;
+    if (mainClass === 'Main') { first = bodies[mainIdx]; bodies.splice(mainIdx, 1); }
+    else first = `// Entry point for the playground\nclass Main {\n    public static void main(String[] args) throws Exception {\n        ${mainClass}.main(args);\n    }\n}\n`;
+    const code = [...imports].sort().join('\n') + (imports.size ? '\n\n' : '') + [first, ...bodies].join('\n');
     return { ok: true, code };
   }
 

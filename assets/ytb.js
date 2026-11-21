@@ -116,6 +116,7 @@
 
   let gsiPromise = null;
   function loadGsi() {
+    if (window.google && google.accounts && google.accounts.id) return Promise.resolve();
     return (gsiPromise ||= new Promise((resolve, reject) => {
       const s = document.createElement('script');
       s.src = 'https://accounts.google.com/gsi/client';
@@ -134,11 +135,25 @@
       alertBox('Sign-in failed: ' + e.message);
     }
   }
+  // Google's button lives in an iframe; it gets a theme that reads well on our background and is redrawn on theme change.
+  const gsiButtons = new Set();
+  let gsiReady = false;
   async function renderGoogleButton(el, opts = {}) {
     await loadGsi();
-    google.accounts.id.initialize({ client_id: CFG.googleClientId, callback: onCredential });
-    google.accounts.id.renderButton(el, { theme: 'filled_black', size: opts.size || 'medium', shape: 'pill', text: 'signin_with', ...opts });
+    if (!gsiReady) { google.accounts.id.initialize({ client_id: CFG.googleClientId, callback: onCredential }); gsiReady = true; }
+    el.classList.add('ytb-gsi-host');
+    el._gsiOpts = opts; gsiButtons.add(el);
+    drawGsi(el);
   }
+  function drawGsi(el) {
+    if (!el.isConnected) { gsiButtons.delete(el); return; }
+    const dark = document.documentElement.getAttribute('data-theme') !== 'light';
+    const inSidebar = !!el.closest('.sn');
+    const o = { theme: dark ? 'filled_blue' : 'outline', size: 'large', shape: 'pill', text: 'signin_with', logo_alignment: 'left', ...(inSidebar && el._gsiOpts.type !== 'icon' ? { size: 'medium', width: 168 } : {}), ...el._gsiOpts };
+    el.innerHTML = '';
+    google.accounts.id.renderButton(el, o);
+  }
+  window.addEventListener('ytb:theme', () => { if (window.google && google.accounts) gsiButtons.forEach(drawGsi); });
 
   function alertBox(msg) {
     const d = document.createElement('div');
@@ -188,6 +203,9 @@
     .ytb-who{padding:8px 10px 10px;border-bottom:1px solid var(--border);margin-bottom:4px}
     .ytb-who b{display:block;font-size:14px}.ytb-who small{color:var(--muted);font-size:12px}
     .ytb-gsi{min-height:32px;display:flex;align-items:center}
+    /* stop dark mode painting a white box behind Google's sign-in iframe */
+    .ytb-gsi-host,.ytb-gsi-host iframe,iframe[src*="accounts.google.com/gsi"]{color-scheme:light;background:transparent!important}
+    .ytb-gsi-host{border-radius:99px;overflow:hidden;max-width:100%}
     body.shell .sn-row .ytb-menu{top:auto;bottom:44px;left:0;right:auto}
     body.shell .sn-row .ytb-user{display:flex}
     @media (max-width:900px){body.shell .sn-row .ytb-menu{bottom:auto;top:44px;left:auto;right:0}}
@@ -277,7 +295,6 @@
       ${item('', 'Home', 'home')}
       ${item('courses/', 'Courses', 'courses')}
       ${item('patterns/', 'Design patterns', 'pattern')}
-      ${item('code/', 'Course code', 'folder')}
       <a class="sn-item ${pr && !(trackParam || /session/.test(here)) ? '' : ''} ${pr ? 'on' : ''}" href="${ROOT}practice/">${icon('practice')}<span>Mock interviews</span></a>
       ${sub('lld', 'LLD · classes &amp; code')}
       ${sub('hld', 'HLD · system design')}
@@ -312,7 +329,6 @@
       { g: 'Pages', t: 'All courses', u: ROOT + 'courses/', ic: 'courses' },
       { g: 'Pages', t: 'Design patterns (all 23)', u: ROOT + 'patterns/', ic: 'pattern' },
       { g: 'Pages', t: 'Mock interviews', u: ROOT + 'practice/', ic: 'practice' },
-      { g: 'Pages', t: 'Course code (Java)', u: ROOT + 'code/', ic: 'folder' },
       { g: 'Pages', t: 'LLD mock interviews', u: ROOT + 'practice/?track=lld', ic: 'layers' },
       { g: 'Pages', t: 'HLD mock interviews', u: ROOT + 'practice/?track=hld', ic: 'server' },
       { g: 'Pages', t: 'Code playground', u: ROOT + 'playground/', ic: 'code' },

@@ -32,6 +32,11 @@
   .cv{display:flex;flex-direction:column;gap:12px;min-width:0}
   .cv-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .cv-top .sp{flex:1}
+  .cv-bigtabs{display:flex;gap:4px;width:100%;border-bottom:1px solid var(--border);margin-bottom:2px}
+  .cv-bigtabs button{border:0;background:none;padding:10px 4px 11px;margin-right:18px;font:600 16px var(--sans);color:var(--muted);border-bottom:2.5px solid transparent;margin-bottom:-1px}
+  .cv-bigtabs button:hover:not(:disabled){color:var(--text)}
+  .cv-bigtabs button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent)}
+  .cv-bigtabs button:disabled{opacity:.45;cursor:not-allowed}
   .cv-vtabs{display:flex;gap:6px;flex-wrap:wrap}
   .cv-vtabs button{border:1px solid var(--border);background:var(--panel);border-radius:99px;padding:5px 12px;font-size:13px;color:var(--muted)}
   .cv-vtabs button:hover{border-color:var(--border-strong);color:var(--text)}
@@ -92,6 +97,7 @@
   async function mount(el, opts) {
     await ensureLibs();
     const { item } = opts;
+    const L = { code: 'Code', notes: 'Notes', ...(opts.labels || {}) };
     let s = { v: null, f: null, tab: 'code', ...(opts.state || {}) };
     function draw() {
       const v = item.variants.find((x) => x.key === s.v) || item.variants[0];
@@ -111,7 +117,9 @@
       const code = f ? f.content : '', lines = code.split('\n').length;
       el.innerHTML = `<div class="cv" style="${opts.height ? `--cv-h:${opts.height}` : ''}">
         <div class="cv-top">
-          ${notes ? `<div class="tabs" role="tablist"><button role="tab" data-cvtab="code" aria-selected="${s.tab === 'code'}">Code</button><button role="tab" data-cvtab="notes" aria-selected="${s.tab === 'notes'}">Notes</button></div>` : ''}
+          ${opts.bigTabs
+            ? `<div class="cv-bigtabs" role="tablist"><button role="tab" data-cvtab="code" aria-selected="${s.tab === 'code'}">${esc(L.code)}</button><button role="tab" data-cvtab="notes" aria-selected="${s.tab === 'notes'}" ${notes ? '' : 'disabled title="No notes for this lesson yet"'}>${esc(L.notes)}</button></div>`
+            : notes ? `<div class="tabs" role="tablist"><button role="tab" data-cvtab="code" aria-selected="${s.tab === 'code'}">${esc(L.code)}</button><button role="tab" data-cvtab="notes" aria-selected="${s.tab === 'notes'}">${esc(L.notes)}</button></div>` : ''}
           ${item.variants.length > 1 ? `<div class="cv-vtabs" role="group" aria-label="Examples">${item.variants.map((x) => `<button data-cvv="${esc(x.key)}" aria-pressed="${x.key === s.v}">${esc(x.title)}<i>${x.files.length}</i></button>`).join('')}</div>` : ''}
         </div>
         ${s.tab === 'notes' ? `<div class="cv-md">${md(notes)}</div>` : v ? `
@@ -134,7 +142,7 @@
     el.onclick = (e) => {
       const v = e.target.closest('[data-cvv]'); if (v) { s = { ...s, v: v.dataset.cvv, f: null }; return draw(); }
       const f = e.target.closest('[data-cvf]'); if (f) { s.f = f.dataset.cvf; return draw(); }
-      const t = e.target.closest('[data-cvtab]'); if (t) { s.tab = t.dataset.cvtab; return draw(); }
+      const t = e.target.closest('[data-cvtab]'); if (t && !t.disabled) { s.tab = t.dataset.cvtab; return draw(); }
       if (e.target.closest('[data-cvact="copy"]')) {
         const fv = item.variants.find((x) => x.key === s.v), ff = fv && fv.files.find((x) => x.path === s.f);
         if (ff) navigator.clipboard.writeText(ff.content).then(() => window.YTB && YTB.toast('Copied'), () => window.YTB && YTB.toast('Copy failed'));
