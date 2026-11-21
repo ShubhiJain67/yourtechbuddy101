@@ -330,7 +330,7 @@
     const sn = document.createElement('div');
     sn.className = 'sn';
     sn.innerHTML = `
-      <div class="sn-top"><a class="sn-brand" href="${ROOT}" title="YourTechBuddy"><img class="sn-logo" src="${ROOT}assets/logo.png" alt="" width="34" height="34"><span><b>YourTechBuddy</b><small>LLD &amp; HLD interview prep</small></span></a></div>
+      <div class="sn-top"><a class="sn-brand" href="${ROOT}" title="YourTechBuddy"><img class="sn-logo" src="${ROOT}assets/logo.png" alt="" width="34" height="34"><span><b>YourTechBuddy</b><small>Learn · build · practise</small></span></a></div>
       <button class="sn-search" data-cmdk title="Search (⌘K)">${icon('search')}<span>Search</span><kbd>⌘K</kbd></button>
       ${item('', 'Home', 'home')}
       ${item('courses/', 'Courses', 'courses')}

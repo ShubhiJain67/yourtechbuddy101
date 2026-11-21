@@ -17,7 +17,7 @@ window.COURSES = [
   {
     slug: 'lld',
     title: 'Low Level Design 101',
-    tagline: 'From OOP basics to cracking LLD interview rounds, with real case studies.',
+    tagline: 'From OOP basics to real-world case studies.',
     level: 'Beginner → Advanced',
     tags: ['LLD', 'OOP', 'Design Patterns', 'Interviews'],
     practice: 'java',
