@@ -330,7 +330,7 @@
     // Topic sections: each has its own learning resources and mock interviews. Add a topic here.
     const SECTIONS = [
       { key: 'dsa', label: 'DSA', full: 'Data structures & algorithms', ic: 'bars', href: 'dsa/', course: 'dsa', on: () => isOn('dsa/'),
-        kids: () => `<div class="sn-algos" data-list="dsa"></div>` },
+        kids: () => kid('dsa/', 'Algorithms', isOn('dsa/')) },
       { key: 'lld', label: 'LLD', full: 'Low level design', ic: 'layers', href: 'courses/watch.html?c=lld', course: 'lld',
         kids: () => kid('patterns/', 'Design patterns', isOn('patterns/')) + sub('lld', 'Mock interviews') },
       { key: 'hld', label: 'HLD', full: 'High level design', ic: 'server', href: 'practice/?track=hld', course: 'hld',
@@ -345,10 +345,8 @@
           <button class="sn-grp-tog" data-sec-toggle="${s.key}" aria-label="Show ${s.label}" aria-expanded="${secOpen[s.key] !== false}">${icon('chev')}</button></div>
         <div class="sn-kids">${kids}</div></div>`;
     };
-    const sub = (t, label) => `<div class="sn-grp" data-track="${t}">
-        <div class="sn-grp-row"><a class="sn-item sn-sub ${pr && trackParam === t && !/session/.test(here) ? 'on' : ''}" href="${ROOT}practice/?track=${t}">${label}</a>
-          <button class="sn-grp-tog" data-grp-toggle="${t}" aria-label="Show ${t.toUpperCase()} problems" aria-expanded="false">${icon('chev')}</button></div>
-        <div class="sn-probs" id="sn-probs-${t}"></div></div>`;
+    // mock interviews: the problem list lives on the interview pages themselves, not in the sidebar
+    const sub = (t, label) => kid(`practice/?track=${t}`, label, pr && trackParam === t);
     const sn = document.createElement('div');
     sn.className = 'sn';
     sn.innerHTML = `
@@ -389,16 +387,7 @@
     const backdrop = document.createElement('div'); backdrop.className = 'sn-backdrop'; backdrop.setAttribute('data-drawer-close', '');
     document.body.appendChild(backdrop);
     document.body.appendChild(tb);
-    fillProblemGroups(sn);
-    fillDsa(sn);
     sn.addEventListener('click', (e) => {
-      const g0 = e.target.closest('[data-grp-toggle]');
-      if (g0) {
-        const t = g0.dataset.grpToggle, g = g0.closest('.sn-grp'), open = !g.classList.contains('open');
-        g.classList.toggle('open', open); g0.setAttribute('aria-expanded', String(open));
-        const set = new Set(LS.get('ytb:sn-open', [])); open ? set.add(t) : set.delete(t); LS.set('ytb:sn-open', [...set]);
-        return;
-      }
       const b = e.target.closest('[data-sec-toggle]'); if (!b) return;
       const s = b.closest('.sn-sec'), open = !s.classList.contains('open');
       s.classList.toggle('open', open); b.setAttribute('aria-expanded', String(open));
@@ -409,45 +398,6 @@
       const slot = sn.querySelector(`[data-course-slot="${c.slug}"]`); if (!slot) return;
       slot.outerHTML = kid(`courses/watch.html?c=${encodeURIComponent(c.slug)}`, 'Video course', courseOn(c.slug));
     })).catch(() => {});
-  }
-
-  /* Interview problems listed in the sidebar under each track, as collapsible groups. Cached so the sidebar is instant. */
-  let currentProblem = new URLSearchParams(location.search).get('p');
-  // every DSA algorithm under DSA; each opens its own page
-  async function fillDsa(sn) {
-    const g = sn.querySelector('[data-list="dsa"]'); if (!g) return;
-    // the video course page has its own lesson list on the left, so the sidebar doesn't repeat the algorithms there
-    if (here === ROOT + 'courses/watch.html') { g.remove(); return; }
-    await loadScript(ROOT + 'assets/dsa.js').catch(() => {});
-    const D = window.YTBDSA; if (!D) return;
-    const onDsa = isOn('dsa/'), cur = onDsa ? (new URLSearchParams(location.search).get('t') || D.list[0].key) : null;
-    g.innerHTML = D.cats.map((c) => `<span class="sn-cat">${esc(c)}</span>` + D.list.filter((t) => t.cat === c)
-      .map((t) => `<a class="sn-prob ${t.key === cur ? 'on' : ''}" href="${ROOT}dsa/?t=${t.key}" data-dsa="${t.key}"><span>${esc(t.name)}</span></a>`).join('')).join('');
-    // on the DSA page, switching topics updates the highlight
-    window.YTB_markDsa = (key) => g.querySelectorAll('[data-dsa]').forEach((a) => a.classList.toggle('on', a.dataset.dsa === key));
-  }
-
-  async function fillProblemGroups(sn) {
-    if (!apiOn) return;
-    const paint = (probs) => {
-      const openSet = new Set(LS.get('ytb:sn-open', []));
-      sn.querySelectorAll('.sn-grp[data-track]').forEach((g) => {
-        const t = g.dataset.track, list = probs.filter((p) => (p.track || 'lld') === t);
-        const hasCur = list.some((p) => p.slug === currentProblem);
-        if (hasCur || (trackParam === t && /practice/.test(here))) openSet.add(t);
-        g.classList.toggle('open', openSet.has(t));
-        g.querySelector('[data-grp-toggle]').setAttribute('aria-expanded', String(openSet.has(t)));
-        g.querySelector('.sn-probs').innerHTML = list.map((p) => `<a class="sn-prob ${p.slug === currentProblem ? 'on' : ''}" href="${ROOT}practice/session.html?p=${encodeURIComponent(p.slug)}" title="${esc(p.title)} · ${esc(p.difficulty)}"><i class="d ${esc(p.difficulty)}"></i><span>${esc(p.title.replace(/\s*\(.*\)$/, ''))}</span></a>`).join('')
-          || '<span class="sn-none">No problems yet</span>';
-      });
-      LS.set('ytb:sn-open', [...openSet]);
-      sn.querySelector('.sn-prob.on')?.scrollIntoView({ block: 'nearest' });
-    };
-    const cached = LS.get('ytb:sn-probs', null);
-    if (cached) paint(cached);
-    try { const probs = (await api('/api/practice/problems')).problems.map((p) => ({ slug: p.slug, title: p.title, difficulty: p.difficulty, track: p.track })); LS.set('ytb:sn-probs', probs); paint(probs); } catch {}
-    // pages that only know the problem later (e.g. session.html?id=…) call YTB.markProblem(slug)
-    window.YTB_markProblem = (slug) => { currentProblem = slug; paint(LS.get('ytb:sn-probs', [])); };
   }
 
   let cmdkEl = null, cmdkItems = null;
@@ -566,7 +516,7 @@
     get user() { return session && session.user; },
     get isAdmin() { return !!(session && session.user && session.user.isAdmin); },
     getCourses, getCourse, progress, renderAuth, renderGoogleButton, signOut, toast: alertBox, loadScript, b64url, match, words,
-    markProblem: (slug) => window.YTB_markProblem && window.YTB_markProblem(slug),
+    markProblem: (slug) => window.YTB_markProblem && window.YTB_markProblem(slug), // pages can listen for the current problem
     get theme() { return getTheme(); }, setTheme, icon, thumb, openCmdk,
   };
 

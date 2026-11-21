@@ -14,27 +14,38 @@
 <link rel="stylesheet" href="../courses/courses.css">
 <style>
   body{height:100vh;overflow:hidden}
-  .app{flex:1;display:grid;grid-template-columns:320px minmax(0,1fr);min-height:0}
+  .app{flex:1;display:grid;grid-template-columns:280px minmax(0,1fr);min-height:0}
   /* left rail */
   .rail{border-right:1px solid var(--border);background:var(--bg);display:flex;flex-direction:column;min-height:0;overflow:auto}
   .rail .top{padding:16px 18px;border-bottom:1px solid var(--border)}
   .rail .top a{font:12.5px var(--mono);color:var(--muted);text-decoration:none}
-  .rail h1{font:600 19px/1.3 var(--sans);margin:6px 0 4px}
-  .rail .meta{font:12.5px var(--mono);color:var(--muted);display:flex;gap:12px;flex-wrap:wrap}
   .diff.Easy{color:var(--ok)} .diff.Medium{color:var(--warn)} .diff.Hard{color:var(--err)}
-  details.stmt{padding:12px 18px;border-bottom:1px solid var(--border)}
+  /* problem list (left) */
+  .plist-r{flex:1;padding:8px;display:flex;flex-direction:column;gap:1px}
+  .plist-r a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r-sm);font-size:14px;color:var(--muted);text-decoration:none;line-height:1.3}
+  .plist-r a:hover{background:var(--panel2);color:var(--text)}
+  .plist-r a.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+  .plist-r a .d{width:8px;height:8px;border-radius:50%;flex:none;background:var(--border-strong)}
+  .plist-r a .d.Easy{background:var(--ok)} .plist-r a .d.Medium{background:var(--warn)} .plist-r a .d.Hard{background:var(--err)}
+  .plist-r .none{padding:10px;color:var(--faint);font-size:13px}
+  /* problem header + steps across the top */
+  .phead{padding:18px clamp(16px,3vw,32px) 0;display:flex;flex-direction:column;gap:12px;max-width:1180px;width:100%}
+  .phead h1{font:600 22px/1.25 var(--sans);margin:0}
+  .phead .meta{font:12.5px var(--mono);color:var(--muted);display:flex;gap:12px;flex-wrap:wrap;margin-top:4px}
+  details.stmt{border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;background:var(--panel)}
   details.stmt summary{cursor:pointer;font:500 13px var(--mono);color:var(--muted)}
   details.stmt p{white-space:pre-wrap;font-size:14px;line-height:1.6;margin:10px 0 0}
-  .steps{list-style:none;margin:0;padding:10px 0;flex:1}
-  .steps li button{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;width:100%;padding:10px 18px;background:none;border:0;text-align:left;cursor:pointer;border-left:3px solid transparent}
-  .steps li button:hover:not(:disabled){background:var(--panel2)}
-  .steps li button.on{background:var(--panel2);border-left-color:var(--accent)}
+  .steps{list-style:none;margin:0;padding:0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin}
+  .steps li{flex:1 1 0;min-width:max-content}
+  .steps li button{display:flex;align-items:center;gap:9px;width:100%;padding:9px 12px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);text-align:left;cursor:pointer;color:var(--text)}
+  .steps li button:hover:not(:disabled){border-color:var(--border-strong);background:var(--panel2)}
+  .steps li button.on{border-color:var(--accent);background:var(--accent-soft)}
   .steps li button:disabled{cursor:not-allowed;opacity:.5}
-  .steps .k{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);display:grid;place-items:center;font:600 12px var(--mono)}
-  .steps .done .k{border-color:var(--ok);color:var(--ok)}
-  .steps .t b{display:block;font-size:14px;font-weight:600}
-  .steps .t small{color:var(--muted);font-size:12.5px}
-  .steps .s{font:600 13px var(--mono)}
+  .steps .k{width:24px;height:24px;flex:none;border-radius:50%;border:1.5px solid var(--border-strong);display:grid;place-items:center;font:600 12px var(--mono)}
+  .steps .on .k{border-color:var(--accent);color:var(--accent)}
+  .steps .done .k{border-color:var(--ok);background:var(--ok);color:var(--on-accent)}
+  .steps .t b{display:block;font-size:13.5px;font-weight:600;white-space:nowrap}
+  .steps .s{margin-left:auto;font:600 12.5px var(--mono)}
   .s.hi{color:var(--ok)} .s.mid{color:var(--warn)} .s.lo{color:var(--err)}
   .rail .foot{padding:14px 18px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;font:12.5px var(--mono);color:var(--muted)}
 
@@ -98,10 +109,10 @@
     .app{grid-template-columns:minmax(0,1fr)}
     .rail,.main{min-width:0}
     .rail{border-right:0;border-bottom:1px solid var(--border);overflow:visible}
-    .steps{display:flex;overflow-x:auto;padding:6px}
-    .steps li button{grid-template-columns:26px auto;border-left:0;border-bottom:3px solid transparent;padding:8px 10px;white-space:nowrap}
-    .steps li button.on{border-bottom-color:var(--accent)}
-    .steps .t small,.steps .s{display:none}
+    .plist-r{display:none}
+    .rail .foot{border-top:0;padding-top:0}
+    .steps li{flex:none}
+    .steps .s{display:none}
     .split,.review .bd,.two{grid-template-columns:1fr}
     .review .bd > div + div{border-left:0;border-top:1px solid var(--border)}
     .bars .b{grid-template-columns:120px 1fr 40px}
@@ -216,28 +227,52 @@
         <aside class="rail">
           <div class="top">
             <a href="./?track=${YTBTracks.get(p.track).key}">‹ all ${esc(YTBTracks.get(p.track).label)} problems</a>
-            <h1>${esc(p.title)}</h1>
-            <div class="meta"><span class="diff ${esc(p.difficulty)}">${esc(p.difficulty)}</span><span id="clock" title="Time since you started">${fmt(elapsed)}</span></div>
           </div>
-          <details class="stmt" ${cur === 0 && view === 'step' ? 'open' : ''}><summary>Problem statement</summary><p>${esc(p.statement)}</p></details>
-          <ol class="steps">
-            ${STEPS.map((s, i) => {
-              const r = attempt.reviews[s.id];
-              return `<li><button data-go="${i}" class="${i === cur && view === 'step' ? 'on' : ''} ${r ? 'done' : ''}" ${i + 1 > unlocked ? 'disabled title="Get the previous step reviewed first"' : ''}>
-                <span class="k">${r ? '✓' : i + 1}</span>
-                <span class="t"><b>${s.name}</b><small>${s.short}</small></span>
-                <span class="s ${r ? cls(r.score) : ''}">${r ? r.score + '/10' : ''}</span>
-              </button></li>`;
-            }).join('')}
-          </ol>
+          <nav class="plist-r" id="rail-probs" aria-label="${esc(YTBTracks.get(p.track).label)} problems"></nav>
           <div class="foot">
             ${usage ? `<span>AI reviews left today: ${Math.max(0, usage.limit - usage.used)}/${usage.limit}</span>` : ''}
             ${Object.keys(attempt.reviews).length ? `<button class="btn" data-act="report">${attempt.report ? 'View report' : 'Finish & see report'}</button>` : ''}
           </div>
         </aside>
-        <main class="main"><div class="stage" id="stage"></div></main>
+        <main class="main">
+          <div class="phead">
+            <div><h1>${esc(p.title)}</h1>
+              <div class="meta"><span class="diff ${esc(p.difficulty)}">${esc(p.difficulty)}</span><span id="clock" title="Time since you started">${fmt(elapsed)}</span></div></div>
+          <ol class="steps" aria-label="Interview steps">
+            ${STEPS.map((s, i) => {
+              const r = attempt.reviews[s.id];
+              return `<li><button data-go="${i}" class="${i === cur && view === 'step' ? 'on' : ''} ${r ? 'done' : ''}" ${i + 1 > unlocked ? 'disabled title="Get the previous step reviewed first"' : ''}>
+                <span class="k">${r ? '✓' : i + 1}</span>
+                <span class="t" title="${esc(s.short)}"><b>${s.name}</b></span>
+                <span class="s ${r ? cls(r.score) : ''}">${r ? r.score + '/10' : ''}</span>
+              </button></li>`;
+            }).join('')}
+          </ol>
+          <details class="stmt" ${cur === 0 && view === 'step' ? 'open' : ''}><summary>Problem statement</summary><p>${esc(p.statement)}</p></details>
+          </div>
+          <div class="stage" id="stage"></div>
+        </main>
       </div>`;
+    fillRailProbs();
     view === 'report' && attempt.report ? renderReport() : renderStep();
+  }
+
+  /* ---------------- other problems of this track, on the left (cached, so it's instant) ---------------- */
+  let railProbs = null, railFetching = false;
+  function fillRailProbs() {
+    const el = document.getElementById('rail-probs'); if (!el) return;
+    const t = YTBTracks.get(attempt.problem.track).key;
+    const list = (railProbs || YTB.LS.get('ytb:probs', [])).filter((x) => (x.track || 'lld') === t);
+    el.innerHTML = list.map((x) => `<a class="${x.slug === attempt.problem.slug ? 'on' : ''}" href="session.html?p=${encodeURIComponent(x.slug)}" title="${esc(x.title)} · ${esc(x.difficulty)}"><i class="d ${esc(x.difficulty)}"></i><span>${esc(x.title.replace(/\s*\(.*\)$/, ''))}</span></a>`).join('')
+      || '<span class="none">Loading problems…</span>';
+    el.querySelector('.on')?.scrollIntoView({ block: 'nearest' });
+    if (!railProbs && !railFetching) {
+      railFetching = true;
+      YTB.api('/api/practice/problems').then((r) => {
+        railProbs = r.problems.map((x) => ({ slug: x.slug, title: x.title, difficulty: x.difficulty, track: x.track }));
+        YTB.LS.set('ytb:probs', railProbs); fillRailProbs();
+      }).catch(() => {}).finally(() => { railFetching = false; });
+    }
   }
 
   function renderStep() {
