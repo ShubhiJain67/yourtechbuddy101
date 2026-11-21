@@ -55,7 +55,12 @@
   @media (max-width:900px){ .pick{grid-template-columns:1fr;gap:20px} }
 
   /* hero */
-  .hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:22px;align-items:stretch}
+  .hero{display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
+  .hero-main .stats{max-width:620px}
+  /* design patterns + sorting, side by side, same size */
+  .live-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;margin-top:22px;align-items:stretch}
+  .live-row .explorer{height:100%}
+  @media (max-width:1100px){.live-row{grid-template-columns:minmax(0,1fr)}}
   .hero-main{padding:30px 32px;display:flex;flex-direction:column;gap:16px;background:
     radial-gradient(120% 90% at 0% 0%,var(--accent-soft),transparent 60%),var(--panel)}
   .hero-main h1{font:700 clamp(28px,3.4vw,40px)/1.12 var(--sans);letter-spacing:-.025em;margin:0}
@@ -74,8 +79,7 @@
   .explorer .tabs{width:100%;display:flex}
   .explorer .tabs button{flex:1;padding:6px 8px;font-size:13px}
   #dg{width:100%;height:auto;display:block;overflow:visible;margin:4px 0}
-  .sx{margin-top:22px}
-  .sx .bars{height:200px;margin-top:4px}
+  .sx .bars{flex:1;height:auto;min-height:200px;margin-top:4px}
   .sx .acts{justify-content:flex-start}
   .sx .acts #sx-watch{margin-left:auto}
   .info{min-height:46px;margin:6px 0 12px;padding:9px 12px;background:var(--panel2);border-radius:var(--r-sm);font-size:14px;line-height:1.5}
@@ -162,8 +166,10 @@
         <div class="stat"><b id="st-done">₹0</b><span id="st-done-l">to use, always</span></div>
       </div>
     </div>
+  </section>
 
-    <div class="panel explorer">
+  <div class="live-row">
+    <section class="panel explorer" aria-label="Design patterns, live">
       <div class="top">
         <h2>Design patterns, live</h2><span class="live">interactive</span><a class="more-all" id="dg-all" href="patterns/">All 23 patterns →</a>
         <div class="tabs ptabs" role="tablist" aria-label="Choose a design pattern">
@@ -179,10 +185,8 @@
         <a class="btn sm" id="dg-watch" target="_blank" rel="noopener" hidden>Video explanation ↗</a>
         <a class="btn sm primary" id="dg-run" href="playground/">Run this code</a>
       </div>
-    </div>
-  </section>
-
-  <section class="panel explorer sx" aria-label="Sorting algorithms, live">
+    </section>
+    <section class="panel explorer sx" aria-label="Sorting algorithms, live">
     <div class="top">
       <h2>Sorting algorithms, live</h2><span class="live">interactive</span><a class="more-all" id="sx-all" href="dsa/">All algorithms →</a>
       <div class="tabs sxtabs" role="tablist" aria-label="Choose a sorting algorithm">
@@ -201,6 +205,7 @@
       <a class="btn sm" id="sx-watch" target="_blank" rel="noopener">Video explanation ↗</a>
     </div>
   </section>
+  </div>
 
   <div id="resume-wrap"></div>
 
