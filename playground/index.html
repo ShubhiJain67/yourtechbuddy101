@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<link rel="icon" type="image/png" href="../assets/favicon.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
 <script src="../assets/theme.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>YourTechBuddy Playground — write &amp; run code in your browser</title>
@@ -10,37 +12,21 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../courses/courses.css">
 <style>
-  :root{
-    --bg:#0A1424; --panel:#14233F; --panel2:#1D3056; --border:#5470A3;
-    --text:#F1F5FC; --muted:#B0BED8; --accent:#8DB1FF; --accent-2:#8DB1FF; --on-accent:#0A1424;
-    --ok:#6BE0A0; --err:#FF8A80; --warn:#F5BF5C;
-    --mono:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-    color-scheme:dark;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%;margin:0}
-  body{background:var(--bg);color:var(--text);font:14px/1.5 'IBM Plex Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;display:flex;flex-direction:column}
-  button,select,textarea{font:inherit;color:inherit}
-
-  /* Header */
-  header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg);flex-wrap:wrap}
-  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);margin-right:auto}
-  .logo{width:26px;height:28px;border:1.5px solid var(--text);border-radius:3px;flex:none;color:transparent;font-size:0;overflow:hidden;
-    background:linear-gradient(var(--accent),var(--accent)) 0 0/100% 9px no-repeat,linear-gradient(var(--text),var(--text)) 0 9px/100% 1.5px no-repeat,linear-gradient(var(--text),var(--text)) 0 17px/100% 1.5px no-repeat}
-  .brand b{font:600 16px/1 var(--mono);letter-spacing:-.02em}
-  .brand span{color:var(--muted);font:13px var(--mono);display:block;line-height:1.3}
-  .controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  select{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:7px 30px 7px 10px;cursor:pointer;appearance:none;font-family:var(--mono);
+  html,body{height:100%}
+  body{font-size:14px}
+  /* toolbar above the editor */
+  .pg-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--side);flex-wrap:wrap}
+  .pg-bar h1{font:600 16px var(--sans);margin:0 8px 0 0;display:flex;align-items:center;gap:8px}
+  .pg-bar h1 small{font:500 12px var(--sans);color:var(--muted);background:var(--panel2);padding:2px 8px;border-radius:99px}
+  .pg-bar .sp{flex:1}
+  .pg-bar .btn{padding:7px 13px}
+  select{background:var(--panel);border:1px solid var(--border-strong);border-radius:var(--r-sm);padding:7px 30px 7px 10px;cursor:pointer;appearance:none;font:500 13.5px var(--mono);color:var(--text);
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238b95a5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
-  .btn{display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1.5px solid var(--border);border-radius:6px;padding:7px 12px;cursor:pointer;text-decoration:none;white-space:nowrap}
-  .btn:hover{border-color:var(--text);background:var(--panel2)}
-  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600;padding:7px 16px}
-  .btn.primary:hover{filter:brightness(1.08)}
-  .btn:disabled{opacity:.6;cursor:not-allowed}
-  .btn.yt{color:var(--text)}
-  kbd{font:11px var(--mono);opacity:.8;border:1px solid currentColor;border-radius:4px;padding:0 4px}
-
+  select:hover{border-color:var(--text)}
+  .pg-bar kbd{margin-left:2px;background:rgba(0,0,0,.15);border-color:rgba(0,0,0,.25);color:inherit}
+  .app-col{flex:1;display:flex;flex-direction:column;min-height:0;min-width:0}
   /* Layout */
   main{flex:1;display:flex;min-height:0}
   .editor-wrap{flex:1;min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--border)}
@@ -77,61 +63,49 @@
     main{flex-direction:column}
     .editor-wrap{border-right:0;border-bottom:1px solid var(--border);height:55vh;flex:none}
     .side{width:100%;max-width:none;min-width:0;flex:1;min-height:360px}
-    .brand span{display:none}
     .hide-sm{display:none}
   }
 
-  a.btn{color:var(--text)}
-  a.btn.yt{color:var(--text)}
-  /* Light theme */
-  [data-theme="light"]{
-    --bg:#EDF1F7; --panel:#FFFFFF; --panel2:#E2E8F1; --border:#8592AA;
-    --text:#0F1A30; --muted:#46536C; --accent:#1F48C9; --accent-2:#1F48C9; --on-accent:#FFFFFF;
-    --ok:#11723F; --err:#B3261E; --warn:#8F5500; color-scheme:light;
-  }
-  @media (max-width: 600px){
-    header{padding:8px 10px;gap:8px}
-    .controls{width:100%;gap:6px}
-    .controls select{flex:1;min-width:0}
-    .controls .btn{padding:7px 10px}
-    #share,#reset{font-size:13px}
-    .bar{padding:7px 12px}
-    footer{flex-wrap:wrap;gap:6px}
-  }
-  /* Pressable buttons */
-  :root{--edge:#000814}
-  [data-theme="light"]{--edge:#7C89A3}
-  .btn{box-shadow:0 2px 0 var(--edge);transition:transform .08s ease,box-shadow .08s ease,border-color .12s,filter .12s}
-  .btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 3px 0 var(--edge);border-color:var(--text)}
-  .btn:active:not(:disabled){transform:translateY(1px);box-shadow:none}
-  .btn.primary{box-shadow:0 2px 0 color-mix(in srgb,var(--accent) 55%,#000)}
-  .btn:disabled{box-shadow:none;cursor:not-allowed}
-  select{box-shadow:0 2px 0 var(--edge)}
-  select:hover{border-color:var(--text)}
+
+  main{flex:1;display:flex;min-height:0}
+  .bar{font-family:var(--sans)}
   .link{text-decoration:underline;text-underline-offset:3px}
-  footer a{text-decoration:underline;text-underline-offset:3px}
+  .pg-foot{display:flex;gap:12px;align-items:center;padding:6px 16px;border-top:1px solid var(--border);background:var(--side);font-size:12px;color:var(--muted)}
+  .pg-foot .right{margin-left:auto}
+  .pg-foot a{color:var(--muted)}
+  .toast{position:fixed;bottom:44px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--panel);border:1px solid var(--border-strong);padding:8px 14px;border-radius:8px;opacity:0;transition:.2s;pointer-events:none;z-index:50}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  /* desktop: the playground fills the screen beside the sidebar */
+  @media (min-width:901px){ body.shell{height:100vh;overflow:hidden} }
+  @media (max-width:900px){
+    .pg-bar{padding:8px 12px;gap:6px}
+    .pg-bar h1{display:none}
+    .pg-bar select{flex:1 1 140px;min-width:0}
+    .pg-bar .sp{display:none}
+    .pg-bar .btn{flex:1 1 auto;justify-content:center}
+    .pg-bar #run{flex:2 1 auto}
+    .pg-foot{flex-wrap:wrap;gap:6px}
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <a class="brand" href="../">
-    <div class="logo">&lt;/&gt;</div>
-    <div><b>yourtechbuddy</b><span>/playground</span></div>
-  </a>
-  <div class="controls">
-    <select id="lang" aria-label="Language"></select>
-    <button class="btn primary" id="run" title="Run (Ctrl/Cmd + Enter)">▶ Run <kbd class="hide-sm">⌘↵</kbd></button>
-    <button class="btn" id="share" title="Copy a link to this code">Share</button>
-    <button class="btn" id="reset" title="Reset to starter code">↺ Reset</button>
-    <a class="btn" href="../courses/">Courses</a>
-    <a class="btn hide-sm" href="../practice/">Practice</a>
-    <span id="auth"></span>
-    <a class="btn yt hide-sm" href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a>
-  </div>
+  <a class="brand" href="../"><div class="logo">YTB</div><b>yourtechbuddy</b></a>
+  <nav><a href="../courses/">courses</a><a href="../practice/">practice</a><a href="./" class="active">playground</a></nav>
+  <div id="auth"></div>
 </header>
 
-<main>
+<div class="app-col">
+  <div class="pg-bar">
+    <h1>Playground <small>runs in your browser</small></h1>
+    <select id="lang" aria-label="Language"></select>
+    <span class="sp"></span>
+    <button class="btn" id="reset" title="Reset to starter code">Reset</button>
+    <button class="btn" id="share" title="Copy a link to this code">Share</button>
+    <button class="btn primary" id="run" title="Run (Ctrl/Cmd + Enter)">▶ Run <kbd class="hide-sm">⌘↵</kbd></button>
+  </div>
+<main class="pg">
   <section class="editor-wrap">
     <div class="bar"><span id="filename">main.js</span><div class="right"><span id="runtime-info"></span></div></div>
     <div id="editor"></div>
@@ -149,11 +123,11 @@
     </div>
   </section>
 </main>
-
-<footer>
-  <span>Made by <a href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YourTechBuddy</a></span> · <a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a>
-  <span class="right hide-sm">JS &amp; Python run in your browser · C, C++, Java, Go, Rust compile via <a href="https://wandbox.org" target="_blank" rel="noopener">Wandbox</a></span>
-</footer>
+  <div class="pg-foot">
+    <span>JS &amp; Python run in your browser · C, C++, Java, Go, Rust compile via <a href="https://wandbox.org" target="_blank" rel="noopener">Wandbox</a></span>
+    <span class="right hide-sm"><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a></span>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -436,13 +410,13 @@ function loadMonaco() {
     require(['vs/editor/editor.main'], () => {
       monaco.editor.defineTheme('ytb-light', {
         base: 'vs', inherit: true, rules: [],
-        colors: { 'editor.background': '#FFFFFF', 'editorLineNumber.foreground': '#6B7891', 'editor.lineHighlightBackground': '#EEF2F8', 'editorCursor.foreground': '#1F48C9' }
+        colors: { 'editor.background': '#FFFFFF', 'editorLineNumber.foreground': '#6B7891', 'editor.lineHighlightBackground': '#EEF2F8', 'editorCursor.foreground': '#1A6E80' }
       });
       const monacoTheme = () => document.documentElement.getAttribute('data-theme') === 'light' ? 'ytb-light' : 'ytb';
       window.addEventListener('ytb:theme', () => monaco.editor.setTheme(monacoTheme()));
       monaco.editor.defineTheme('ytb', {
         base: 'vs-dark', inherit: true, rules: [],
-        colors: { 'editor.background': '#0A1424', 'editorLineNumber.foreground': '#6A82B0', 'editor.lineHighlightBackground': '#14233F', 'editorCursor.foreground': '#8DB1FF' }
+        colors: { 'editor.background': '#0E1322', 'editorLineNumber.foreground': '#5E6A8A', 'editor.lineHighlightBackground': '#161D31', 'editorCursor.foreground': '#5CC6D0' }
       });
       monacoEditor = monaco.editor.create($('editor'), {
         value: initialCode(), language: LANGS[currentLang].monaco, theme: monacoTheme(),

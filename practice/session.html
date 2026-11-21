@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<link rel="icon" type="image/png" href="../assets/favicon.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
 <script src="../assets/theme.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mock interview — YourTechBuddy</title>
@@ -104,6 +106,14 @@
     .review .bd > div + div{border-left:0;border-top:1px solid var(--border)}
     .bars .b{grid-template-columns:120px 1fr 40px}
     #monaco{height:360px}
+    .review .ft{flex-direction:column;align-items:stretch}
+    .review .ft > span[style]{display:none}
+    .review .ft .btn{width:100%}
+    .stage > .row{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+    .stage > .row .sp{display:none}
+    .stage > .row .btn{width:100%}
+    .stage > .row .saved{text-align:center}
+    .report .btn-group{grid-template-columns:minmax(0,1fr)}
   }
 </style>
 </head>
@@ -340,7 +350,7 @@
           <div class="box"><h3>Strengths</h3><ul>${R.strengths.map((x) => `<li>${esc(x.text)} <small>(${esc(x.step)})</small></li>`).join('') || '<li>—</li>'}</ul></div>
           <div class="box"><h3>Top things to improve</h3><ul>${R.improvements.map((x) => `<li>${esc(x.text)} <small>(${esc(x.step)})</small></li>`).join('') || '<li>—</li>'}</ul></div>
         </div>
-        <div class="row">
+        <div class="row btn-group">
           ${!R.complete ? '<button class="btn primary" data-act="resume">Continue the interview</button>' : ''}
           <a class="btn ${R.complete ? 'primary' : ''}" href="session.html?p=${encodeURIComponent(attempt.problem.slug)}">Retry this problem</a>
           <a class="btn" href="./?track=${attempt.problem.track === 'hld' ? 'hld' : 'lld'}">Try another problem</a>

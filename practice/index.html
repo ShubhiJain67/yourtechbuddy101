@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<link rel="icon" type="image/png" href="../assets/favicon.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
 <script src="../assets/theme.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mock interviews (LLD &amp; HLD) — YourTechBuddy</title>
@@ -55,6 +57,32 @@
   .rc .ft{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted)}
   .rc .sig{font-weight:600;color:var(--text)}
 
+  /* chooser */
+  .choose{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+  .round{padding:24px;gap:16px;text-align:left;border:1px solid var(--border);font:inherit;background:var(--panel);position:relative}
+  .round .hd{display:flex;align-items:center;gap:14px}
+  .round .big{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);flex:none}
+  .round.hld .big{background:var(--ok-soft);color:var(--ok)}
+  .round .big svg{width:26px;height:26px}
+  .round h2{margin:0;font:600 21px/1.2 var(--sans)}
+  .round .hd p{margin:3px 0 0;color:var(--muted);font-size:14px}
+  .round .desc{margin:0;color:var(--muted);font-size:15px;line-height:1.55}
+  .round ol{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+  .round li{display:flex;align-items:center;gap:10px;font-size:14px}
+  .round li i{width:22px;height:22px;border-radius:50%;background:var(--panel2);display:grid;place-items:center;font:600 11px var(--mono);font-style:normal;color:var(--muted);flex:none}
+  .round li span{color:var(--muted)}
+  .round .meta{display:flex;gap:8px;flex-wrap:wrap}
+  .round .ft{display:flex;align-items:center;gap:12px;margin-top:auto;padding-top:6px}
+  .round .ft .sp{flex:1}
+  .round .today{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:7px}
+  .round .today i{width:8px;height:8px;border-radius:50%;background:var(--ok)}
+  .round .today.used i{background:var(--warn)}
+  a.round:hover .btn.primary{filter:brightness(1.08)}
+  .crumb{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);margin-bottom:10px}
+  .crumb a{color:var(--muted);text-decoration:none}
+  .crumb a:hover{color:var(--accent)}
+  @media (max-width:860px){.choose{grid-template-columns:minmax(0,1fr)}.round{padding:18px}}
+  @media (max-width:640px){.round .ft{flex-direction:column;align-items:stretch}.round .ft .sp{display:none}.round .ft .btn{width:100%}.toolbar .field{max-width:none;flex-basis:100%}.toolbar .sp{display:none}}
   .gate{max-width:520px;margin:60px auto;padding:28px;text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center;color:var(--muted)}
 
   @media (max-width:760px){
@@ -73,32 +101,41 @@
 </header>
 
 <main class="page">
-  <div class="ph">
-    <div><h1 id="title">Mock interviews</h1><p id="sub"></p></div>
-    <span class="sp"></span>
-    <div class="tabs" role="tablist" aria-label="Interview type" id="track">
-      <button role="tab" data-track="lld" aria-selected="true">LLD · classes &amp; code</button>
-      <button role="tab" data-track="hld" aria-selected="false">HLD · system design</button>
-    </div>
-  </div>
-  <div class="flow" id="flow" aria-label="Interview steps"></div>
+  <section id="v-choose" hidden>
+    <div class="ph"><div><h1>Mock interviews</h1><p>Practise a real interview round, one step at a time. An AI interviewer scores every step, points out what's missing and throws in a follow-up twist. Pick the type of round.</p></div></div>
+    <div class="choose" id="rounds"></div>
+    <div id="recent-all"></div>
+  </section>
 
-  <div id="recent-wrap"></div>
-
-  <div class="sec-h" style="margin-top:8px"><h2>Problems</h2></div>
-  <div class="toolbar">
-    <label class="field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" placeholder="Search problems" aria-label="Search problems"></label>
-    <div class="filters" id="diff" aria-label="Difficulty">
-      <button data-d="" aria-pressed="true">All</button><button data-d="Easy" aria-pressed="false">Easy</button><button data-d="Medium" aria-pressed="false">Medium</button><button data-d="Hard" aria-pressed="false">Hard</button>
+  <section id="v-list" hidden>
+    <div class="crumb"><a href="./" data-nav="choose">‹ Mock interviews</a><span>/</span><span id="crumb-t">LLD</span></div>
+    <div class="ph">
+      <div><h1 id="title">Mock interviews</h1><p id="sub"></p></div>
+      <span class="sp"></span>
+      <div class="tabs" role="tablist" aria-label="Interview type" id="track">
+        <button role="tab" data-track="lld" aria-selected="true">LLD · classes &amp; code</button>
+        <button role="tab" data-track="hld" aria-selected="false">HLD · system design</button>
+      </div>
     </div>
-    <span class="sp"></span><span class="count" id="count"></span>
-  </div>
-  <div id="quota"></div>
-  <div class="panel table">
-    <div class="thead"><span>Status</span><span>Problem</span><span>Difficulty</span><span>Best score</span><span></span></div>
-    <div id="rows"><div class="trow"><span class="stat"></span><span><b class="skel" style="height:16px;width:40%"></b></span></div></div>
-  </div>
-  <p class="note" style="margin-top:16px">AI reviews are free, with a daily limit per person. Sign in with Google to start; your answers are saved so you can come back any time.</p>
+    <div class="flow" id="flow" aria-label="Interview steps"></div>
+
+    <div id="recent-wrap"></div>
+
+    <div class="sec-h" style="margin-top:8px"><h2>Problems</h2></div>
+    <div class="toolbar">
+      <label class="field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" placeholder="Search problems" aria-label="Search problems"></label>
+      <div class="filters" id="diff" aria-label="Difficulty">
+        <button data-d="" aria-pressed="true">All</button><button data-d="Easy" aria-pressed="false">Easy</button><button data-d="Medium" aria-pressed="false">Medium</button><button data-d="Hard" aria-pressed="false">Hard</button>
+      </div>
+      <span class="sp"></span><span class="count" id="count"></span>
+    </div>
+    <div id="quota"></div>
+    <div class="panel table">
+      <div class="thead"><span>Status</span><span>Problem</span><span>Difficulty</span><span>Best score</span><span></span></div>
+      <div id="rows"><div class="trow"><span class="stat"></span><span><b class="skel" style="height:16px;width:40%"></b></span></div></div>
+    </div>
+  </section>
+  <p class="note" style="margin-top:16px">AI reviews are free. Everyone gets one LLD and one HLD interview a day. Sign in with Google to start; your answers are saved so you can come back any time.</p>
 </main>
 
 <footer><a href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a> · <a href="../privacy.html">Privacy</a></footer>
@@ -114,14 +151,72 @@
     hld: { title: 'HLD mock interviews', sub: 'Design a system at scale: estimate, sketch the architecture, defend your trade-offs. Scored step by step by an AI interviewer.',
       steps: ['Requirements', 'Estimation', 'APIs + data', 'Architecture', 'Scale & trade-offs', 'The twist'], ids: ['requirements', 'estimation', 'api', 'architecture', 'deepdive', 'twist'] },
   };
-  let track = new URLSearchParams(location.search).get('track') === 'hld' ? 'hld' : 'lld';
+  const urlTrack = () => { const t = new URLSearchParams(location.search).get('track'); return t === 'hld' || t === 'lld' ? t : null; };
+  let track = urlTrack() || 'lld', mode = urlTrack() ? 'list' : 'choose';
+  const TRACK_META = {
+    lld: { name: 'LLD round', tag: 'Low Level Design · classes & code', icon: 'layers', time: '~45 min',
+      desc: 'Turn a vague problem like a parking lot or BookMyShow into clean classes: requirements, entities, a UML diagram with design patterns, working code, then a twist.' },
+    hld: { name: 'HLD round', tag: 'High Level Design · system design', icon: 'server', time: '~50 min',
+      desc: 'Design a system that serves millions, like WhatsApp or YouTube: requirements, capacity estimates, APIs and data model, architecture, scaling trade-offs, then a twist.' },
+  };
   let problems = null, attempts = [], diff = '', q = '', usage = null;
   const cls = (s) => s == null ? 'none' : s >= 7 ? 'hi' : s >= 5 ? 'mid' : 'lo';
   const ago = (t) => { const d = Math.floor(Date.now() / 1000 - t); return d < 3600 ? Math.max(1, Math.round(d / 60)) + 'm ago' : d < 86400 ? Math.round(d / 3600) + 'h ago' : Math.round(d / 86400) + 'd ago'; };
   const avg = (a) => { const v = Object.values(a.scores || {}); return v.length ? Math.round(v.reduce((x, y) => x + y, 0) / v.length * 10) / 10 : null; };
 
+  function setSidebar() {
+    document.querySelectorAll('.sn-sub').forEach((a) => a.classList.toggle('on', mode === 'list' && a.href.endsWith('track=' + track)));
+  }
+  function show() {
+    $('v-choose').hidden = mode !== 'choose'; $('v-list').hidden = mode !== 'list';
+    setSidebar();
+    if (mode === 'choose') { document.title = 'Mock interviews — YourTechBuddy'; drawChoose(); }
+    else { drawHead(); drawRows(); }
+  }
+  function go(m, t) {
+    mode = m; if (t) track = t;
+    history.pushState(null, '', m === 'list' ? '?track=' + track : './');
+    show(); window.scrollTo(0, 0);
+  }
+  window.addEventListener('popstate', () => { mode = urlTrack() ? 'list' : 'choose'; track = urlTrack() || track; show(); });
+  document.addEventListener('click', (e) => {
+    const n = e.target.closest('[data-nav]'); if (!n || e.metaKey || e.ctrlKey) return;
+    e.preventDefault(); go(n.dataset.nav, n.dataset.t);
+  });
+
+  function drawChoose() {
+    $('rounds').innerHTML = ['lld', 'hld'].map((t) => {
+      const M = TRACK_META[t], T = TRACKS[t];
+      const n = problems ? problems.filter((p) => (p.track || 'lld') === t).length : null;
+      const mine = attempts.filter((a) => (a.problem.track || 'lld') === t);
+      const done = new Set(mine.filter((a) => a.status === 'done').map((a) => a.problem.slug)).size;
+      const used = usage && !usage.unlimited && usage.startedToday?.[t];
+      return `<a class="card round ${t}" href="?track=${t}" data-nav="list" data-t="${t}">
+        <div class="hd"><span class="big">${YTB.icon(M.icon)}</span><div><h2>${M.name}</h2><p>${M.tag}</p></div></div>
+        <p class="desc">${M.desc}</p>
+        <ol>${T.steps.map((s, i) => `<li><i>${i + 1}</i>${s}</li>`).join('')}</ol>
+        <div class="meta"><span class="chip">${n == null ? '…' : n} problems</span><span class="chip">${T.steps.length} steps</span><span class="chip">${M.time}</span>${YTB.user && mine.length ? `<span class="chip">${done} completed</span>` : ''}</div>
+        <div class="ft">
+          ${YTB.user && usage ? `<span class="today ${used ? 'used' : ''}"><i></i>${usage.unlimited ? 'No daily limit (admin)' : used ? "Today's interview started" : "Today's interview available"}</span>` : '<span class="today"><i></i>1 free interview a day</span>'}
+          <span class="sp"></span><span class="btn primary">See ${t.toUpperCase()} problems</span>
+        </div>
+      </a>`;
+    }).join('');
+    const recent = attempts.slice(0, 6);
+    $('recent-all').innerHTML = recent.length ? `<div class="sec-h"><h2>Your recent interviews</h2></div><div class="recent">${recent.map(recentCard).join('')}</div>` : '';
+  }
+  function recentCard(a) {
+    const T = TRACKS[a.problem.track === 'hld' ? 'hld' : 'lld'], s = avg(a);
+    return `<a class="card rc" href="session.html?id=${a.id}">
+      <div class="top"><b>${esc(a.problem.title)}</b><span class="chip">${(a.problem.track || 'lld').toUpperCase()}</span><span class="chip diff ${esc(a.problem.difficulty)}">${esc(a.problem.difficulty)}</span></div>
+      <div class="bars" title="Score per step">${T.ids.map((id) => { const v = a.scores[id]; return `<i style="height:${v != null ? Math.max(12, v * 10) : 10}%;${v != null ? `background:var(--${v >= 7 ? 'ok' : v >= 5 ? 'warn' : 'err'})` : ''}"></i>`; }).join('')}</div>
+      <div class="ft"><span class="sig">${a.status === 'done' ? esc(a.signal || 'Done') : `Step ${a.step} of ${a.steps || T.ids.length}`}</span><span>${s != null ? `avg ${s} · ` : ''}${ago(a.updated_at)}</span></div>
+    </a>`;
+  }
+
   function drawHead() {
     const T = TRACKS[track];
+    $('crumb-t').textContent = track.toUpperCase();
     $('title').textContent = T.title; $('sub').textContent = T.sub;
     document.title = `${T.title} — YourTechBuddy`;
     $('track').querySelectorAll('button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.track === track)));
@@ -129,7 +224,7 @@
   }
 
   function drawRows() {
-    if (!problems) return;
+    if (!problems || mode !== 'list') return;
     const T = TRACKS[track];
     const mine = {};
     attempts.forEach((a) => {
@@ -161,23 +256,13 @@
     }).join('') || `<div class="empty">No ${track.toUpperCase()} problems match.${diff || q ? ' Try clearing the filters.' : ''}</div>`;
 
     const recent = attempts.filter((a) => (a.problem.track || 'lld') === track).slice(0, 6);
-    $('recent-wrap').innerHTML = recent.length ? `
-      <div class="sec-h" style="margin-top:0"><h2>Your interviews</h2></div>
-      <div class="recent">${recent.map((a) => {
-        const s = avg(a);
-        return `<a class="card rc" href="session.html?id=${a.id}">
-          <div class="top"><b>${esc(a.problem.title)}</b><span class="chip diff ${esc(a.problem.difficulty)}">${esc(a.problem.difficulty)}</span></div>
-          <div class="bars" title="Score per step">${T.ids.map((id) => { const v = a.scores[id]; return `<i style="height:${v != null ? Math.max(12, v * 10) : 10}%;${v != null ? `background:var(--${v >= 7 ? 'ok' : v >= 5 ? 'warn' : 'err'})` : ''}"></i>`; }).join('')}</div>
-          <div class="ft"><span class="sig">${a.status === 'done' ? esc(a.signal || 'Done') : `Step ${a.step} of ${a.steps || T.ids.length}`}</span><span>${s != null ? `avg ${s} · ` : ''}${ago(a.updated_at)}</span></div>
-        </a>`; }).join('')}</div>` : '';
+    $('recent-wrap').innerHTML = recent.length ? `<div class="sec-h" style="margin-top:0"><h2>Your ${track.toUpperCase()} interviews</h2></div><div class="recent">${recent.map(recentCard).join('')}</div>` : '';
   }
 
   $('track').addEventListener('click', (e) => {
     const b = e.target.closest('[data-track]'); if (!b || b.dataset.track === track) return;
     track = b.dataset.track; history.replaceState(null, '', '?track=' + track);
-    // sidebar highlight follows the tab
-    document.querySelectorAll('.sn-sub').forEach((a) => a.classList.toggle('on', a.href.endsWith('track=' + track)));
-    drawHead(); drawRows();
+    setSidebar(); drawHead(); drawRows();
   });
   $('diff').addEventListener('click', (e) => {
     const b = e.target.closest('[data-d]'); if (!b) return;
@@ -185,15 +270,15 @@
   });
   $('q').addEventListener('input', (e) => { q = e.target.value.trim().toLowerCase(); drawRows(); });
 
-  drawHead();
+  show();
   (async () => {
     if (!YTB.apiOn) { $('rows').innerHTML = '<div class="empty">Mock interviews need the site\'s API, which isn\'t configured yet.</div>'; return; }
     try { problems = (await YTB.api('/api/practice/problems')).problems; }
     catch (e) { $('rows').innerHTML = `<div class="empty">Couldn't load problems: ${esc(e.message)}</div>`; return; }
-    drawRows();
+    show();
     if (YTB.user) {
       try { [attempts, usage] = await Promise.all([YTB.api('/api/practice/attempts').then((r) => r.attempts), YTB.api('/api/practice/usage')]); } catch {}
-      drawRows();
+      show();
     }
   })();
 </script>

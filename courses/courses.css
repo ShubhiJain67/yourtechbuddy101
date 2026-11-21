@@ -5,7 +5,7 @@
   --bg:#0E1322; --side:#0A0F1C; --panel:#161D31; --panel2:#1F2842; --panel3:#28334F;
   --border:#2E3A5C; --border-strong:#4A5A86;
   --text:#ECF0FA; --muted:#A3AFCB; --faint:#7D89A8;
-  --accent:#7C95FF; --accent-soft:rgba(124,149,255,.14); --on-accent:#0B1020;
+  --accent:#5CC6D0; --accent-soft:rgba(92,198,208,.14); --on-accent:#06191D;
   --ok:#3DDC97; --ok-soft:rgba(61,220,151,.14);
   --warn:#F7BE54; --warn-soft:rgba(247,190,84,.14);
   --err:#FF7B7B; --err-soft:rgba(255,123,123,.14);
@@ -22,7 +22,7 @@
   --bg:#F3F5FA; --side:#FFFFFF; --panel:#FFFFFF; --panel2:#EEF1F8; --panel3:#E2E7F2;
   --border:#D3DAE8; --border-strong:#9AA6C0;
   --text:#111A2E; --muted:#4F5B78; --faint:#6E7A96;
-  --accent:#3654F0; --accent-soft:rgba(54,84,240,.10); --on-accent:#FFFFFF;
+  --accent:#1A6E80; --accent-soft:rgba(26,110,128,.10); --on-accent:#FFFFFF;
   --ok:#0B8457; --ok-soft:rgba(11,132,87,.10);
   --warn:#9A5B00; --warn-soft:rgba(154,91,0,.10);
   --err:#C0332B; --err-soft:rgba(192,51,43,.10);
@@ -32,6 +32,7 @@
 }
 
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0}
 body{background:var(--bg);color:var(--text);font:15px/1.55 var(--sans);min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
 a{color:inherit}
@@ -47,7 +48,7 @@ body.shell > header{position:fixed;inset:0 auto 0 0;width:var(--side-w);display:
 body.shell > header > :not(.sn){display:none!important}
 .sn{display:contents}
 .sn-brand{display:flex;align-items:center;gap:10px;padding:4px 8px 14px;text-decoration:none}
-.sn-logo{width:30px;height:30px;border-radius:8px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font:700 13px var(--mono);flex:none}
+.sn-logo{width:34px;height:34px;border-radius:50%;flex:none;display:block}
 .sn-brand b{font:600 15px var(--sans);letter-spacing:-.01em}
 .sn-brand small{display:block;font:12px var(--sans);color:var(--muted)}
 .sn-search{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;margin-bottom:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--muted);font-size:13.5px;text-align:left;transition:border-color .12s,background .12s}
@@ -88,7 +89,7 @@ kbd{font:500 11px var(--mono);border:1px solid var(--border);border-bottom-width
 /* Legacy top header (pages without the shell, e.g. Playground) */
 body:not(.shell) > header{display:flex;align-items:center;gap:14px;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--side);position:sticky;top:0;z-index:5}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;margin-right:auto}
-.logo{width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font:700 12px var(--mono);flex:none}
+.logo{width:30px;height:30px;border-radius:50%;flex:none;background:url(../assets/logo.png) center/cover;color:transparent;font-size:0;overflow:hidden}
 .brand b{font:600 15px var(--sans)}
 body:not(.shell) nav{display:flex;gap:2px}
 body:not(.shell) nav a{text-decoration:none;color:var(--muted);padding:6px 10px;font-size:14px;border-radius:var(--r-sm)}
@@ -215,5 +216,16 @@ footer a:hover{color:var(--text)}
 .cmdk-foot{display:flex;gap:14px;padding:9px 14px;border-top:1px solid var(--border);font-size:12px;color:var(--faint)}
 @keyframes fade{from{opacity:0}}
 @keyframes pop{from{opacity:0;transform:translateY(-6px) scale(.98)}}
+
+/* Phones: button groups become even, full-width grids with comfortable tap targets */
+@media (max-width:640px){
+  .btn{min-height:42px}
+  .btn.sm{min-height:36px}
+  .btn-group,.ctas,.acts{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%}
+  .btn-group > .btn,.ctas > .btn,.acts > .btn{width:100%;padding-left:8px;padding-right:8px;white-space:normal;text-align:center;line-height:1.25}
+  .btn-group > .btn:only-child{grid-column:1/-1}
+  .btn-stack{display:flex!important;flex-direction:column;align-items:stretch!important;gap:8px}
+  .btn-stack > .btn{width:100%}
+}
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}

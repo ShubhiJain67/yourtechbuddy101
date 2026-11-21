@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" type="image/png" href="../assets/favicon.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<script src="../assets/theme.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>All 23 design patterns, interactive — YourTechBuddy</title>
+<meta name="description" content="Every Gang of Four design pattern as an interactive UML diagram with a runnable Python example. Creational, structural and behavioral patterns, explained simply.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../courses/courses.css">
+<style>
+  .pl{display:grid;grid-template-columns:250px minmax(0,1fr);gap:22px;align-items:start}
+  .plist{position:sticky;top:20px;max-height:calc(100vh - 40px);overflow:auto;padding:10px}
+  .plist .field{margin:2px 2px 8px}
+  .plist h3{font:600 12px var(--sans);color:var(--faint);margin:12px 8px 4px;display:flex;justify-content:space-between}
+  .plist button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;padding:7px 10px;border-radius:var(--r-sm);font-size:14px;color:var(--muted)}
+  .plist button:hover{background:var(--panel2);color:var(--text)}
+  .plist button[aria-current="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+  .plist button .d{width:7px;height:7px;border-radius:50%;background:var(--border-strong);flex:none}
+  .plist button[aria-current="true"] .d{background:var(--accent)}
+  .plist .none{padding:10px;color:var(--muted);font-size:13.5px}
+
+  .view{padding:20px 22px;display:flex;flex-direction:column;gap:14px}
+  .vh{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap}
+  .vh h2{margin:0;font:600 24px/1.2 var(--sans);letter-spacing:-.01em}
+  .vh p{margin:6px 0 0;color:var(--muted);font-size:15px;max-width:62ch}
+  .vh .sp{flex:1}
+  .vh .nav{display:flex;gap:6px}
+  #dg{width:100%;height:auto;display:block;overflow:visible;max-height:62vh}
+  .dgwrap{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:14px;overflow-x:auto}
+  .info{min-height:46px;padding:10px 14px;background:var(--panel2);border-radius:var(--r-sm);font-size:14.5px;line-height:1.5}
+  .info b{font:600 14px var(--mono);color:var(--accent)}
+  .info .tip{color:var(--muted)}
+  .when{display:flex;gap:12px;align-items:flex-start;font-size:14.5px}
+  .when b{flex:none;font-weight:600}
+  .when span{color:var(--muted)}
+  .acts{display:flex;gap:8px;flex-wrap:wrap}
+  details.code{border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+  details.code summary{padding:10px 14px;font-size:14px;font-weight:500;background:var(--panel2);list-style:none;display:flex;align-items:center;gap:8px}
+  details.code summary::before{content:"▸";color:var(--faint);transition:transform .15s}
+  details.code[open] summary::before{transform:rotate(90deg)}
+  details.code pre{margin:0;padding:14px 16px;font:13px/1.6 var(--mono);overflow:auto;max-height:420px;background:var(--bg)}
+  .kbdhint{font-size:12.5px;color:var(--faint)}
+
+  @media (max-width:900px){
+    .pl{grid-template-columns:minmax(0,1fr)}
+    .plist{position:static;max-height:none;display:flex;gap:6px;overflow-x:auto;padding:8px;scrollbar-width:none}
+    .plist .field,.plist h3,.plist .none{display:none}
+    .plist button{flex:none;width:auto;border:1px solid var(--border);border-radius:99px;padding:6px 12px;font-size:13px;white-space:nowrap}
+    .plist button .d{display:none}
+    .view{padding:16px}
+    .dgwrap{padding:8px}
+    #dg{max-height:none}
+    .vh .nav{width:100%}
+    .vh .nav .btn{flex:1}
+    .kbdhint{display:none}
+  }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="../"><div class="logo">YTB</div><b>yourtechbuddy</b></a>
+  <nav><a href="../courses/">courses</a><a href="../practice/">practice</a><a href="../playground/">playground</a></nav>
+  <div id="auth"></div>
+</header>
+
+<main class="page">
+  <div class="ph"><div><h1>Design patterns</h1><p>All 23 Gang of Four patterns as UML you can poke at. Hover a class to see its job, then run the example code in the playground.</p></div></div>
+  <div class="pl">
+    <nav class="panel plist" id="plist" aria-label="Patterns"></nav>
+    <section class="panel view" aria-live="polite">
+      <div class="vh">
+        <div><span class="chip" id="cat"></span><h2 id="name" style="margin-top:8px"></h2><p id="intent"></p></div>
+        <span class="sp"></span>
+        <div class="nav"><button class="btn sm" id="prev">← Prev</button><button class="btn sm" id="next">Next →</button></div>
+      </div>
+      <div class="dgwrap"><svg id="dg" viewBox="0 0 620 340" role="img"></svg></div>
+      <div class="info" id="dg-info"></div>
+      <div class="when"><b>Use it when</b><span id="when"></span></div>
+      <div class="acts">
+        <a class="btn primary" id="run" href="../playground/">▶ Run this code</a>
+        <a class="btn" id="watch" hidden>Watch the lesson</a>
+        <a class="btn" href="../practice/?track=lld">Practise in a mock interview</a>
+      </div>
+      <details class="code"><summary>Show the Python code</summary><pre id="code"></pre></details>
+      <span class="kbdhint">Tip: use ← and → to move between patterns.</span>
+    </section>
+  </div>
+</main>
+
+<footer><a href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a> · <a href="../privacy.html">Privacy</a></footer>
+
+<script src="../assets/config.js"></script>
+<script src="../assets/ytb.js"></script>
+<script src="../assets/patterns.js"></script>
+<script>
+  const PX = YTBPatterns, esc = PX.esc, $ = (id) => document.getElementById(id);
+  const list = PX.list.slice().sort((a, b) => PX.cats.indexOf(a.cat) - PX.cats.indexOf(b.cat) || a.name.localeCompare(b.name));
+  let q = '';
+  const ex = PX.mount({ svg: $('dg'), info: $('dg-info'), onShow: async (p) => {
+    $('cat').textContent = p.cat; $('name').textContent = p.name; $('intent').textContent = p.intent; $('when').textContent = p.when;
+    $('code').textContent = p.code;
+    $('run').href = `../playground/#lang=python&code=${PX.b64url(p.code)}`;
+    document.title = `${p.name} pattern — YourTechBuddy`;
+    drawList();
+    const url = await PX.lessonFor(p, '../');
+    $('watch').hidden = !url; if (url) $('watch').href = url;
+  } });
+
+  function drawList() {
+    const cur = ex.current?.key;
+    const match = (p) => !q || (p.name + ' ' + p.cat + ' ' + p.intent).toLowerCase().includes(q);
+    $('plist').innerHTML = `<label class="field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="pq" placeholder="Filter patterns" value="${esc(q)}" aria-label="Filter patterns"></label>` +
+      PX.cats.map((c) => {
+        const ps = list.filter((p) => p.cat === c && match(p));
+        return ps.length ? `<h3><span>${c}</span><span>${ps.length}</span></h3>` + ps.map((p) => `<button data-k="${p.key}" aria-current="${p.key === cur}"><span class="d"></span>${esc(p.name)}</button>`).join('') : '';
+      }).join('') + (list.some(match) ? '' : '<div class="none">No pattern matches.</div>');
+    const i = $('pq'); if (q) { i.focus(); i.setSelectionRange(q.length, q.length); }
+    $('plist').querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+  function go(key, push = true) {
+    ex.show(key);
+    if (push) history.replaceState(null, '', '?p=' + key);
+  }
+  const step = (d) => { const i = list.findIndex((p) => p.key === ex.current.key); go(list[(i + d + list.length) % list.length].key); };
+  $('plist').addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (b) go(b.dataset.k); });
+  $('plist').addEventListener('input', (e) => { if (e.target.id === 'pq') { q = e.target.value.trim().toLowerCase(); drawList(); } });
+  $('prev').addEventListener('click', () => step(-1));
+  $('next').addEventListener('click', () => step(1));
+  document.addEventListener('keydown', (e) => {
+    if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '')) return;
+    if (e.key === 'ArrowRight') step(1); else if (e.key === 'ArrowLeft') step(-1);
+  });
+  const want = new URLSearchParams(location.search).get('p');
+  go(list.some((p) => p.key === want) ? want : 'strategy', false);
+</script>
+</body>
+</html>

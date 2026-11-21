@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<link rel="icon" type="image/png" href="../assets/favicon.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
 <script src="../assets/theme.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Course — YourTechBuddy</title>
@@ -21,8 +23,15 @@
   .crumb{font-size:13px;color:var(--muted);margin:18px 0 4px}
   .crumb a{color:var(--muted)}
   h1{font-size:clamp(20px,2.4vw,26px);margin:0 0 16px;letter-spacing:-.015em}
-  .actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-  .actions .spacer{flex:1}
+  .actions{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+  .nav3,.more3{display:flex;gap:8px;flex-wrap:wrap}
+  .more3 .btn{border:1px solid var(--border)}
+  @media (max-width:640px){
+    .actions{flex-direction:column;align-items:stretch}
+    .nav3{display:grid;grid-template-columns:1fr 1.4fr 1fr}
+    .more3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+    .nav3 .btn,.more3 .btn{padding:10px 6px;font-size:13.5px;white-space:normal;text-align:center;line-height:1.25;min-height:44px}
+  }
 
   .layout > aside{order:-1;border-right:1px solid var(--border);background:var(--panel);display:flex;flex-direction:column;min-height:0;max-height:100vh;position:sticky;top:0}
   .aside-head{padding:18px 18px 14px;border-bottom:1px solid var(--border)}
@@ -82,13 +91,16 @@
     <h1 id="title">Loading…</h1>
 
     <div class="actions">
-      <button class="btn" id="prev">← Previous</button>
-      <button class="btn" id="mark">✓ Mark complete</button>
-      <button class="btn primary" id="next">Next →</button>
-      <span class="spacer"></span>
-      <a class="btn" href="../practice/">Mock interview</a>
-      <a class="btn" id="practice" href="../playground/">⌨️ Practise in Playground</a>
-      <a class="btn" id="on-yt" target="_blank" rel="noopener">Watch on YouTube ↗</a>
+      <div class="nav3">
+        <button class="btn" id="prev">← Previous</button>
+        <button class="btn" id="mark">✓ Mark complete</button>
+        <button class="btn primary" id="next">Next →</button>
+      </div>
+      <div class="more3">
+        <a class="btn ghost" href="../practice/">Mock interview</a>
+        <a class="btn ghost" id="practice" href="../playground/">Practise in Playground</a>
+        <a class="btn ghost" id="on-yt" target="_blank" rel="noopener">YouTube ↗</a>
+      </div>
     </div>
   </main>
 

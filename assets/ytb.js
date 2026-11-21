@@ -250,6 +250,7 @@
     search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
     play: '<path d="m7 4 13 8-13 8z"/>',
     layers: '<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>',
+    pattern: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="8.5" y="14" width="7" height="7" rx="1.5"/><path d="M6.5 10v2h11v-2M12 12v2"/>',
     server: '<rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/>',
   };
   const icon = (n) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n] || ''}</svg>`;
@@ -262,18 +263,19 @@
   }
   function buildShell() {
     const header = document.querySelector('body > header');
-    if (!header || document.body.dataset.shell === 'off' || /\/playground\//.test(location.pathname)) return;
+    if (!header || document.body.dataset.shell === 'off') return;
     const admin = !!(session && session.user && session.user.isAdmin);
     const item = (path, label, ic, extra = '') => `<a class="sn-item ${isOn(path) ? 'on' : ''}" href="${ROOT}${path}">${icon(ic)}<span>${label}</span>${extra}</a>`;
     const pr = isOn('practice/');
-    const sub = (t, label) => `<a class="sn-item sn-sub ${pr && ((trackParam || 'lld') === t) && !/session/.test(here) ? 'on' : ''}" href="${ROOT}practice/?track=${t}">${label}</a>`;
+    const sub = (t, label) => `<a class="sn-item sn-sub ${pr && trackParam === t && !/session/.test(here) ? 'on' : ''}" href="${ROOT}practice/?track=${t}">${label}</a>`;
     const sn = document.createElement('div');
     sn.className = 'sn';
     sn.innerHTML = `
-      <a class="sn-brand" href="${ROOT}"><span class="sn-logo">YTB</span><span><b>YourTechBuddy</b><small>LLD &amp; HLD in Hindi</small></span></a>
+      <a class="sn-brand" href="${ROOT}"><img class="sn-logo" src="${ROOT}assets/logo.png" alt="" width="34" height="34"><span><b>YourTechBuddy</b><small>LLD &amp; HLD in Hindi</small></span></a>
       <button class="sn-search" data-cmdk>${icon('search')}<span>Search</span><kbd>⌘K</kbd></button>
       ${item('', 'Home', 'home')}
       ${item('courses/', 'Courses', 'courses')}
+      ${item('patterns/', 'Design patterns', 'pattern')}
       <a class="sn-item ${pr && !(trackParam || /session/.test(here)) ? '' : ''} ${pr ? 'on' : ''}" href="${ROOT}practice/">${icon('practice')}<span>Mock interviews</span></a>
       ${sub('lld', 'LLD · classes &amp; code')}
       ${sub('hld', 'HLD · system design')}
@@ -306,12 +308,18 @@
     const items = [
       { g: 'Pages', t: 'Home', u: ROOT, ic: 'home' },
       { g: 'Pages', t: 'All courses', u: ROOT + 'courses/', ic: 'courses' },
+      { g: 'Pages', t: 'Design patterns (all 23)', u: ROOT + 'patterns/', ic: 'pattern' },
+      { g: 'Pages', t: 'Mock interviews', u: ROOT + 'practice/', ic: 'practice' },
       { g: 'Pages', t: 'LLD mock interviews', u: ROOT + 'practice/?track=lld', ic: 'layers' },
       { g: 'Pages', t: 'HLD mock interviews', u: ROOT + 'practice/?track=hld', ic: 'server' },
       { g: 'Pages', t: 'Code playground', u: ROOT + 'playground/', ic: 'code' },
     ];
     if (session) items.push({ g: 'Pages', t: 'My learning', u: ROOT + 'me/', ic: 'me' });
     if (session && session.user.isAdmin) items.push({ g: 'Studio', t: 'Content planner', u: ROOT + 'planner/', ic: 'plan' }, { g: 'Studio', t: 'Ideas', u: ROOT + 'ideas/', ic: 'idea' }, { g: 'Studio', t: 'Interview problems', u: ROOT + 'admin/problems.html', ic: 'puzzle' }, { g: 'Studio', t: 'Courses admin', u: ROOT + 'admin/', ic: 'admin' });
+    if (!window.YTBPatterns) {
+      await new Promise((res) => { const s = document.createElement('script'); s.src = ROOT + 'assets/patterns.js'; s.onload = s.onerror = res; document.head.appendChild(s); });
+    }
+    (window.YTBPatterns?.list || []).forEach((p) => items.push({ g: 'Design patterns', t: p.name, s: p.cat, u: `${ROOT}patterns/?p=${p.key}`, ic: 'pattern' }));
     const [courses, probs] = await Promise.all([
       getCourses().catch(() => []),
       apiOn ? api('/api/practice/problems').then((r) => r.problems).catch(() => []) : Promise.resolve([]),
@@ -337,7 +345,7 @@
         const all = await cmdkIndex();
         const words = q.split(/\s+/).filter(Boolean);
         shown = all.filter((x) => words.every((w) => (x.t + ' ' + (x.s || '') + ' ' + x.g).toLowerCase().includes(w))).slice(0, 40);
-        if (!q) shown = all.filter((x) => x.g !== 'Lessons').concat(all.filter((x) => x.g === 'Lessons').slice(0, 5)).slice(0, 40);
+        if (!q) shown = all.filter((x) => x.g === 'Pages' || x.g === 'Studio').concat(all.filter((x) => x.g === 'Lessons').slice(0, 5)).slice(0, 40);
         sel = Math.min(sel, Math.max(0, shown.length - 1));
         let g = '';
         list.innerHTML = shown.map((x, i) => (x.g !== g ? `<div class="cmdk-g">${esc((g = x.g))}</div>` : '') +
