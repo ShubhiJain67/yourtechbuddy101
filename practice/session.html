@@ -132,6 +132,7 @@
 
 <script src="../assets/config.js"></script>
 <script src="../assets/ytb.js"></script>
+<script src="../assets/lldcode.js"></script>
 <script>
   const { esc } = YTB;
   const root = document.getElementById('root');
@@ -353,12 +354,17 @@
         <div class="row btn-group">
           ${!R.complete ? '<button class="btn primary" data-act="resume">Continue the interview</button>' : ''}
           <a class="btn ${R.complete ? 'primary' : ''}" href="session.html?p=${encodeURIComponent(attempt.problem.slug)}">Retry this problem</a>
+          <a class="btn" id="ref-sol" hidden>See a reference solution (Java)</a>
           <a class="btn" href="./?track=${attempt.problem.track === 'hld' ? 'hld' : 'lld'}">Try another problem</a>
           ${attempt.problem.track === 'hld' ? '<a class="btn" href="../courses/">Browse courses</a>' : '<a class="btn" href="../courses/watch.html?c=lld">Revise with the LLD course</a>'}
         </div>
       </div>`;
+    refSolution();
   }
 
+  function refSolution() {
+    LLDCode.forProblem(attempt.problem.slug).then((t) => { const b = document.getElementById('ref-sol'); if (b && t) { b.href = LLDCode.url(t.id); b.hidden = false; } });
+  }
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   setInterval(() => { const c = document.getElementById('clock'); if (c && attempt && attempt.status !== 'done') c.textContent = fmt(Math.floor(Date.now() / 1000 - attempt.created_at)); }, 1000);
 

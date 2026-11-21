@@ -251,6 +251,7 @@
     play: '<path d="m7 4 13 8-13 8z"/>',
     layers: '<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>',
     pattern: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="8.5" y="14" width="7" height="7" rx="1.5"/><path d="M6.5 10v2h11v-2M12 12v2"/>',
+    folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="m10 11-2 2 2 2M14 11l2 2-2 2"/>',
     server: '<rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/>',
   };
   const icon = (n) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n] || ''}</svg>`;
@@ -276,6 +277,7 @@
       ${item('', 'Home', 'home')}
       ${item('courses/', 'Courses', 'courses')}
       ${item('patterns/', 'Design patterns', 'pattern')}
+      ${item('code/', 'Course code', 'folder')}
       <a class="sn-item ${pr && !(trackParam || /session/.test(here)) ? '' : ''} ${pr ? 'on' : ''}" href="${ROOT}practice/">${icon('practice')}<span>Mock interviews</span></a>
       ${sub('lld', 'LLD · classes &amp; code')}
       ${sub('hld', 'HLD · system design')}
@@ -310,6 +312,7 @@
       { g: 'Pages', t: 'All courses', u: ROOT + 'courses/', ic: 'courses' },
       { g: 'Pages', t: 'Design patterns (all 23)', u: ROOT + 'patterns/', ic: 'pattern' },
       { g: 'Pages', t: 'Mock interviews', u: ROOT + 'practice/', ic: 'practice' },
+      { g: 'Pages', t: 'Course code (Java)', u: ROOT + 'code/', ic: 'folder' },
       { g: 'Pages', t: 'LLD mock interviews', u: ROOT + 'practice/?track=lld', ic: 'layers' },
       { g: 'Pages', t: 'HLD mock interviews', u: ROOT + 'practice/?track=hld', ic: 'server' },
       { g: 'Pages', t: 'Code playground', u: ROOT + 'playground/', ic: 'code' },
@@ -320,6 +323,11 @@
       await new Promise((res) => { const s = document.createElement('script'); s.src = ROOT + 'assets/patterns.js'; s.onload = s.onerror = res; document.head.appendChild(s); });
     }
     (window.YTBPatterns?.list || []).forEach((p) => items.push({ g: 'Design patterns', t: p.name, s: p.cat, u: `${ROOT}patterns/?p=${p.key}`, ic: 'pattern' }));
+    try {
+      if (!window.LLDCode) await new Promise((res) => { const s = document.createElement('script'); s.src = ROOT + 'assets/lldcode.js'; s.onload = s.onerror = res; document.head.appendChild(s); });
+      const ci = window.LLDCode ? await window.LLDCode.load() : null;
+      (ci?.sections || []).forEach((s) => s.items.forEach((i) => items.push({ g: 'Course code', t: i.title + ' (Java)', s: s.title, u: `${ROOT}code/?t=${i.id}`, ic: 'folder' })));
+    } catch {}
     const [courses, probs] = await Promise.all([
       getCourses().catch(() => []),
       apiOn ? api('/api/practice/problems').then((r) => r.problems).catch(() => []) : Promise.resolve([]),

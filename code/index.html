@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" type="image/png" href="../assets/favicon.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<script src="../assets/theme.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Course code (Java) — YourTechBuddy</title>
+<meta name="description" content="All the Java code from the YourTechBuddy Low Level Design course: design patterns, machine coding projects like Parking Lot, Splitwise and BookMyShow, and concurrency examples. Read, browse and run in your browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../courses/courses.css">
+<style>
+  .cl{display:grid;grid-template-columns:270px minmax(0,1fr);gap:22px;align-items:start}
+  .tree{position:sticky;top:20px;max-height:calc(100vh - 40px);overflow:auto;padding:10px}
+  .tree summary.mob{display:none}
+  .tree .field{margin:2px 2px 8px}
+  .tree details.sec{margin-top:6px}
+  .tree details.sec > summary{list-style:none;display:flex;align-items:center;gap:8px;padding:6px 8px;font:600 12.5px var(--sans);color:var(--faint);border-radius:6px}
+  .tree details.sec > summary::before{content:"▸";font-size:10px;transition:transform .15s}
+  .tree details.sec[open] > summary::before{transform:rotate(90deg)}
+  .tree details.sec > summary:hover{color:var(--text)}
+  .tree details.sec > summary span{margin-left:auto;font-weight:500}
+  .tree a{display:flex;align-items:center;gap:8px;padding:6px 10px 6px 24px;border-radius:var(--r-sm);font-size:14px;color:var(--muted);text-decoration:none}
+  .tree a:hover{background:var(--panel2);color:var(--text)}
+  .tree a[aria-current="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+  .tree a small{margin-left:auto;font:12px var(--mono);color:var(--faint)}
+  .tree .home{padding-left:10px;font-weight:500}
+  .tree .none{padding:10px;color:var(--muted);font-size:13.5px}
+
+  .view{padding:20px 22px;display:flex;flex-direction:column;gap:16px;min-width:0}
+  .vh{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  .vh h2{margin:6px 0 0;font:600 24px/1.2 var(--sans)}
+  .vh p{margin:6px 0 0;color:var(--muted);font-size:14.5px}
+  .vh .sp{flex:1}
+  .vtabs{display:flex;gap:6px;flex-wrap:wrap}
+  .vtabs button{border:1px solid var(--border);background:var(--panel);border-radius:99px;padding:6px 13px;font-size:13.5px;color:var(--muted)}
+  .vtabs button:hover{border-color:var(--border-strong);color:var(--text)}
+  .vtabs button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+  .vtabs button i{font-style:normal;font:12px var(--mono);color:var(--faint);margin-left:4px}
+
+  .ide{display:grid;grid-template-columns:230px minmax(0,1fr);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;min-height:420px}
+  .files{background:var(--panel2);border-right:1px solid var(--border);padding:8px 0;overflow:auto;max-height:640px}
+  .files .dir{font:500 12px var(--mono);color:var(--faint);padding:8px 12px 2px}
+  .files button{display:block;width:100%;text-align:left;border:0;background:none;padding:5px 12px 5px 20px;font:13px var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .files button:hover{color:var(--text);background:var(--panel3)}
+  .files button[aria-current="true"]{color:var(--accent);background:var(--accent-soft);font-weight:600}
+  .pane{display:flex;flex-direction:column;min-width:0;background:var(--bg)}
+  .pane .bar{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);font:13px var(--mono);color:var(--muted);background:var(--panel)}
+  .pane .bar span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .codewrap{display:flex;overflow:auto;max-height:640px;font:13px/1.65 var(--mono)}
+  .gutter{padding:12px 10px 12px 14px;text-align:right;color:var(--faint);user-select:none;border-right:1px solid var(--border);flex:none}
+  .codewrap pre{margin:0;padding:12px 16px;flex:1;tab-size:4}
+  .codewrap code{font:inherit;background:none}
+  .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .acts .note{margin-left:4px}
+
+  /* markdown */
+  .md{font-size:15px;line-height:1.65;max-width:84ch}
+  .md h1{font:600 24px/1.25 var(--sans);margin:4px 0 12px}
+  .md h2{font:600 19px/1.3 var(--sans);margin:26px 0 8px;padding-top:4px}
+  .md h3{font:600 16px var(--sans);margin:20px 0 6px}
+  .md p,.md ul,.md ol{margin:0 0 12px}
+  .md hr{border:0;border-top:1px solid var(--border);margin:22px 0}
+  .md code{font:13.5px var(--mono);background:var(--panel2);padding:1px 5px;border-radius:4px}
+  .md pre{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;overflow:auto}
+  .md pre code{background:none;padding:0}
+  .md table{border-collapse:collapse;width:100%;font-size:13.5px;margin:0 0 16px;display:block;overflow-x:auto}
+  .md th,.md td{border:1px solid var(--border);padding:7px 10px;text-align:left;vertical-align:top}
+  .md th{background:var(--panel2);font-weight:600}
+  .md a{color:var(--accent)}
+  .md blockquote{margin:0 0 12px;padding:4px 14px;border-left:3px solid var(--accent);color:var(--muted)}
+
+  .live-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);display:inline-block;box-shadow:0 0 0 3px var(--ok-soft)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+  .cards a{padding:14px 16px;gap:4px}
+  .cards b{font-size:15px}
+  .cards small{color:var(--muted);font-size:13px}
+
+  /* syntax colours (highlight.js classes) */
+  .hljs-keyword,.hljs-built_in{color:#C792EA}
+  .hljs-title,.hljs-title.class_,.hljs-title.function_{color:#82AAFF}
+  .hljs-string{color:#C3E88D}
+  .hljs-number,.hljs-literal{color:#F78C6C}
+  .hljs-comment{color:var(--faint);font-style:italic}
+  .hljs-type,.hljs-meta{color:#FFCB6B}
+  .hljs-variable,.hljs-params{color:var(--text)}
+  [data-theme="light"] .hljs-keyword,[data-theme="light"] .hljs-built_in{color:#7C3AED}
+  [data-theme="light"] .hljs-title,[data-theme="light"] .hljs-title.class_,[data-theme="light"] .hljs-title.function_{color:#1D4ED8}
+  [data-theme="light"] .hljs-string{color:#15803D}
+  [data-theme="light"] .hljs-number,[data-theme="light"] .hljs-literal{color:#B45309}
+  [data-theme="light"] .hljs-type,[data-theme="light"] .hljs-meta{color:#A16207}
+
+  @media (max-width:900px){
+    .cl{grid-template-columns:minmax(0,1fr)}
+    .tree{position:static;max-height:none;padding:0}
+    .tree > details.wrap{padding:6px 10px}
+    .tree summary.mob{display:flex;align-items:center;justify-content:space-between;padding:8px 4px;font-weight:600;list-style:none}
+    .tree summary.mob::after{content:"▾";color:var(--faint)}
+    .view{padding:16px}
+    .ide{grid-template-columns:minmax(0,1fr)}
+    .files{display:flex;gap:6px;overflow-x:auto;padding:8px;border-right:0;border-bottom:1px solid var(--border);max-height:none}
+    .files .dir{display:none}
+    .files button{width:auto;flex:none;border:1px solid var(--border);border-radius:99px;padding:5px 11px}
+    .codewrap{max-height:70vh;font-size:12.5px}
+    .gutter{display:none}
+  }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="../"><div class="logo">YTB</div><b>yourtechbuddy</b></a>
+  <nav><a href="../courses/">courses</a><a href="../practice/">practice</a><a href="../playground/">playground</a></nav>
+  <div id="auth"></div>
+</header>
+
+<main class="page">
+  <div class="ph">
+    <div><h1>Course code</h1><p>Every Java example from the Low Level Design course, straight from GitHub: patterns, machine coding projects and concurrency. Read the notes, browse the files, run it in the playground.</p></div>
+    <span class="sp"></span>
+    <a class="btn" id="gh" href="https://github.com/ShubhiJain67/low-level-design-101" target="_blank" rel="noopener">View repo on GitHub ↗</a>
+  </div>
+  <div class="cl">
+    <nav class="panel tree" id="tree" aria-label="Topics"><p class="note" style="padding:10px">Loading…</p></nav>
+    <section class="panel view" id="view" aria-live="polite"><div class="skel" style="height:24px;width:40%"></div><div class="skel" style="height:300px"></div></section>
+  </div>
+</main>
+
+<footer><a href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a> · <a href="https://github.com/ShubhiJain67/low-level-design-101" target="_blank" rel="noopener">GitHub</a> · <a href="../privacy.html">Privacy</a></footer>
+
+<script src="../assets/config.js"></script>
+<script src="../assets/ytb.js"></script>
+<script src="../assets/lldcode.js"></script>
+<script>
+  const { esc } = YTB, $ = (id) => document.getElementById(id);
+  const REPO = 'ShubhiJain67/low-level-design-101';
+  let index = null, item = null, q = '', state = { t: null, v: null, f: null, tab: 'code' };
+  const cache = {};
+
+  /* ---------- lazy libraries: markdown (marked, MIT) + syntax highlighting (highlight.js, BSD-3), bundled in assets/vendor ---------- */
+  const loadScript = (src) => new Promise((res) => { const s = document.createElement('script'); s.src = src; s.onload = () => res(true); s.onerror = () => res(false); document.head.appendChild(s); });
+  let libs = null;
+  const ensureLibs = () => libs ||= Promise.all([
+    window.marked ? true : loadScript('../assets/vendor/marked.min.js'),
+    window.hljs ? true : loadScript('../assets/vendor/highlight.min.js'),
+  ]);
+  function md(src) {
+    let html;
+    if (window.marked) html = marked.parse(src, { gfm: true, breaks: false });
+    else html = src.split(/\n{2,}/).map((p) => p.startsWith('#') ? `<h2>${esc(p.replace(/^#+\s*/, ''))}</h2>` : `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join('');
+    const t = document.createElement('template'); t.innerHTML = html;
+    t.content.querySelectorAll('script,iframe,object,embed,style,form').forEach((n) => n.remove());
+    t.content.querySelectorAll('*').forEach((n) => [...n.attributes].forEach((a) => { if (/^on/i.test(a.name) || /^\s*javascript:/i.test(a.value)) n.removeAttribute(a.name); }));
+    t.content.querySelectorAll('a[href]').forEach((a) => { if (/^https?:/.test(a.getAttribute('href'))) { a.target = '_blank'; a.rel = 'noopener'; } });
+    if (window.hljs) t.content.querySelectorAll('pre code').forEach((c) => { try { hljs.highlightElement(c); } catch {} });
+    return t.innerHTML;
+  }
+  const highlight = (code) => { if (window.hljs) { try { return hljs.highlight(code, { language: 'java' }).value; } catch {} } return esc(code); };
+  function b64url(str) {
+    const bytes = new TextEncoder().encode(str); let bin = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  /* ---------- sidebar tree ---------- */
+  function drawTree() {
+    const match = (it) => !q || (it.title + ' ' + it.key).toLowerCase().includes(q);
+    const mobileOpen = !state.t;
+    $('tree').innerHTML = `<details class="wrap" ${mobileOpen || matchMedia('(min-width:901px)').matches ? 'open' : ''}>
+      <summary class="mob">${state.t && item ? esc(item.title) : 'Browse topics'}</summary>
+      <label class="field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="tq" placeholder="Filter topics" value="${esc(q)}" aria-label="Filter topics"></label>
+      <a class="home" href="./" data-t="" aria-current="${!state.t}">Overview: how LLD interviews work</a>
+      ${index.sections.map((s) => {
+        const its = s.items.filter(match);
+        if (!its.length) return '';
+        const open = q || !state.t || its.some((i) => i.id === state.t) || s.key === 'projects';
+        return `<details class="sec" ${open ? 'open' : ''}><summary>${esc(s.title)}<span>${its.length}</span></summary>
+          ${its.map((i) => `<a href="?t=${i.id}" data-t="${i.id}" aria-current="${i.id === state.t}">${esc(i.title)}<small>${i.variants.length > 1 ? i.variants.length : ''}</small></a>`).join('')}</details>`;
+      }).join('')}
+      ${index.sections.some((s) => s.items.some(match)) ? '' : '<div class="none">No topic matches.</div>'}
+    </details>`;
+    if (q) { const i = $('tq'); i.focus(); i.setSelectionRange(q.length, q.length); }
+  }
+
+  /* ---------- main view ---------- */
+  const getItem = (id) => LLDCode.item(id);
+  async function render() {
+    await ensureLibs();
+    if (!state.t) { item = null; drawTree(); return drawOverview(); }
+    try { item = await getItem(state.t); } catch { state.t = null; return render(); }
+    drawTree();
+    const v = item.variants.find((x) => x.key === state.v) || item.variants[0];
+    state.v = v ? v.key : null;
+    const notes = (v && v.readme) || item.readme;
+    if (state.tab === 'notes' && !notes) state.tab = 'code';
+    const f = v ? (v.files.find((x) => x.path === state.f) || v.files.find((x) => /\/Main\.java$/.test(x.path)) || v.files[0]) : null;
+    state.f = f ? f.path : null;
+    const sec = index.sections.find((s) => s.key === item.sec);
+    const short = (p) => p.slice((v.path.endsWith('.java') ? v.path.slice(0, v.path.lastIndexOf('/')) : v.path).length + 1) || p.split('/').pop();
+    document.title = `${item.title} (Java) — YourTechBuddy`;
+    // group files by folder
+    let lastDir = null;
+    const fileList = v ? v.files.map((x) => {
+      const s = short(x.path), dir = s.includes('/') ? s.slice(0, s.lastIndexOf('/')) : '';
+      const head = dir !== lastDir ? `<div class="dir">${esc(dir || '.')}/</div>` : ''; lastDir = dir;
+      return `${head}<button data-f="${esc(x.path)}" aria-current="${x.path === state.f}" title="${esc(s)}">${esc(s.split('/').pop())}</button>`;
+    }).join('') : '';
+    const code = f ? f.content : '';
+    const lines = code.split('\n').length;
+    $('view').innerHTML = `
+      <div class="vh">
+        <div><span class="chip">${esc(sec ? sec.title : '')}</span><h2>${esc(item.title)}</h2>
+          <p>${item.variants.length} example${item.variants.length === 1 ? '' : 's'} · ${item.variants.reduce((n, x) => n + x.files.length, 0)} Java files · ${index.live ? 'live from GitHub' : 'saved copy'}</p></div>
+        <span class="sp"></span>
+        <a class="btn sm" href="https://github.com/${REPO}/tree/main/${esc(v ? v.path : item.path)}" target="_blank" rel="noopener">Open on GitHub ↗</a>
+      </div>
+      ${item.variants.length > 1 ? `<div class="vtabs" role="group" aria-label="Examples">${item.variants.map((x) => `<button data-v="${esc(x.key)}" aria-pressed="${x.key === state.v}">${esc(x.title)}<i>${x.files.length}</i></button>`).join('')}</div>` : ''}
+      ${notes ? `<div class="tabs" role="tablist"><button role="tab" data-tab="code" aria-selected="${state.tab === 'code'}">Code</button><button role="tab" data-tab="notes" aria-selected="${state.tab === 'notes'}">Notes</button></div>` : ''}
+      ${state.tab === 'notes' ? `<div class="md">${md(notes)}</div>` : v ? `
+        <div class="acts">
+          ${v.run ? `<a class="btn primary" href="../playground/#lang=java&code=${b64url(v.run)}" target="_blank" rel="noopener">▶ Run in Playground</a>` : ''}
+          <button class="btn" data-act="copy">Copy file</button>
+          <span class="note">${v.run ? `All ${v.files.length} file${v.files.length === 1 ? '' : 's'} are merged into one Main.java so it runs in the browser.` : 'Support files only.'}</span>
+        </div>
+        <div class="ide">
+          <nav class="files" aria-label="Files">${fileList}</nav>
+          <div class="pane"><div class="bar"><span>${esc(f ? short(f.path) : '')}</span><span style="flex:none">${lines} lines</span></div>
+            <div class="codewrap"><div class="gutter">${Array.from({ length: lines }, (_, i) => i + 1).join('<br>')}</div><pre><code>${highlight(code)}</code></pre></div></div>
+        </div>` : '<p class="note">No code in this topic yet.</p>'}`;
+  }
+  function drawOverview() {
+    document.title = 'Course code (Java) — YourTechBuddy';
+    const counts = index.sections.map((s) => ({ s, n: s.items.length }));
+    $('view').innerHTML = `
+      <div class="vh"><div><span class="chip">${index.live ? `<i class="live-dot"></i>Live from GitHub` : 'Saved copy (GitHub unreachable)'}${index.commit ? ' · ' + esc(index.commit) : ''}</span><h2>Low Level Design 101, the code</h2><p>Pick a topic on the left, or jump into a machine coding project.</p></div></div>
+      <div class="cards">${counts.map(({ s, n }) => `<a class="card" href="?t=${s.items[0].id}" data-t="${s.items[0].id}"><b>${esc(s.title)}</b><small>${n} topic${n === 1 ? '' : 's'} · ${s.items.slice(0, 3).map((i) => esc(i.title)).join(', ')}${n > 3 ? '…' : ''}</small></a>`).join('')}</div>
+      <div class="md">${md(index.readme || '')}</div>`;
+  }
+
+  /* ---------- navigation ---------- */
+  function go(next, push = true) {
+    state = { ...state, ...next };
+    const p = new URLSearchParams();
+    if (state.t) p.set('t', state.t);
+    if (state.t && state.v) p.set('v', state.v);
+    if (state.t && state.f) p.set('f', state.f);
+    if (state.tab === 'notes') p.set('tab', 'notes');
+    const qs = p.toString();
+    history[push ? 'pushState' : 'replaceState'](null, '', qs ? '?' + qs : './');
+    render();
+  }
+  function fromUrl() {
+    const p = new URLSearchParams(location.search);
+    state = { t: p.get('t'), v: p.get('v'), f: p.get('f'), tab: p.get('tab') === 'notes' ? 'notes' : 'code' };
+  }
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-t]');
+    if (t && !e.metaKey && !e.ctrlKey) { e.preventDefault(); go({ t: t.dataset.t || null, v: null, f: null, tab: 'code' }); window.scrollTo(0, 0); return; }
+    const v = e.target.closest('[data-v]'); if (v) return go({ v: v.dataset.v, f: null });
+    const f = e.target.closest('[data-f]'); if (f) return go({ f: f.dataset.f }, false);
+    const tab = e.target.closest('[data-tab]'); if (tab) return go({ tab: tab.dataset.tab }, false);
+    if (e.target.closest('[data-act="copy"]')) {
+      const fv = item.variants.find((x) => x.key === state.v), ff = fv && fv.files.find((x) => x.path === state.f);
+      if (ff) navigator.clipboard.writeText(ff.content).then(() => YTB.toast('Copied'), () => YTB.toast('Copy failed'));
+    }
+  });
+  $('tree').addEventListener('input', (e) => { if (e.target.id === 'tq') { q = e.target.value.trim().toLowerCase(); drawTree(); } });
+  window.addEventListener('popstate', () => { fromUrl(); render(); });
+
+  (async () => {
+    index = await LLDCode.load();
+    if (!index) { $('view').innerHTML = '<p class="note">The course code hasn\'t been synced yet. Run <code>make lld-code</code>.</p>'; $('tree').innerHTML = ''; return; }
+    fromUrl(); render();
+  })();
+</script>
+</body>
+</html>

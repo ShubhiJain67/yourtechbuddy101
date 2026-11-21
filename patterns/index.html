@@ -45,6 +45,10 @@
   details.code[open] summary::before{transform:rotate(90deg)}
   details.code pre{margin:0;padding:14px 16px;font:13px/1.6 var(--mono);overflow:auto;max-height:420px;background:var(--bg)}
   .kbdhint{font-size:12.5px;color:var(--faint)}
+  .java{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--r);background:var(--panel2)}
+  .java b{font-weight:600}
+  .java span{color:var(--muted);font-size:13.5px;margin-left:8px}
+  .jv{display:flex;gap:8px;flex-wrap:wrap}
 
   @media (max-width:900px){
     .pl{grid-template-columns:minmax(0,1fr)}
@@ -87,6 +91,10 @@
         <a class="btn" href="../practice/?track=lld">Practise in a mock interview</a>
       </div>
       <details class="code"><summary>Show the Python code</summary><pre id="code"></pre></details>
+      <div class="java" id="java" hidden>
+        <div><b>Java code from the course</b><span id="java-sub"></span></div>
+        <div class="jv" id="java-links"></div>
+      </div>
       <span class="kbdhint">Tip: use ← and → to move between patterns.</span>
     </section>
   </div>
@@ -97,6 +105,7 @@
 <script src="../assets/config.js"></script>
 <script src="../assets/ytb.js"></script>
 <script src="../assets/patterns.js"></script>
+<script src="../assets/lldcode.js"></script>
 <script>
   const PX = YTBPatterns, esc = PX.esc, $ = (id) => document.getElementById(id);
   const list = PX.list.slice().sort((a, b) => PX.cats.indexOf(a.cat) - PX.cats.indexOf(b.cat) || a.name.localeCompare(b.name));
@@ -109,6 +118,12 @@
     drawList();
     const url = await PX.lessonFor(p, '../');
     $('watch').hidden = !url; if (url) $('watch').href = url;
+    const t = await LLDCode.forPattern(p.key);
+    $('java').hidden = !t;
+    if (t) {
+      $('java-sub').textContent = `${t.variants.length} example${t.variants.length === 1 ? '' : 's'}, with notes and runnable code`;
+      $('java-links').innerHTML = t.variants.map((v) => `<a class="btn sm" href="${LLDCode.url(t.id, v.key)}">${esc(v.title)}</a>`).join('') + (t.hasReadme ? `<a class="btn sm ghost" href="${LLDCode.url(t.id)}&tab=notes">Read the notes</a>` : '');
+    }
   } });
 
   function drawList() {

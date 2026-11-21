@@ -29,7 +29,7 @@
   @media (max-width:640px){
     .actions{flex-direction:column;align-items:stretch}
     .nav3{display:grid;grid-template-columns:1fr 1.4fr 1fr}
-    .more3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+    .more3{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
     .nav3 .btn,.more3 .btn{padding:10px 6px;font-size:13.5px;white-space:normal;text-align:center;line-height:1.25;min-height:44px}
   }
 
@@ -99,6 +99,7 @@
       <div class="more3">
         <a class="btn ghost" href="../practice/">Mock interview</a>
         <a class="btn ghost" id="practice" href="../playground/">Practise in Playground</a>
+        <a class="btn ghost" id="lesson-code" hidden>Code for this lesson</a>
         <a class="btn ghost" id="on-yt" target="_blank" rel="noopener">YouTube ↗</a>
       </div>
     </div>
@@ -117,6 +118,7 @@
 <script src="../assets/config.js"></script>
 <script src="courses.js"></script>
 <script src="../assets/ytb.js"></script>
+<script src="../assets/lldcode.js"></script>
 <script>
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -352,6 +354,11 @@
     if (l.youtube) $('on-yt').href = `https://www.youtube.com/watch?v=${encodeURIComponent(l.youtube)}` + (course.playlist ? `&list=${course.playlist}` : '');
     const lang = l.practice || course.practice;
     $('practice').href = lang ? `../playground/#lang=${encodeURIComponent(lang)}` : '../playground/';
+    const want = l.title;
+    LLDCode.forLesson(l.title).then((t) => {
+      if (lessons[idx - 1]?.title !== want) return;
+      $('lesson-code').hidden = !t; if (t) $('lesson-code').href = LLDCode.url(t.id);
+    });
   }
   function render(autoplay = false) {
     if (!lessons.length) return;
