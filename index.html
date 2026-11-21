@@ -172,7 +172,7 @@
       <svg id="dg" viewBox="0 0 600 340" role="img" aria-labelledby="dg-t"><title id="dg-t">UML class diagram</title></svg>
       <div class="info" id="dg-info" aria-live="polite"></div>
       <div class="acts">
-        <a class="btn sm" id="dg-watch" href="courses/watch.html?c=lld" hidden>Watch the lesson</a>
+        <a class="btn sm" id="dg-watch" target="_blank" rel="noopener" hidden>Video explanation ↗</a>
         <a class="btn sm primary" id="dg-run" href="playground/">Run this code</a>
       </div>
     </div>
@@ -214,8 +214,9 @@
     document.querySelectorAll('.ptabs [data-pat]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.pat === p.key)));
     document.getElementById('dg-run').href = `playground/#lang=python&code=${PX.b64url(p.code)}`;
     document.getElementById('dg-all').href = `patterns/?p=${p.key}`;
-    const w = document.getElementById('dg-watch'), url = await PX.lessonFor(p);
-    w.hidden = !url; if (url) w.href = url;
+    const w = document.getElementById('dg-watch'), v = await PX.videoFor(p);
+    if (explorer.current !== p) return;
+    w.hidden = !v; if (v) w.href = `https://www.youtube.com/watch?v=${encodeURIComponent(v.id)}`;
   } });
   const HOME_KEYS = ['strategy', 'observer', 'factory', 'singleton'];
   document.querySelector('.ptabs').addEventListener('click', (e) => { const b = e.target.closest('[data-pat]'); if (b) explorer.show(b.dataset.pat); });

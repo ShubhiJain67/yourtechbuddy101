@@ -45,6 +45,21 @@
   details.code[open] summary::before{transform:rotate(90deg)}
   details.code pre{margin:0;padding:14px 16px;font:13px/1.6 var(--mono);overflow:auto;max-height:420px;background:var(--bg)}
   .kbdhint{font-size:12.5px;color:var(--faint)}
+  .self{display:flex;flex-direction:column;gap:10px;padding:16px 18px;border:1px solid var(--accent);border-radius:var(--r);background:var(--accent-soft)}
+  .self-h{display:flex;align-items:center;gap:10px}
+  .self h3{margin:0;font:600 18px/1.3 var(--sans)}
+  .self p{margin:0;line-height:1.55;max-width:70ch}
+  .self-out span{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+  .self-out pre{margin:0;padding:10px 12px;border-radius:var(--r-sm);background:var(--panel);border:1px solid var(--border);font:13px/1.55 var(--mono);white-space:pre-wrap}
+  .vid{display:flex;flex-direction:column;gap:10px}
+  .vid b{font-weight:600}
+  .yt{position:relative;display:block;width:100%;max-width:720px;aspect-ratio:16/9;padding:0;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:#000;cursor:pointer}
+  .yt img{width:100%;height:100%;object-fit:cover;display:block;opacity:.85;transition:opacity .15s}
+  .yt:hover img{opacity:1}
+  .yt .play{position:absolute;left:50%;top:50%;width:68px;height:48px;margin:-24px 0 0 -34px;border-radius:12px;background:#f00}
+  .yt .play::after{content:"";position:absolute;left:27px;top:14px;border-style:solid;border-width:10px 0 10px 17px;border-color:transparent transparent transparent #fff}
+  .yt .yt-t{position:absolute;left:0;right:0;top:0;padding:12px 14px 28px;text-align:left;color:#fff;font:600 15px/1.35 var(--sans);background:linear-gradient(#000a,#0000)}
+  .yt iframe{width:100%;height:100%;border:0;display:block}
   .java{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--r);background:var(--panel2)}
   .java b{font-weight:600}
   .java span{color:var(--muted);font-size:13.5px;margin-left:8px}
@@ -87,12 +102,22 @@
       <div class="when"><b>Use it when</b><span id="when"></span></div>
       <div class="acts">
         <a class="btn primary" id="run" href="../playground/">▶ Run this code</a>
-        <a class="btn" id="watch" hidden>Watch the lesson</a>
         <a class="btn" href="../practice/?track=lld">Practise in a mock interview</a>
+      </div>
+      <div class="vid" id="vid" hidden>
+        <b>Video explanation</b>
+        <button class="yt" id="yt" type="button"><img id="yt-img" alt=""><span class="play" aria-hidden="true"></span><span class="yt-t" id="yt-t"></span></button>
+      </div>
+      <div class="self" id="self" hidden>
+        <div class="self-h"><b>Practise it yourself</b><span class="chip">No AI, no limit</span></div>
+        <h3 id="self-t"></h3>
+        <p id="self-q"></p>
+        <div class="self-out"><span>Aim for output like</span><pre id="self-e"></pre></div>
+        <div class="acts"><a class="btn primary" id="self-go">Solve it in the playground</a><button class="btn" id="self-ans" type="button">Stuck? See the pattern in code</button></div>
       </div>
       <details class="code"><summary>Show the Python code</summary><pre id="code"></pre></details>
       <div class="java" id="java" hidden>
-        <div><b>Java code from the course</b><span id="java-sub"></span></div>
+        <div><b>Java code on GitHub</b><span id="java-sub"></span></div>
         <div class="jv" id="java-links"></div>
       </div>
       <span class="kbdhint">Tip: use ← and → to move between patterns.</span>
@@ -116,16 +141,35 @@
     $('run').href = `../playground/#lang=python&code=${PX.b64url(p.code)}`;
     document.title = `${p.name} pattern — YourTechBuddy`;
     drawList();
-    const url = await PX.lessonFor(p, '../');
-    $('watch').hidden = !url; if (url) $('watch').href = url;
+    const s = PX.practiceFor(p);
+    $('self').hidden = !s;
+    if (s) {
+      $('self-t').textContent = s.title; $('self-q').textContent = s.ask; $('self-e').textContent = s.expect.join('\n');
+      $('self-go').href = `../playground/#lang=python&code=${PX.b64url(PX.practiceCode(p))}`;
+    }
+    const v = await PX.videoFor(p);
+    if (ex.current !== p) return;
+    $('vid').hidden = !v;
+    if (v) {
+      const y = $('yt'); y.dataset.id = v.id; y.innerHTML = `<img src="https://i.ytimg.com/vi/${encodeURIComponent(v.id)}/hqdefault.jpg" alt=""><span class="play" aria-hidden="true"></span><span class="yt-t">${esc(v.title)}</span>`;
+      y.setAttribute('aria-label', `Play video: ${v.title}`);
+    }
     const t = await LLDCode.forPattern(p);
+    if (ex.current !== p) return;
     $('java').hidden = !t;
     if (t) {
-      $('java-sub').textContent = `${t.variants.length} example${t.variants.length === 1 ? '' : 's'}, with notes and runnable code`;
-      $('java-links').innerHTML = t.variants.map((v) => `<a class="btn sm" href="${LLDCode.url(t.id, v.key)}">${esc(v.title)}</a>`).join('') + (t.hasReadme ? `<a class="btn sm ghost" href="${LLDCode.url(t.id)}&tab=notes">Read the notes</a>` : '');
+      $('java-sub').textContent = `${t.variants.length} example${t.variants.length === 1 ? '' : 's'}`;
+      $('java-links').innerHTML = t.variants.map((x) => `<a class="btn sm" href="${LLDCode.github(x.path || t.path)}" target="_blank" rel="noopener">${esc(x.title)} ↗</a>`).join('');
     }
   } });
 
+  // "Stuck?" opens the pattern demo code
+  $('self-ans').addEventListener('click', () => { const d = document.querySelector('details.code'); d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  // the player loads only when clicked (no YouTube iframes on every pattern switch)
+  $('yt').addEventListener('click', (e) => {
+    const y = e.currentTarget; if (!y.dataset.id || y.querySelector('iframe')) return;
+    y.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(y.dataset.id)}?autoplay=1&rel=0" title="${esc(y.getAttribute('aria-label') || 'Video')}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+  });
   function drawList() {
     const cur = ex.current?.key;
     const match = (p) => !q || (p.name + ' ' + p.cat + ' ' + p.intent).toLowerCase().includes(q);

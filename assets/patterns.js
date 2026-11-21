@@ -1017,14 +1017,47 @@ print("GST:     ", sum(i.accept(GstVisitor()) for i in cart))
 
   /* The lesson about a pattern: the first lesson whose title best matches this pattern (by name, see YTB.match). */
   let lessons = null;
-  async function lessonFor(p, root = '') {
+  /* A related question to solve on your own, per pattern: {title, ask, expect[]} -> playground starter */
+  const PRACTICE = {
+    singleton: { title: 'App config loader', ask: 'Build an AppConfig that reads settings once and is shared everywhere. Two calls to AppConfig.instance() must return the same object, and a change made through one must be visible through the other.', expect: ['same object: True', 'theme from b: dark'] },
+    factory: { title: 'Notification sender', ask: 'Write a NotificationFactory.create(channel) that returns an Email, SMS or Push sender. Each sender has send(to, msg). Adding a new channel should not touch the code that sends.', expect: ['EMAIL to a@x.com: Hi', 'SMS to 98xxxx: Hi', 'PUSH to device-7: Hi'] },
+    'abstract-factory': { title: 'Themed UI kit', ask: 'Create LightTheme and DarkTheme factories that each make a matching Button and Checkbox. The screen code receives a factory and never names a concrete widget class.', expect: ['[light] button: Save', '[light] checkbox: off', '[dark] button: Save', '[dark] checkbox: off'] },
+    builder: { title: 'Pizza order builder', ask: 'Build a PizzaBuilder with chained size(), add(topping) and extra_cheese() calls, and build() returning an immutable Pizza. build() should reject a pizza with no size.', expect: ['Pizza(large, [olive, paneer], extra cheese)', 'error: size is required'] },
+    prototype: { title: 'Document templates', ask: 'Keep a registry of template documents (invoice, letter). get(name) returns a deep copy, so editing the copy never changes the template.', expect: ['copy title: Invoice #42', 'template title: Invoice'] },
+    adapter: { title: 'Payment gateway adapter', ask: 'Your checkout calls pay(amount_in_rupees). A new gateway only offers make_payment(paise, currency). Write an adapter so checkout works with it unchanged.', expect: ['gateway charged 49900 paise INR'] },
+    bridge: { title: 'Remote and devices', ask: 'Separate Remote (basic, advanced with mute) from Device (TV, Radio) so any remote works with any device. Adding a device must not need a new remote class.', expect: ['TV volume 11', 'Radio volume 0 (muted)'] },
+    composite: { title: 'Folder size', ask: 'Model files and folders where a folder holds files and other folders. size() on any node returns the total, and the caller treats both the same.', expect: ['src: 350 KB', 'project: 1350 KB'] },
+    decorator: { title: 'Coffee add-ons', ask: 'Price a coffee with any mix of add-ons (milk, caramel, extra shot) by wrapping objects, not by making a class for every combination.', expect: ['Espresso + milk + caramel: 160', 'Espresso + shot + shot: 180'] },
+    facade: { title: 'Home theatre', ask: 'Projector, amplifier, lights and streamer each have several calls. Write a HomeTheatre facade with watch(movie) and end() that runs the right steps in order.', expect: ['lights dim', 'projector on', 'amp on, volume 7', 'streaming Inception'] },
+    flyweight: { title: 'Forest of trees', ask: 'Draw 100,000 trees where each has x, y but shares one of three TreeType objects (name, colour, texture). Count how many TreeType objects exist.', expect: ['trees: 100000', 'tree types: 3'] },
+    proxy: { title: 'Cached image loader', ask: 'Loading an image from disk is slow. Write a proxy with the same display() method that loads on first use and reuses it afterwards, logging each real load.', expect: ['loading cat.png from disk', 'show cat.png', 'show cat.png'] },
+    chain: { title: 'Support ticket escalation', ask: 'Send tickets through Bot -> Agent -> Manager. Each handler resolves the levels it can and passes the rest on. Handlers can be reordered without changing their code.', expect: ['bot solved: reset password', 'agent solved: refund', 'manager solved: legal'] },
+    command: { title: 'Text editor with undo', ask: 'Implement Type(text) and Delete(n) commands with execute() and undo(), and an editor that keeps history so undo() reverses the last command.', expect: ['hello world', 'hello', 'hello world'] },
+    interpreter: { title: 'Tiny calculator', ask: 'Parse and evaluate expressions like "3 4 + 2 *" (postfix) by building Number, Add and Multiply expression objects with interpret().', expect: ['3 4 + 2 * = 14', '5 1 2 + 4 * + = 17'] },
+    iterator: { title: 'Playlist iterator', ask: 'Give a Playlist a normal iterator and a shuffled one, both used with a plain for loop. The caller should not know how songs are stored.', expect: ['in order: A B C D', 'shuffled: 4 songs, no repeats'] },
+    mediator: { title: 'Chat room', ask: 'Users send messages through a ChatRoom instead of holding references to each other. The room delivers to everyone except the sender.', expect: ['bob got from asha: hi all', 'chen got from asha: hi all'] },
+    memento: { title: 'Game save points', ask: 'A Game has level, health and inventory. save() returns a snapshot, restore(snapshot) rolls back, and outside code cannot change what is inside a snapshot.', expect: ['before boss: level 5, health 80', 'after restore: level 5, health 80'] },
+    observer: { title: 'Price drop alerts', ask: 'Let users subscribe to a product and get notified when its price falls. Unsubscribed users get nothing, and the product does not know who the users are.', expect: ['asha: Headphones now 1999', 'bob: Headphones now 1999'] },
+    state: { title: 'Order lifecycle', ask: 'An order moves Placed -> Packed -> Shipped -> Delivered, and can be cancelled only before Shipped. Put each rule in a state class, not in if-else chains.', expect: ['packed', 'shipped', 'cannot cancel: already shipped'] },
+    strategy: { title: 'Delivery fee rules', ask: 'Compute a delivery fee with swappable rules: flat, per-km, and free above an order value. The checkout can change the rule at runtime without changing its own code.', expect: ['flat: 40', 'per km (6 km): 60', 'free above 499: 0'] },
+    template: { title: 'Report exporter', ask: 'Exporting a report always means fetch -> format -> save. Write a base class with export() fixing that order, and CSV and PDF subclasses that change only the format step.', expect: ['saved report.csv (3 rows)', 'saved report.pdf (3 rows)'] },
+    visitor: { title: 'Cart tax and discount', ask: 'A cart holds Book, Food and Electronics items. Add a TaxVisitor and a DiscountVisitor without editing the item classes.', expect: ['tax: 113.0', 'discount: 75.0'] },
+  };
+  const practiceFor = (p) => PRACTICE[p.key] || null;
+  const practiceCode = (p) => {
+    const x = PRACTICE[p.key]; if (!x) return '';
+    const wrap = (s) => s.match(/.{1,74}(\s|$)/g).map((l) => '# ' + l.trim()).join('\n');
+    return `# Practise the ${p.name} pattern: ${x.title}\n#\n${wrap(x.ask)}\n#\n# When you press Run, aim for output like:\n${x.expect.map((l) => '#   ' + l).join('\n')}\n\n\n# Write your solution here\n\n\nif __name__ == "__main__":\n    pass  # try your classes here\n`;
+  };
+
+  /* The YouTube video that explains a pattern, found by name in the channel's video titles: {id, title} or null. */
+  async function videoFor(p) {
     if (!lessons) {
       lessons = [];
-      try { (await YTB.getCourses()).forEach((c) => (c.sections || []).forEach((s) => s.lessons.forEach((l) => { if (l.youtube) lessons.push({ c: c.slug, v: l.youtube, title: l.title }); }))); } catch {}
+      try { (await YTB.getCourses()).forEach((c) => (c.sections || []).forEach((s) => s.lessons.forEach((l) => { if (l.youtube) lessons.push({ id: l.youtube, title: l.title }); }))); } catch {}
     }
     const keys = (x) => [x.name, ...(x.aliases || [])];
-    const hit = lessons.find((l) => YTB.match(l.title, P, keys) === p);
-    return hit ? `${root}courses/watch.html?c=${encodeURIComponent(hit.c)}&v=${encodeURIComponent(hit.v)}` : null;
+    return lessons.find((l) => YTB.match(l.title, P, keys) === p) || null;
   }
 
   /* Interactive mount: svg + info box; hover/focus highlights a class and its edges. */
@@ -1087,5 +1120,5 @@ print("GST:     ", sum(i.accept(GstVisitor()) for i in cart))
   @media (prefers-reduced-motion:reduce){.draw{stroke-dashoffset:0;animation:none}.fade{opacity:1;animation:none}}`;
   const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
 
-  window.YTBPatterns = { list: P, cats: ['Creational', 'Structural', 'Behavioral'], render, mount, b64url, lessonFor, esc };
+  window.YTBPatterns = { list: P, cats: ['Creational', 'Structural', 'Behavioral'], render, mount, b64url, videoFor, practiceFor, practiceCode, esc };
 })();
