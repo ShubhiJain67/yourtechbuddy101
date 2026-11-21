@@ -131,10 +131,10 @@
             </div>
           </div>
           <div class="cv-acts">
-            ${v.run ? `<a class="btn primary sm" href="${ROOT}playground/#lang=java&code=${b64url(v.run)}" target="_blank" rel="noopener">▶ Run in Playground</a>` : ''}
-            <a class="btn sm" href="https://github.com/${REPO}/tree/main/${esc(v.path)}" target="_blank" rel="noopener">GitHub ↗</a>
+            ${v.run && opts.run !== false ? `<a class="btn primary sm" href="${ROOT}playground/#lang=java&code=${b64url(v.run)}" target="_blank" rel="noopener">▶ Run in Playground</a>` : ''}
+            <a class="btn sm ${opts.run === false ? 'primary' : ''}" href="https://github.com/${REPO}/tree/main/${esc(v.path)}" target="_blank" rel="noopener">${opts.run === false ? 'View on GitHub ↗' : 'GitHub ↗'}</a>
             ${opts.fullLink ? `<a class="btn sm ghost" href="${opts.fullLink}">Open full screen</a>` : ''}
-            <span class="note">${v.run ? `${v.files.length} file${v.files.length === 1 ? '' : 's'}${opts.live === false ? ' · saved copy' : ' · live from GitHub'}` : 'Support files only'}</span>
+            <span class="note">${opts.run === false ? `${v.files.length} file${v.files.length === 1 ? '' : 's'}${opts.live === false ? ' · saved copy' : ' · live from GitHub'}` : v.run ? `${v.files.length} file${v.files.length === 1 ? '' : 's'}${opts.live === false ? ' · saved copy' : ' · live from GitHub'}` : 'Support files only'}</span>
           </div>` : '<p class="note">No code for this topic yet.</p>'}
       </div>`;
       opts.onChange && opts.onChange({ ...s });

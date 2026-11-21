@@ -400,7 +400,7 @@
     try {
       const [item, index] = await Promise.all([LLDCode.item(t.id), LLDCode.load()]);
       if (codeFor !== title) return;
-      LLDView.mount($('lcode-view'), { item, live: !!(index && index.live), height: '520px', bigTabs: true, labels: { code: 'Code for this lesson', notes: 'Notes' } });
+      LLDView.mount($('lcode-view'), { item, live: !!(index && index.live), height: '520px', bigTabs: true, run: false, labels: { code: 'Code for this lesson', notes: 'Notes' } });
     } catch (e) { $('lcode-view').innerHTML = `<p class="note">Couldn't load the code right now. <a href="${LLDCode.url(t.id)}">Open it on the code page</a>.</p>`; }
   }
 
