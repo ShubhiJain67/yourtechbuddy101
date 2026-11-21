@@ -1,0 +1,93 @@
+{
+  "course": "lld",
+  "passPct": 70,
+  "modules": [
+    {
+      "module": "OOP Foundations",
+      "aliases": ["Foundations", "OOPs", "Object Oriented Programming"],
+      "questions": [
+        { "q": "What does encapsulation mean?", "options": ["A class reusing code from a parent class", "Bundling data with the methods that use it, and hiding the internal state behind them", "Having many methods with the same name", "Creating objects from a class"], "answer": 1, "why": "Encapsulation keeps fields private and exposes behaviour through methods, so the object controls how its state changes." },
+        { "q": "Which of these is runtime polymorphism?", "options": ["Method overloading", "A static method called on the class", "Calling an overridden method through a parent-type reference", "Two constructors with different parameters"], "answer": 2, "why": "With overriding, the method that runs is chosen at runtime from the actual object type. Overloading is resolved at compile time." },
+        { "q": "In Java, which statement about abstract classes and interfaces is true?", "options": ["A class can extend many abstract classes", "Interfaces can have constructors", "An abstract class can hold state (fields) and constructors; a class can implement many interfaces but extend only one class", "Abstract classes cannot have any implemented methods"], "answer": 2, "why": "Abstract classes can carry state and partial implementation; interfaces define a contract, and a class may implement several of them." },
+        { "q": "A Car has an Engine that is created with the car and destroyed with it. Which relationship is this?", "options": ["Association", "Aggregation", "Composition", "Inheritance"], "answer": 2, "why": "Composition is a strong has-a: the part's lifecycle is owned by the whole." },
+        { "q": "A Department has Professors, but a professor can exist without the department. Which relationship is this?", "options": ["Composition", "Aggregation", "Inheritance", "Dependency"], "answer": 1, "why": "Aggregation is a weak has-a: the parts can live independently of the whole." },
+        { "q": "In a UML class diagram, what does a dashed line with a hollow triangle mean?", "options": ["Composition", "Inheritance from a class", "A class implements an interface (realization)", "A simple association"], "answer": 2, "why": "A solid line with a hollow triangle is inheritance; a dashed line with a hollow triangle is realization (implements)." }
+      ]
+    },
+    {
+      "module": "Design Principles",
+      "aliases": ["SOLID", "SOLID Principles"],
+      "questions": [
+        { "q": "The Single Responsibility Principle says a class should…", "options": ["Have only one method", "Have only one reason to change", "Be used by only one other class", "Never have more than one field"], "answer": 1, "why": "SRP is about responsibilities: one actor or reason to change per class, not a count of methods." },
+        { "q": "You add UPI payments by writing a new UpiPayment class that implements PaymentMethod, without editing PaymentService. Which principle is this?", "options": ["Open/Closed Principle", "Liskov Substitution Principle", "Interface Segregation Principle", "YAGNI"], "answer": 0, "why": "The code is open for extension (a new class) and closed for modification (PaymentService is untouched)." },
+        { "q": "Square extends Rectangle, and setWidth() on a Square also changes its height, breaking code that expects a Rectangle. Which principle is violated?", "options": ["Single Responsibility", "Dependency Inversion", "Liskov Substitution", "Interface Segregation"], "answer": 2, "why": "A subtype must be usable wherever its parent is expected without surprising behaviour." },
+        { "q": "A Printer interface has print(), scan() and fax(), so a basic printer must implement fax() with an exception. What fixes this?", "options": ["Make fax() static", "Split it into smaller interfaces like Printable, Scannable and Faxable", "Add a default fax() that does nothing", "Make Printer an abstract class"], "answer": 1, "why": "Interface Segregation: clients shouldn't be forced to depend on methods they don't use." },
+        { "q": "Dependency Inversion says…", "options": ["Low-level classes should create high-level classes", "High-level modules should depend on abstractions, not concrete implementations", "Every class needs an interface", "Dependencies should always be static"], "answer": 1, "why": "OrderService depends on a PaymentGateway interface; the concrete gateway is plugged in from outside." },
+        { "q": "order.getCustomer().getAddress().getCity() breaks which guideline?", "options": ["DRY", "KISS", "Law of Demeter", "YAGNI"], "answer": 2, "why": "Law of Demeter: talk to your immediate collaborators, not to their internals. Ask the order for what you need instead." }
+      ]
+    },
+    {
+      "module": "Creational Patterns",
+      "aliases": ["Creational"],
+      "questions": [
+        { "q": "What goes wrong with a naive lazy Singleton (if instance == null, create it) in multi-threaded code?", "options": ["Nothing, it is always safe", "Two threads can both see null and create two instances", "It can never be garbage collected", "It cannot have methods"], "answer": 1, "why": "The null check and the creation are not atomic, so concurrent calls can race." },
+        { "q": "In double-checked locking, why must the instance field be volatile?", "options": ["To make it faster", "So other threads never see a partially constructed object", "So it can be serialized", "So the class can be subclassed"], "answer": 1, "why": "Without volatile, instruction reordering can publish the reference before the constructor finishes." },
+        { "q": "Why is an enum Singleton often recommended in Java?", "options": ["It allows many instances", "It is thread-safe and protected against reflection and serialization creating new instances", "It is lazily loaded on every call", "It can extend other classes"], "answer": 1, "why": "The JVM guarantees a single enum instance and handles serialization correctly." },
+        { "q": "What is the key difference between Factory and Abstract Factory?", "options": ["Abstract Factory creates families of related objects that must match", "Factory can only create one object ever", "Abstract Factory never uses interfaces", "There is no difference"], "answer": 0, "why": "Abstract Factory guarantees consistency across a family, like a dark theme's button and checkbox." },
+        { "q": "When is Builder the right choice?", "options": ["A class with two required fields", "An object with many optional parameters, to avoid telescoping constructors", "When you need exactly one instance", "When objects must be cloned"], "answer": 1, "why": "Builder gives a readable, step-by-step way to construct complex objects and can validate before build()." },
+        { "q": "With the Prototype pattern, what does a shallow copy do?", "options": ["Copies every nested object too", "Copies the fields, but nested objects are shared between the original and the copy", "Creates an empty object", "Only copies primitive fields"], "answer": 1, "why": "Shallow copies share references; changing a nested object affects both. Deep copies duplicate nested objects." }
+      ]
+    },
+    {
+      "module": "Structural Patterns",
+      "aliases": ["Structural"],
+      "questions": [
+        { "q": "You must use a third-party SDK whose methods don't match your PaymentGateway interface. Which pattern helps?", "options": ["Adapter", "Decorator", "Composite", "Flyweight"], "answer": 0, "why": "Adapter wraps the SDK and translates calls into the interface your code expects." },
+        { "q": "How does Decorator differ from subclassing?", "options": ["It adds behaviour at runtime by wrapping an object, avoiding a subclass for every combination", "It removes methods from a class", "It only works with final classes", "It creates objects"], "answer": 0, "why": "Milk + sugar + extra shot is three stacked wrappers, not seven subclasses." },
+        { "q": "Proxy and Decorator both wrap an object. What sets Proxy apart?", "options": ["Proxy changes the interface", "Proxy controls access to the object (lazy loading, permissions, caching)", "Proxy always adds new features", "Proxy cannot hold a reference to the real object"], "answer": 1, "why": "Proxy is about access to an object; Decorator is about adding behaviour to it." },
+        { "q": "A Folder contains Files and other Folders, and size() works on both. Which pattern is this?", "options": ["Bridge", "Composite", "Facade", "Adapter"], "answer": 1, "why": "Composite lets you treat single objects and groups the same way in a tree." },
+        { "q": "Which pattern gives one simple entry point to a complex set of subsystems, like placeOrder() calling inventory, payment and shipping?", "options": ["Facade", "Proxy", "Flyweight", "Bridge"], "answer": 0, "why": "A Facade hides multi-step subsystem work behind one call." },
+        { "q": "Notification types (Alert, Promo) and channels (Email, SMS) should vary independently. Which pattern avoids a class for every pair?", "options": ["Bridge", "Singleton", "Decorator", "Composite"], "answer": 0, "why": "Bridge splits the abstraction from the implementation so both can grow separately." },
+        { "q": "A game draws a million trees but only a few kinds. Which pattern saves memory?", "options": ["Prototype", "Flyweight", "Proxy", "Builder"], "answer": 1, "why": "Flyweight shares the heavy intrinsic state (texture, colour) and keeps only position per tree." }
+      ]
+    },
+    {
+      "module": "Behavioural Patterns",
+      "aliases": ["Behavioral Patterns", "Behavioural", "Behavioral"],
+      "questions": [
+        { "q": "A parking lot must switch between hourly and flat pricing at runtime. Which pattern fits best?", "options": ["Strategy", "Template Method", "Observer", "Memento"], "answer": 0, "why": "Strategy puts each algorithm behind one interface and swaps it through composition." },
+        { "q": "What is a classic follow-up question on the Observer pattern?", "options": ["How to make the subject a Singleton", "How observers unsubscribe, to avoid memory leaks from dangling references", "How to clone observers", "How to sort observers"], "answer": 1, "why": "Forgetting removal keeps dead observers alive and notified." },
+        { "q": "An expense goes to a manager, then a director, then the CFO depending on the amount. Which pattern models this?", "options": ["Chain of Responsibility", "Command", "Iterator", "Visitor"], "answer": 0, "why": "Each handler approves or passes the request on. Remember to handle the case where nobody approves." },
+        { "q": "How does State differ from Strategy?", "options": ["They are identical", "In State, the states themselves trigger transitions as the object's situation changes", "State is creational", "Strategy can't use interfaces"], "answer": 1, "why": "State models a lifecycle (Idle → HasCoin → Sold); Strategy swaps an algorithm chosen from outside." },
+        { "q": "Which pattern fixes an algorithm's steps in a base class and lets subclasses override only some steps?", "options": ["Template Method", "Strategy", "Mediator", "Proxy"], "answer": 0, "why": "export() always runs fetch → format → save; subclasses only change format()." },
+        { "q": "You need undo and redo for editor actions. Which pattern is the usual answer?", "options": ["Command", "Observer", "Flyweight", "Builder"], "answer": 0, "why": "Each action becomes an object with execute() and undo(), kept in a history stack." },
+        { "q": "Which pattern saves and restores an object's state without exposing its internals?", "options": ["Memento", "Iterator", "Facade", "Adapter"], "answer": 0, "why": "The originator creates snapshots; the caretaker stores them without reading inside." },
+        { "q": "In a chat room, users talk through the room instead of to each other. Which pattern is this?", "options": ["Mediator", "Observer", "Composite", "Interpreter"], "answer": 0, "why": "A Mediator centralises communication, turning many-to-many links into one-to-many." }
+      ]
+    },
+    {
+      "module": "Architectural Patterns",
+      "aliases": ["Architecture", "Modern Patterns"],
+      "questions": [
+        { "q": "What does the Repository pattern give you?", "options": ["Faster databases", "A collection-like interface for data access, so services don't know how data is stored", "A single global instance", "Automatic caching"], "answer": 1, "why": "UserService calls repo.findById(); whether that's SQL, an API or memory is hidden." },
+        { "q": "What is a practical benefit of a repository interface?", "options": ["You can swap in an in-memory repository for tests", "It removes the need for a database", "It makes every query parallel", "It prevents all bugs"], "answer": 0, "why": "Tests run fast and isolated against a fake implementation of the same interface." },
+        { "q": "What is Dependency Injection?", "options": ["A class creating its own dependencies with new", "Giving a class its dependencies from outside instead of creating them inside", "Injecting code at runtime with reflection only", "A way to remove interfaces"], "answer": 1, "why": "The caller (or a container) passes in the collaborators, usually through the constructor." },
+        { "q": "Why is constructor injection usually preferred?", "options": ["It hides dependencies", "Dependencies are explicit, required and can be final, which makes testing easy", "It needs no constructor", "It only works with Singletons"], "answer": 1, "why": "An object can't be created half-wired, and tests can pass fakes directly." },
+        { "q": "Dependency Injection is a practical way to apply which SOLID principle?", "options": ["Single Responsibility", "Open/Closed", "Liskov Substitution", "Dependency Inversion"], "answer": 3, "why": "Depending on abstractions that are supplied from outside is Dependency Inversion in practice." },
+        { "q": "Where should business rules like 'a user can't place more than 5 orders a day' live?", "options": ["Inside the repository", "In the service layer that uses the repository", "In the database driver", "In the UI only"], "answer": 1, "why": "Repositories handle storage; services hold the rules, which keeps them testable." }
+      ]
+    },
+    {
+      "module": "Concurrency",
+      "aliases": ["Concurrency & Thread Safety", "Multithreading"],
+      "questions": [
+        { "q": "What is a race condition?", "options": ["Two threads running on different CPUs", "When the result depends on the timing of threads accessing shared data, with at least one writing", "A thread that never finishes", "Using too many threads"], "answer": 1, "why": "Unsynchronised read-modify-write on shared state gives different results depending on interleaving." },
+        { "q": "Why is count++ not thread-safe?", "options": ["Integers are immutable", "It is a read, an add and a write, which other threads can interleave", "It throws an exception on overflow", "It always runs on the main thread"], "answer": 1, "why": "Two threads can read the same value and both write value + 1, losing an update." },
+        { "q": "How does AtomicInteger.incrementAndGet() stay correct without a lock?", "options": ["It uses compare-and-swap (CAS) in a retry loop", "It disables other threads", "It uses synchronized internally on every call", "It copies the value per thread"], "answer": 0, "why": "CAS updates only if the value is still what it read; otherwise it retries." },
+        { "q": "When does a read-write lock help most?", "options": ["Many readers and few writers", "Only writers", "A single thread", "When every operation is a write"], "answer": 0, "why": "Readers can proceed in parallel; writers get exclusive access." },
+        { "q": "What is the trade-off of fine-grained locking compared with one big lock?", "options": ["Less concurrency but simpler code", "More concurrency, but more complexity and a higher risk of deadlocks", "It removes the need for locks", "No trade-off"], "answer": 1, "why": "Locking per item lets more threads work at once, but juggling many locks is harder to get right." },
+        { "q": "Thread A holds lock X and waits for Y; thread B holds Y and waits for X. What is a standard fix?", "options": ["Add Thread.sleep()", "Always acquire locks in the same global order", "Use more threads", "Make the locks volatile"], "answer": 1, "why": "A consistent lock order removes circular wait, one of the conditions a deadlock needs." }
+      ]
+    }
+  ]
+}

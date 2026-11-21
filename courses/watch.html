@@ -43,6 +43,43 @@
   .crumb{font-size:13px;color:var(--muted);margin:18px 0 4px}
   .crumb a{color:var(--muted)}
   h1{font-size:clamp(20px,2.4vw,26px);margin:0 0 16px;letter-spacing:-.015em}
+  /* module quiz */
+  .stage.quiz-mode > :not(#quiz){display:none!important}
+  .quiz{display:flex;flex-direction:column;gap:18px;max-width:760px}
+  .quiz .qcrumb{font-size:13.5px;color:var(--muted)}
+  .quiz h1{margin:0;font:600 26px/1.25 var(--sans)}
+  .quiz .qmeta{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .qdots{display:flex;gap:6px}
+  .qdots i{width:26px;height:6px;border-radius:99px;background:var(--panel3)}
+  .qdots i.ok{background:var(--ok)} .qdots i.bad{background:var(--err)} .qdots i.cur{background:var(--accent)}
+  .qcard{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow)}
+  .qcard .qn{font:600 12.5px var(--sans);color:var(--faint)}
+  .qcard .qq{font:600 18px/1.45 var(--sans);margin:0}
+  .qopts{display:grid;gap:10px}
+  .qopt{display:flex;align-items:flex-start;gap:12px;text-align:left;width:100%;padding:12px 14px;border:1px solid var(--border-strong);border-radius:var(--r-sm);background:var(--panel);font:15px/1.45 var(--sans);color:var(--text);transition:border-color .12s,background .12s}
+  .qopt:hover:not(:disabled){border-color:var(--accent);background:var(--accent-soft)}
+  .qopt .k{flex:none;width:24px;height:24px;border-radius:50%;border:1px solid var(--border-strong);display:grid;place-items:center;font:600 12px var(--mono);color:var(--muted)}
+  .qopt:disabled{cursor:default}
+  .qopt.right{border-color:var(--ok);background:var(--ok-soft)} .qopt.right .k{background:var(--ok);border-color:var(--ok);color:var(--on-accent)}
+  .qopt.wrong{border-color:var(--err);background:var(--err-soft)} .qopt.wrong .k{background:var(--err);border-color:var(--err);color:#fff}
+  .qwhy{padding:12px 14px;border-radius:var(--r-sm);background:var(--panel2);font-size:14.5px;line-height:1.55}
+  .qwhy b{display:block;margin-bottom:2px}
+  .qwhy.ok b{color:var(--ok)} .qwhy.bad b{color:var(--err)}
+  .qacts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .qacts .sp{flex:1}
+  .qscore{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .qscore .big{font:700 44px/1 var(--mono)}
+  .qscore .big small{font-size:20px;color:var(--muted)}
+  .qscore p{margin:0;color:var(--muted);max-width:46ch}
+  .qreview{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+  .qreview li{display:flex;gap:10px;font-size:14px;line-height:1.5}
+  .qreview li i{flex:none;font-style:normal;font-weight:700}
+  .qreview li.ok i{color:var(--ok)} .qreview li.bad i{color:var(--err)}
+  .qreview small{display:block;color:var(--muted)}
+  /* quiz row in the lesson list */
+  .lesson.quiz-row .n{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+  .lesson.quiz-row.passed .n{background:var(--ok);border-color:var(--ok);color:var(--on-accent)}
+  @media (max-width:640px){ .qcard{padding:16px} .quiz h1{font-size:22px} .qacts .btn{flex:1} .qacts .sp{display:none} }
   .lcode{margin-top:28px;padding-top:22px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:14px;scroll-margin-top:16px}
   .lcode-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;order:2}
   #lcode-view{order:1}
@@ -101,7 +138,8 @@
 </header>
 
 <div class="layout" id="layout">
-  <main class="stage">
+  <main class="stage" id="stage">
+    <section class="quiz" id="quiz" hidden aria-live="polite"></section>
     <div class="player-wrap">
       <div id="player"></div>
       <div class="placeholder" id="placeholder">
@@ -234,13 +272,20 @@
         <div class="kids">`;
       s.items.forEach(([l, n]) => {
         const isDone = l.youtube && done.has(l.youtube);
-        const cls = ['lesson', n === idx ? 'current' : '', isDone ? 'done' : '', l.youtube ? '' : 'locked'].join(' ');
+        const cls = ['lesson', n === idx && !quizOn ? 'current' : '', isDone ? 'done' : '', l.youtube ? '' : 'locked'].join(' ');
         html += `<a class="${cls}" href="${urlFor(n)}" data-l="${n}">
           <span class="n">${isDone ? '✓' : n}</span>
           <span class="t">${esc(l.title)}${l.duration ? `<div class="d">${esc(l.duration)}</div>` : ''}</span>
           ${l.youtube ? '' : '<span class="soon">soon</span>'}
         </a>`;
       });
+      const qm = quizFor(s.title);
+      if (qm) {
+        const best = quizBest(qm), passed = best && best.score / best.total * 100 >= passPct;
+        html += `<a class="lesson quiz-row ${quizOn && quizOn.title === s.title ? 'current' : ''} ${passed ? 'passed' : ''}" href="?c=${course.slug}&quiz=${quizSlug(qm)}" data-quiz="${esc(s.title)}">
+          <span class="n">${passed ? '✓' : '?'}</span>
+          <span class="t">Module quiz<div class="d">${qm.questions.length} questions${best ? ` · best ${best.score}/${best.total}` : ''}</div></span></a>`;
+      }
       html += '</div></div>';
     });
     renderList.secs = secs;
@@ -263,6 +308,8 @@
       grp.classList.toggle('open', open); sb.setAttribute('aria-expanded', String(open));
       return;
     }
+    const qa = e.target.closest('a[data-quiz]');
+    if (qa) { e.preventDefault(); openQuiz(qa.dataset.quiz, true); return; }
     const a = e.target.closest('a[data-l]');
     if (!a) return;
     e.preventDefault();
@@ -377,7 +424,7 @@
     $('title').textContent = `${idx}. ${l.title}`;
     $('crumb-sec').textContent = l.section;
     $('prev').disabled = idx <= 1;
-    $('next').disabled = idx >= total;
+    $('next').disabled = idx >= total && !quizFor(l.section);
     const isDone = l.youtube && done.has(l.youtube);
     $('mark').disabled = !l.youtube;
     $('mark').textContent = isDone ? '✓ Completed' : '✓ Mark complete';
@@ -390,6 +437,111 @@
     showLessonMock(l.title);
     showLessonCode(l.title);
   }
+  /* ---------- Module quizzes: courses/quizzes/<course>.json, matched to modules by name ---------- */
+  let quizData = null, passPct = 70, quizOn = null;
+  async function loadQuizzes() {
+    try {
+      const r = await fetch(`quizzes/${encodeURIComponent(course.slug)}.json`, { cache: 'no-cache' });
+      quizData = r.ok ? await r.json() : null;
+    } catch { quizData = null; }
+    passPct = (quizData && quizData.passPct) || 70;
+    renderList();
+  }
+  const quizKeys = (m) => [m.module, ...(m.aliases || [])];
+  const quizMemo = {};
+  function quizFor(sectionTitle) {
+    if (!quizData || !sectionTitle) return null;
+    if (sectionTitle in quizMemo) return quizMemo[sectionTitle];
+    const ms = quizData.modules || [];
+    const n = (s) => String(s).toLowerCase().trim();
+    const m = ms.find((x) => quizKeys(x).some((k) => n(k) === n(sectionTitle))) || YTB.match(sectionTitle, ms, quizKeys);
+    return (quizMemo[sectionTitle] = m ? { ...m, section: sectionTitle, title: sectionTitle } : null);
+  }
+  const quizSlug = (m) => YTB.words(m.module).join('-');
+  function quizBySlug(slug) {
+    const secs = [...new Set(lessons.map((l) => l.section))];
+    for (const s of secs) { const m = quizFor(s); if (m && quizSlug(m) === slug) return m; }
+    return null;
+  }
+  const bestKey = (m) => `ytb:quiz:${course.slug}:${quizSlug(m)}`;
+  const quizBest = (m) => YTB.LS.get(bestKey(m), null);
+  const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+  function openQuiz(sectionTitle, push) {
+    const m = quizFor(sectionTitle); if (!m) return;
+    quizOn = { title: sectionTitle, m, i: 0, picks: [], order: m.questions.map((q) => shuffle(q.options.map((_, k) => k))) };
+    if (player && playerReady && player.pauseVideo) { try { player.pauseVideo(); } catch {} }
+    if (push) history.pushState(null, '', `?c=${course.slug}&quiz=${quizSlug(m)}`);
+    $('stage').classList.add('quiz-mode'); $('quiz').hidden = false;
+    document.title = `Quiz: ${sectionTitle} — ${course.title}`;
+    drawQuiz(); renderList(); window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function closeQuiz() {
+    if (!quizOn) return;
+    quizOn = null; $('stage').classList.remove('quiz-mode'); $('quiz').hidden = true;
+    document.title = `${course.title} — YourTechBuddy`;
+  }
+  function moduleBounds(title) {
+    const first = lessons.findIndex((l) => l.section === title) + 1;
+    let last = first; while (last < total && lessons[last].section === title) last++;
+    return { first, last, next: last < total ? last + 1 : null };
+  }
+  function drawQuiz() {
+    const Q = quizOn, m = Q.m, qs = m.questions, b = moduleBounds(Q.title);
+    const dots = qs.map((q, k) => `<i class="${k < Q.picks.length ? (Q.picks[k] === q.answer ? 'ok' : 'bad') : k === Q.i ? 'cur' : ''}"></i>`).join('');
+    const head = `<div class="qcrumb">${esc(course.title)} / ${esc(Q.title)}</div><h1>Module quiz: ${esc(Q.title)}</h1>`;
+    if (Q.i >= qs.length) {
+      const score = Q.picks.filter((p, k) => p === qs[k].answer).length, pct = Math.round(score / qs.length * 100);
+      const prev = quizBest(m);
+      if (!prev || score > prev.score) YTB.LS.set(bestKey(m), { score, total: qs.length, at: Date.now() });
+      const passed = pct >= passPct;
+      $('quiz').innerHTML = `${head}
+        <div class="qmeta"><div class="qdots">${dots}</div></div>
+        <div class="qcard">
+          <div class="qscore"><span class="big">${score}<small>/${qs.length}</small></span>
+            <p>${passed ? (score === qs.length ? 'Perfect score. You have this module nailed.' : 'Nice work, you passed this module.') : `You need ${Math.ceil(qs.length * passPct / 100)} to pass. Rewatch the lessons you missed and try again.`}</p></div>
+          <ul class="qreview">${qs.map((q, k) => { const ok = Q.picks[k] === q.answer; return `<li class="${ok ? 'ok' : 'bad'}"><i>${ok ? '✓' : '✗'}</i><span>${esc(q.q)}${ok ? '' : `<small>Answer: ${esc(q.options[q.answer])}</small>`}</span></li>`; }).join('')}</ul>
+          <div class="qacts">
+            <button class="btn" data-qact="retry">Retry quiz</button>
+            <button class="btn" data-qact="rewatch">Rewatch module</button>
+            <span class="sp"></span>
+            ${b.next ? `<button class="btn primary" data-qact="next">Next module →</button>` : `<a class="btn primary" href="./">Back to courses</a>`}
+          </div>
+        </div>`;
+      renderList();
+      return;
+    }
+    const q = qs[Q.i], picked = Q.picks.length > Q.i ? Q.picks[Q.i] : null, order = Q.order[Q.i];
+    $('quiz').innerHTML = `${head}
+      <div class="qmeta"><div class="qdots">${dots}</div><span class="note">Question ${Q.i + 1} of ${qs.length}</span></div>
+      <div class="qcard">
+        <p class="qq">${esc(q.q)}</p>
+        <div class="qopts">${order.map((k, pos) => `<button class="qopt ${picked !== null ? (k === q.answer ? 'right' : k === picked ? 'wrong' : '') : ''}" data-opt="${k}" ${picked !== null ? 'disabled' : ''}><span class="k">${'ABCD'[pos]}</span><span>${esc(q.options[k])}</span></button>`).join('')}</div>
+        ${picked !== null ? `<div class="qwhy ${picked === q.answer ? 'ok' : 'bad'}"><b>${picked === q.answer ? 'Correct' : 'Not quite'}</b>${esc(q.why || '')}</div>` : ''}
+        <div class="qacts">
+          <button class="btn" data-qact="rewatch">Back to lessons</button>
+          <span class="sp"></span>
+          ${picked !== null ? `<button class="btn primary" data-qact="advance">${Q.i + 1 < qs.length ? 'Next question' : 'See my score'}</button>` : '<span class="note">Pick an answer (keys 1–4)</span>'}
+        </div>
+      </div>`;
+  }
+  $('quiz').addEventListener('click', (e) => {
+    const o = e.target.closest('[data-opt]');
+    if (o && !o.disabled) { quizOn.picks[quizOn.i] = +o.dataset.opt; return drawQuiz(); }
+    const a = e.target.closest('[data-qact]')?.dataset.qact; if (!a) return;
+    const b = moduleBounds(quizOn.title);
+    if (a === 'advance') { quizOn.i++; drawQuiz(); $('quiz').scrollIntoView({ block: 'start' }); }
+    else if (a === 'retry') openQuiz(quizOn.title, false);
+    else if (a === 'rewatch') go(b.first, true, false);
+    else if (a === 'next') go(b.next, true, true);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (!quizOn || e.target.closest('input,textarea')) return;
+    const n = parseInt(e.key, 10);
+    if (n >= 1 && n <= 4) { const btn = $('quiz').querySelectorAll('[data-opt]')[n - 1]; if (btn && !btn.disabled) btn.click(); }
+    if (e.key === 'Enter') { const adv = $('quiz').querySelector('[data-qact="advance"]'); if (adv) adv.click(); }
+  });
+
   /* ---------- Collapsible lesson list (remembered) ---------- */
   const setListHidden = (hidden) => { $('layout').classList.toggle('lessons-hidden', hidden); YTB.LS.set('ytb:lessons-hidden', hidden ? 1 : 0); $('rail-count').textContent = lessons.length ? ' · ' + lessons.length : ''; };
   setListHidden(!!YTB.LS.get('ytb:lessons-hidden', 0));
@@ -446,14 +598,20 @@
 
   function go(n, push, autoplay = false) {
     if (!lessons.length) return;
+    closeQuiz();
     idx = clamp(n, 1, total);
     if (push) history.pushState(null, '', urlFor(idx));
     render(autoplay);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  const lastOfModule = (i) => lessons[i - 1] && (i === total || lessons[i].section !== lessons[i - 1].section);
   $('prev').addEventListener('click', () => go(idx - 1, true, true));
-  $('next').addEventListener('click', () => go(idx + 1, true, true));
+  $('next').addEventListener('click', () => {
+    const qm = lastOfModule(idx) && quizFor(lessons[idx - 1].section);
+    if (qm) return openQuiz(lessons[idx - 1].section, true);
+    go(idx + 1, true, true);
+  });
   $('mark').addEventListener('click', () => {
     const l = lessons[idx - 1];
     if (!l || !l.youtube) return;
@@ -464,7 +622,11 @@
   });
   window.addEventListener('popstate', () => {
     if (!lessons.length) return;
-    idx = idxFromUrl(new URLSearchParams(location.search));
+    const p = new URLSearchParams(location.search);
+    const qm = p.get('quiz') && quizBySlug(p.get('quiz'));
+    if (qm) return openQuiz(qm.section, false);
+    closeQuiz();
+    idx = idxFromUrl(p);
     render();
   });
   document.addEventListener('keydown', (e) => {
@@ -479,8 +641,10 @@
     $('on-yt').style.display = 'none';
   } else {
     idx = idxFromUrl(params);
-    history.replaceState(null, '', urlFor(idx));
-    render();
+    await loadQuizzes();
+    const startQuiz = params.get('quiz') && quizBySlug(params.get('quiz'));
+    if (startQuiz) { render(); openQuiz(startQuiz.section, false); }
+    else { history.replaceState(null, '', urlFor(idx)); render(); }
   }
 })();
 </script>
