@@ -131,6 +131,25 @@ kbd{font:500 11px var(--mono);border:1px solid var(--border);border-bottom-width
   .tabbar a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;color:var(--muted);font-size:11.5px;font-weight:500}
   .tabbar a svg{width:21px;height:21px}
   .tabbar a.on{color:var(--accent)}
+  .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:0;background:none;color:var(--muted);font-size:11.5px;font-weight:500}
+  .tabbar button svg{width:21px;height:21px}
+  body.drawer-open .tabbar button{color:var(--accent)}
+  /* the sidebar's problem groups only live in the drawer on phones */
+  body:not(.drawer-open) .sn-grp{display:none}
+  /* drawer */
+  .sn-backdrop{display:none}
+  body.drawer-open{padding-top:56px;overflow:hidden}
+  body.drawer-open .sn-backdrop{display:block;position:fixed;inset:0;background:rgba(3,6,18,.55);z-index:55;animation:fade .15s ease}
+  body.drawer-open > header{position:fixed;top:0;left:0;bottom:0;right:auto;height:auto;width:min(86vw,320px);flex-direction:column;align-items:stretch;gap:4px;padding:16px 12px calc(16px + env(safe-area-inset-bottom));overflow-y:auto;border-bottom:0;border-right:1px solid var(--border);z-index:60;box-shadow:12px 0 40px rgba(0,0,0,.35);animation:drawer .18s ease}
+  body.drawer-open .sn-top{margin:0;padding:4px 0 14px}
+  body.drawer-open .sn-brand small{display:block}
+  body.drawer-open .sn-search{width:100%;height:auto;border-radius:var(--r-sm);padding:9px 10px;justify-content:flex-start;margin-bottom:10px}
+  body.drawer-open .sn-search span,body.drawer-open .sn-search kbd{display:inline}
+  body.drawer-open .sn-search span{flex:1}
+  body.drawer-open .sn a.sn-item,body.drawer-open .sn-yt{display:flex}
+  body.drawer-open .sn-label{display:block}
+  body.drawer-open .sn-foot{margin-top:auto;flex-direction:column;align-items:stretch;padding-top:14px;border-top:1px solid var(--border)}
+  @keyframes drawer{from{transform:translateX(-100%)}}
 }
 
 /* Legacy top header (pages without the shell, e.g. Playground) */

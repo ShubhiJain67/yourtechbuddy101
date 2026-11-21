@@ -301,6 +301,7 @@
     admin: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
     puzzle: '<path d="M4 7h3a2 2 0 1 1 4 0h3v3a2 2 0 1 1 0 4v3h-3a2 2 0 1 0-4 0H4v-3a2 2 0 1 0 0-4z"/>',
     chev: '<path d="m15 18-6-6 6-6"/>',
+    menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
     search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
     play: '<path d="m7 4 13 8-13 8z"/>',
     layers: '<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>',
@@ -361,7 +362,11 @@
     tb.className = 'tabbar';
     tb.setAttribute('aria-label', 'Main');
     const tab = (path, label, ic) => `<a class="${isOn(path) ? 'on' : ''}" href="${ROOT}${path}">${icon(ic)}${label}</a>`;
-    tb.innerHTML = tab('', 'Home', 'home') + tab('courses/', 'Courses', 'courses') + tab('practice/', 'Interviews', 'practice') + tab('playground/', 'Code', 'code') + (session ? tab('me/', 'Me', 'me') : '');
+    tb.innerHTML = tab('', 'Home', 'home') + tab('courses/', 'Courses', 'courses') + tab('practice/', 'Interviews', 'practice') + tab('patterns/', 'Patterns', 'pattern')
+      + `<button data-drawer aria-label="Menu" aria-expanded="false">${icon('menu')}Menu</button>`;
+    // phones: the full sidebar slides out as a drawer from the Menu tab
+    const backdrop = document.createElement('div'); backdrop.className = 'sn-backdrop'; backdrop.setAttribute('data-drawer-close', '');
+    document.body.appendChild(backdrop);
     document.body.appendChild(tb);
     fillProblemGroups(sn);
   }
@@ -473,6 +478,18 @@
     } else if (e.key === 'Escape' && cmdkEl && !cmdkEl.hidden) closeCmdk();
   });
   document.addEventListener('click', (e) => { if (e.target.closest('[data-cmdk]')) { e.preventDefault(); openCmdk(); } });
+
+  /* Phone drawer (Menu tab) */
+  function setDrawer(open) {
+    document.body.classList.toggle('drawer-open', open);
+    document.querySelectorAll('[data-drawer]').forEach((b) => b.setAttribute('aria-expanded', String(open)));
+  }
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('[data-drawer]')) return setDrawer(!document.body.classList.contains('drawer-open'));
+    if (e.target.closest('[data-drawer-close]') || (document.body.classList.contains('drawer-open') && e.target.closest('.sn a'))) setDrawer(false);
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.body.classList.contains('drawer-open')) setDrawer(false); });
+  matchMedia('(min-width: 901px)').addEventListener?.('change', (m) => { if (m.matches) setDrawer(false); });
 
   /* Collapsible sidebar: an icon-only rail; remembered per browser. Shortcut: [ */
   function labelSideToggle(on) {

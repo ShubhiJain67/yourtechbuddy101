@@ -91,7 +91,7 @@
 
     const card = (r) => {
       const first = r.lessons[0];
-      const th = first ? `<img src="https://i.ytimg.com/vi/${encodeURIComponent(first.youtube)}/mqdefault.jpg" alt="" loading="lazy">` : esc(r.c.slug.toUpperCase());
+      const th = first ? `<img src="https://i.ytimg.com/vi/${encodeURIComponent(first.youtube)}/mqdefault.jpg" alt="" loading="lazy" onerror="this.remove()">` : esc(r.c.slug.toUpperCase());
       const href = `../courses/watch.html?c=${encodeURIComponent(r.c.slug)}` + (r.next ? `&v=${encodeURIComponent(r.next.youtube)}` : '');
       const status = r.pct === 100 ? '🎉 Completed' : r.count ? `${r.count} / ${r.total || '?'} lessons · ${r.pct}%` : `${r.total} lessons`;
       return `<a class="item" href="${href}">
