@@ -322,7 +322,10 @@
     const admin = !!(session && session.user && session.user.isAdmin);
     const item = (path, label, ic, extra = '') => `<a class="sn-item ${isOn(path) ? 'on' : ''}" href="${ROOT}${path}" title="${label}">${icon(ic)}<span>${label}</span>${extra}</a>`;
     const pr = isOn('practice/');
-    const sub = (t, label) => `<a class="sn-item sn-sub ${pr && trackParam === t && !/session/.test(here) ? 'on' : ''}" href="${ROOT}practice/?track=${t}">${label}</a>`;
+    const sub = (t, label) => `<div class="sn-grp" data-track="${t}">
+        <div class="sn-grp-row"><a class="sn-item sn-sub ${pr && trackParam === t && !/session/.test(here) ? 'on' : ''}" href="${ROOT}practice/?track=${t}">${label}</a>
+          <button class="sn-grp-tog" data-grp-toggle="${t}" aria-label="Show ${t.toUpperCase()} problems" aria-expanded="false">${icon('chev')}</button></div>
+        <div class="sn-probs" id="sn-probs-${t}"></div></div>`;
     const sn = document.createElement('div');
     sn.className = 'sn';
     sn.innerHTML = `
@@ -360,6 +363,37 @@
     const tab = (path, label, ic) => `<a class="${isOn(path) ? 'on' : ''}" href="${ROOT}${path}">${icon(ic)}${label}</a>`;
     tb.innerHTML = tab('', 'Home', 'home') + tab('courses/', 'Courses', 'courses') + tab('practice/', 'Interviews', 'practice') + tab('playground/', 'Code', 'code') + (session ? tab('me/', 'Me', 'me') : '');
     document.body.appendChild(tb);
+    fillProblemGroups(sn);
+  }
+
+  /* Interview problems listed in the sidebar under each track, as collapsible groups. Cached so the sidebar is instant. */
+  let currentProblem = new URLSearchParams(location.search).get('p');
+  async function fillProblemGroups(sn) {
+    if (!apiOn) return;
+    const openSet = new Set(LS.get('ytb:sn-open', []));
+    const paint = (probs) => {
+      sn.querySelectorAll('.sn-grp').forEach((g) => {
+        const t = g.dataset.track, list = probs.filter((p) => (p.track || 'lld') === t);
+        const hasCur = list.some((p) => p.slug === currentProblem);
+        if (hasCur || (trackParam === t && /practice/.test(here))) openSet.add(t);
+        g.classList.toggle('open', openSet.has(t));
+        g.querySelector('[data-grp-toggle]').setAttribute('aria-expanded', String(openSet.has(t)));
+        g.querySelector('.sn-probs').innerHTML = list.map((p) => `<a class="sn-prob ${p.slug === currentProblem ? 'on' : ''}" href="${ROOT}practice/session.html?p=${encodeURIComponent(p.slug)}" title="${esc(p.title)} · ${esc(p.difficulty)}"><i class="d ${esc(p.difficulty)}"></i><span>${esc(p.title.replace(/\s*\(.*\)$/, ''))}</span></a>`).join('')
+          || '<span class="sn-none">No problems yet</span>';
+      });
+      sn.querySelector('.sn-prob.on')?.scrollIntoView({ block: 'nearest' });
+    };
+    const cached = LS.get('ytb:sn-probs', null);
+    if (cached) paint(cached);
+    try { const probs = (await api('/api/practice/problems')).problems.map((p) => ({ slug: p.slug, title: p.title, difficulty: p.difficulty, track: p.track })); LS.set('ytb:sn-probs', probs); paint(probs); } catch {}
+    sn.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-grp-toggle]'); if (!b) return;
+      const t = b.dataset.grpToggle, g = b.closest('.sn-grp'), open = !g.classList.contains('open');
+      g.classList.toggle('open', open); b.setAttribute('aria-expanded', String(open));
+      open ? openSet.add(t) : openSet.delete(t); LS.set('ytb:sn-open', [...openSet]);
+    });
+    // pages that only know the problem later (e.g. session.html?id=…) call YTB.markProblem(slug)
+    window.YTB_markProblem = (slug) => { currentProblem = slug; paint(LS.get('ytb:sn-probs', [])); };
   }
 
   let cmdkEl = null, cmdkItems = null;
@@ -463,6 +497,7 @@
     get user() { return session && session.user; },
     get isAdmin() { return !!(session && session.user && session.user.isAdmin); },
     getCourses, getCourse, progress, renderAuth, renderGoogleButton, signOut, toast: alertBox, loadScript, b64url, match, words,
+    markProblem: (slug) => window.YTB_markProblem && window.YTB_markProblem(slug),
     get theme() { return getTheme(); }, setTheme, icon, thumb, openCmdk,
   };
 

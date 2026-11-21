@@ -160,6 +160,7 @@
         history.replaceState(null, '', '?id=' + attempt.id);
       } else { location.href = './'; return; }
     } catch (e) { return gate(`<b>${e.status === 429 ? "That's today's interview done" : "Couldn't open this interview"}</b><span>${esc(e.message)}</span><a class="btn" href="./">Back to problems</a>`); }
+    YTB.markProblem(attempt.problem.slug);
     try { usage = await YTB.api('/api/practice/usage'); } catch {}
     STEPS = YTBTracks.get(attempt.problem.track).steps;
     cur = Math.min(attempt.step, STEPS.length) - 1;

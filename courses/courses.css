@@ -70,6 +70,22 @@ kbd{font:500 11px var(--mono);border:1px solid var(--border);border-bottom-width
 .sn a.sn-item.on{background:var(--accent-soft);color:var(--accent)}
 .sn a.sn-item .ct{margin-left:auto;font:500 11.5px var(--mono);color:var(--faint)}
 .sn a.sn-sub{padding:6px 10px 6px 39px;font-size:13.5px}
+/* interview problems under each track (collapsible) */
+.sn-grp-row{display:flex;align-items:center}
+.sn-grp-row .sn-sub{flex:1;min-width:0}
+.sn-grp-tog{width:26px;height:26px;flex:none;border:0;background:none;border-radius:6px;color:var(--faint);display:grid;place-items:center;margin-right:2px}
+.sn-grp-tog:hover{background:var(--panel2);color:var(--text)}
+.sn-grp-tog svg{width:14px;height:14px;transform:rotate(-90deg);transition:transform .15s}
+.sn-grp.open .sn-grp-tog svg{transform:rotate(90deg)}
+.sn-probs{display:none;margin:2px 0 6px 39px;border-left:1px solid var(--border);padding-left:6px}
+.sn-grp.open .sn-probs{display:block}
+.sn a.sn-prob{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;font-size:13px;color:var(--muted);text-decoration:none;line-height:1.3}
+.sn a.sn-prob span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sn a.sn-prob:hover{background:var(--panel2);color:var(--text)}
+.sn a.sn-prob.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.sn-prob .d{width:7px;height:7px;border-radius:50%;flex:none;background:var(--border-strong)}
+.sn-prob .d.Easy{background:var(--ok)} .sn-prob .d.Medium{background:var(--warn)} .sn-prob .d.Hard{background:var(--err)}
+.sn-none{display:block;padding:5px 8px;font-size:12.5px;color:var(--faint)}
 .sn-foot{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding-top:14px;border-top:1px solid var(--border)}
 .sn-row{display:flex;align-items:center;gap:8px}
 .sn-row #auth{flex:1;min-width:0}
@@ -90,7 +106,7 @@ kbd{font:500 11px var(--mono);border:1px solid var(--border);border-bottom-width
   html.side-mini .sn a.sn-item > span,
   html.side-mini .sn a.sn-item .ct,
   html.side-mini .sn-search span,html.side-mini .sn-search kbd,
-  html.side-mini .sn-label,html.side-mini .sn a.sn-sub,
+  html.side-mini .sn-label,html.side-mini .sn a.sn-sub,html.side-mini .sn-grp,
   html.side-mini .sn-yt > span{display:none}
   html.side-mini .sn-search{justify-content:center;padding:9px 0}
   html.side-mini .sn a.sn-item{justify-content:center;padding:10px 0}
