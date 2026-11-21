@@ -19,12 +19,18 @@
   .list-toggle{width:28px;height:28px;flex:none;border:1px solid transparent;border-radius:7px;background:none;color:var(--faint);display:grid;place-items:center;margin:-4px -6px 0 0}
   .list-toggle:hover{background:var(--panel2);color:var(--text);border-color:var(--border)}
   .list-toggle svg{width:16px;height:16px}
-  .lessons-open{display:none;margin-bottom:12px}
+  .list-rail{display:none}
   @media (max-width:980px){.list-toggle{display:none}}
   @media (min-width:981px){
-    .layout.lessons-hidden{grid-template-columns:minmax(0,1fr)}
-    .layout.lessons-hidden > aside{display:none}
-    .layout.lessons-hidden .lessons-open{display:inline-flex}
+    .layout{transition:grid-template-columns .18s ease}
+    .layout.lessons-hidden{grid-template-columns:48px minmax(0,1fr)}
+    .layout.lessons-hidden > aside > :not(.list-rail){display:none}
+    .layout.lessons-hidden .list-rail{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;flex:1;padding:68px 0 18px;border:0;background:none;color:var(--muted);cursor:pointer}
+    .list-rail:hover{background:var(--panel2);color:var(--text)}
+    .list-rail svg{width:18px;height:18px;padding:5px;box-sizing:content-box;border:1px solid var(--border-strong);border-radius:50%;background:var(--panel)}
+    .list-rail:hover svg{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+    .list-rail span{writing-mode:vertical-rl;font:600 13.5px var(--sans);letter-spacing:.02em;display:flex;gap:8px;align-items:center}
+    .list-rail b{font:500 12px var(--mono);color:var(--faint)}
     .layout.lessons-hidden .stage{max-width:1100px}
   }
   .stage{padding:24px clamp(16px,3vw,32px) 40px;min-width:0;max-width:960px}
@@ -105,7 +111,6 @@
       </div>
     </div>
 
-    <button class="btn sm lessons-open" data-lessons-toggle aria-label="Show lesson list">☰ Lessons</button>
     <div class="crumb"><a href="./">Courses</a> / <span id="crumb-course"></span> / <span id="crumb-sec"></span></div>
     <h1 id="title">Loading…</h1>
 
@@ -129,6 +134,7 @@
   </main>
 
   <aside>
+    <button class="list-rail" data-lessons-toggle aria-label="Show lesson list" title="Show lesson list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg><span>Lessons<b id="rail-count"></b></span></button>
     <div class="aside-head">
       <div class="ah-top"><h2 id="course-title"></h2><button class="list-toggle" data-lessons-toggle aria-label="Hide lesson list" title="Hide lesson list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button></div>
       <div class="progress"><i id="bar" style="width:0%"></i></div>
@@ -239,6 +245,7 @@
     });
     renderList.secs = secs;
     $('list').innerHTML = html;
+    $('rail-count').textContent = lessons.length ? ' · ' + lessons.length : '';
     const count = lessons.filter((l) => l.youtube && done.has(l.youtube)).length;
     const pct = liveCount ? Math.round((count / liveCount) * 100) : 0;
     $('bar').style.width = pct + '%';
@@ -384,7 +391,7 @@
     showLessonCode(l.title);
   }
   /* ---------- Collapsible lesson list (remembered) ---------- */
-  const setListHidden = (hidden) => { $('layout').classList.toggle('lessons-hidden', hidden); YTB.LS.set('ytb:lessons-hidden', hidden ? 1 : 0); };
+  const setListHidden = (hidden) => { $('layout').classList.toggle('lessons-hidden', hidden); YTB.LS.set('ytb:lessons-hidden', hidden ? 1 : 0); $('rail-count').textContent = lessons.length ? ' · ' + lessons.length : ''; };
   setListHidden(!!YTB.LS.get('ytb:lessons-hidden', 0));
   document.addEventListener('click', (e) => { if (e.target.closest('[data-lessons-toggle]')) setListHidden(!$('layout').classList.contains('lessons-hidden')); });
 

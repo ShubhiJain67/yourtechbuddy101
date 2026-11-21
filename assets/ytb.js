@@ -326,8 +326,7 @@
     const sn = document.createElement('div');
     sn.className = 'sn';
     sn.innerHTML = `
-      <div class="sn-top"><a class="sn-brand" href="${ROOT}" title="YourTechBuddy"><img class="sn-logo" src="${ROOT}assets/logo.png" alt="" width="34" height="34"><span><b>YourTechBuddy</b><small>LLD &amp; HLD in Hindi</small></span></a>
-        <button class="sn-collapse" data-side-toggle aria-label="Collapse sidebar" title="Collapse sidebar">${icon('chev')}</button></div>
+      <div class="sn-top"><a class="sn-brand" href="${ROOT}" title="YourTechBuddy"><img class="sn-logo" src="${ROOT}assets/logo.png" alt="" width="34" height="34"><span><b>YourTechBuddy</b><small>LLD &amp; HLD in Hindi</small></span></a></div>
       <button class="sn-search" data-cmdk title="Search (⌘K)">${icon('search')}<span>Search</span><kbd>⌘K</kbd></button>
       ${item('', 'Home', 'home')}
       ${item('courses/', 'Courses', 'courses')}
@@ -350,7 +349,11 @@
     const slot = sn.querySelector('.sn-slot');
     if (auth) slot.replaceWith(auth); else slot.remove();
     document.body.classList.add('shell');
-    if (document.documentElement.classList.contains('side-mini')) { const b = sn.querySelector('[data-side-toggle]'); b.title = 'Expand sidebar'; b.setAttribute('aria-label', 'Expand sidebar'); b.setAttribute('aria-expanded', 'false'); }
+    // always-visible handle on the sidebar's edge to collapse / expand it
+    const edge = document.createElement('button');
+    edge.className = 'sn-edge'; edge.setAttribute('data-side-toggle', ''); edge.innerHTML = icon('chev');
+    document.body.appendChild(edge);
+    labelSideToggle(document.documentElement.classList.contains('side-mini'));
     const tb = document.createElement('nav');
     tb.className = 'tabbar';
     tb.setAttribute('aria-label', 'Main');
@@ -438,10 +441,13 @@
   document.addEventListener('click', (e) => { if (e.target.closest('[data-cmdk]')) { e.preventDefault(); openCmdk(); } });
 
   /* Collapsible sidebar: an icon-only rail; remembered per browser. Shortcut: [ */
+  function labelSideToggle(on) {
+    document.querySelectorAll('[data-side-toggle]').forEach((b) => { const t = (on ? 'Expand sidebar' : 'Collapse sidebar') + ' ( [ )'; b.title = t; b.setAttribute('aria-label', t); b.setAttribute('aria-expanded', String(!on)); });
+  }
   function setSideMini(on) {
     document.documentElement.classList.toggle('side-mini', on);
     LS.set('ytb:side-mini', on ? 1 : 0);
-    document.querySelectorAll('[data-side-toggle]').forEach((b) => { const t = on ? 'Expand sidebar' : 'Collapse sidebar'; b.title = t; b.setAttribute('aria-label', t); b.setAttribute('aria-expanded', String(!on)); });
+    labelSideToggle(on);
     window.dispatchEvent(new CustomEvent('ytb:sidebar', { detail: on }));
   }
   document.addEventListener('click', (e) => { if (e.target.closest('[data-side-toggle]')) setSideMini(!document.documentElement.classList.contains('side-mini')); });
