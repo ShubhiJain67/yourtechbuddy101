@@ -329,8 +329,11 @@
     const kid = (href, label, on) => `<a class="sn-item sn-sub ${on ? 'on' : ''}" href="${ROOT}${href}">${label}</a>`;
     // Topic sections: each has its own learning resources and mock interviews. Add a topic here.
     const SECTIONS = [
-      { key: 'dsa', label: 'DSA', full: 'Data structures & algorithms', ic: 'bars', href: 'dsa/', course: 'dsa',
-        kids: () => kid('dsa/', 'Sorting algorithms', isOn('dsa/')) },
+      { key: 'dsa', label: 'DSA', full: 'Data structures & algorithms', ic: 'bars', href: 'dsa/', course: 'dsa', on: () => isOn('dsa/'),
+        kids: () => `<div class="sn-grp" data-list="dsa">
+          <div class="sn-grp-row"><a class="sn-item sn-sub" href="${ROOT}dsa/">Algorithms</a>
+            <button class="sn-grp-tog" data-grp-toggle="dsa" aria-label="Show algorithms" aria-expanded="false">${icon('chev')}</button></div>
+          <div class="sn-probs" id="sn-list-dsa"></div></div>` },
       { key: 'lld', label: 'LLD', full: 'Low level design', ic: 'layers', href: 'courses/watch.html?c=lld', course: 'lld',
         kids: () => kid('patterns/', 'Design patterns', isOn('patterns/')) + sub('lld', 'Mock interviews') },
       { key: 'hld', label: 'HLD', full: 'High level design', ic: 'server', href: 'practice/?track=hld', course: 'hld',
@@ -339,7 +342,7 @@
     const secOpen = LS.get('ytb:sn-sec', {});
     const section = (s) => {
       const kids = `<span data-course-slot="${s.course}"></span>` + s.kids();
-      const on = /class="[^"]*\bon\b/.test(kids) || courseOn(s.course) || (pr && trackParam === s.key);
+      const on = /class="[^"]*\bon\b/.test(kids) || courseOn(s.course) || (pr && trackParam === s.key) || (s.on && s.on());
       return `<div class="sn-sec ${secOpen[s.key] !== false ? 'open' : ''} ${on ? 'has-on' : ''}" data-sec="${s.key}">
         <div class="sn-grp-row"><a class="sn-item sn-sec-a" href="${ROOT}${s.href}" title="${s.full}">${icon(s.ic)}<span>${s.label}<small>${s.full}</small></span></a>
           <button class="sn-grp-tog" data-sec-toggle="${s.key}" aria-label="Show ${s.label}" aria-expanded="${secOpen[s.key] !== false}">${icon('chev')}</button></div>
@@ -390,7 +393,15 @@
     document.body.appendChild(backdrop);
     document.body.appendChild(tb);
     fillProblemGroups(sn);
+    fillDsa(sn);
     sn.addEventListener('click', (e) => {
+      const g0 = e.target.closest('[data-grp-toggle]');
+      if (g0) {
+        const t = g0.dataset.grpToggle, g = g0.closest('.sn-grp'), open = !g.classList.contains('open');
+        g.classList.toggle('open', open); g0.setAttribute('aria-expanded', String(open));
+        const set = new Set(LS.get('ytb:sn-open', [])); open ? set.add(t) : set.delete(t); LS.set('ytb:sn-open', [...set]);
+        return;
+      }
       const b = e.target.closest('[data-sec-toggle]'); if (!b) return;
       const s = b.closest('.sn-sec'), open = !s.classList.contains('open');
       s.classList.toggle('open', open); b.setAttribute('aria-expanded', String(open));
@@ -405,11 +416,27 @@
 
   /* Interview problems listed in the sidebar under each track, as collapsible groups. Cached so the sidebar is instant. */
   let currentProblem = new URLSearchParams(location.search).get('p');
+  // every DSA algorithm under DSA; each opens its own page
+  async function fillDsa(sn) {
+    const g = sn.querySelector('.sn-grp[data-list="dsa"]'); if (!g) return;
+    await loadScript(ROOT + 'assets/dsa.js').catch(() => {});
+    const D = window.YTBDSA; if (!D) return;
+    const onDsa = isOn('dsa/'), cur = onDsa ? (new URLSearchParams(location.search).get('t') || D.list[0].key) : null;
+    const open = new Set(LS.get('ytb:sn-open', []));
+    if (onDsa) { open.add('dsa'); LS.set('ytb:sn-open', [...open]); }
+    g.classList.toggle('open', open.has('dsa'));
+    g.querySelector('[data-grp-toggle]').setAttribute('aria-expanded', String(open.has('dsa')));
+    g.querySelector('.sn-probs').innerHTML = D.cats.map((c) => `<span class="sn-cat">${esc(c)}</span>` + D.list.filter((t) => t.cat === c)
+      .map((t) => `<a class="sn-prob ${t.key === cur ? 'on' : ''}" href="${ROOT}dsa/?t=${t.key}" data-dsa="${t.key}"><span>${esc(t.name)}</span></a>`).join('')).join('');
+    // on the DSA page, switching topics updates the highlight
+    window.YTB_markDsa = (key) => g.querySelectorAll('[data-dsa]').forEach((a) => a.classList.toggle('on', a.dataset.dsa === key));
+  }
+
   async function fillProblemGroups(sn) {
     if (!apiOn) return;
-    const openSet = new Set(LS.get('ytb:sn-open', []));
     const paint = (probs) => {
-      sn.querySelectorAll('.sn-grp').forEach((g) => {
+      const openSet = new Set(LS.get('ytb:sn-open', []));
+      sn.querySelectorAll('.sn-grp[data-track]').forEach((g) => {
         const t = g.dataset.track, list = probs.filter((p) => (p.track || 'lld') === t);
         const hasCur = list.some((p) => p.slug === currentProblem);
         if (hasCur || (trackParam === t && /practice/.test(here))) openSet.add(t);
@@ -418,17 +445,12 @@
         g.querySelector('.sn-probs').innerHTML = list.map((p) => `<a class="sn-prob ${p.slug === currentProblem ? 'on' : ''}" href="${ROOT}practice/session.html?p=${encodeURIComponent(p.slug)}" title="${esc(p.title)} · ${esc(p.difficulty)}"><i class="d ${esc(p.difficulty)}"></i><span>${esc(p.title.replace(/\s*\(.*\)$/, ''))}</span></a>`).join('')
           || '<span class="sn-none">No problems yet</span>';
       });
+      LS.set('ytb:sn-open', [...openSet]);
       sn.querySelector('.sn-prob.on')?.scrollIntoView({ block: 'nearest' });
     };
     const cached = LS.get('ytb:sn-probs', null);
     if (cached) paint(cached);
     try { const probs = (await api('/api/practice/problems')).problems.map((p) => ({ slug: p.slug, title: p.title, difficulty: p.difficulty, track: p.track })); LS.set('ytb:sn-probs', probs); paint(probs); } catch {}
-    sn.addEventListener('click', (e) => {
-      const b = e.target.closest('[data-grp-toggle]'); if (!b) return;
-      const t = b.dataset.grpToggle, g = b.closest('.sn-grp'), open = !g.classList.contains('open');
-      g.classList.toggle('open', open); b.setAttribute('aria-expanded', String(open));
-      open ? openSet.add(t) : openSet.delete(t); LS.set('ytb:sn-open', [...openSet]);
-    });
     // pages that only know the problem later (e.g. session.html?id=…) call YTB.markProblem(slug)
     window.YTB_markProblem = (slug) => { currentProblem = slug; paint(LS.get('ytb:sn-probs', [])); };
   }

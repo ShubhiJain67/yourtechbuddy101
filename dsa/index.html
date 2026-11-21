@@ -283,6 +283,7 @@
     $('self-t').textContent = t.practice.title; $('self-q').textContent = t.practice.ask; $('self-e').textContent = t.practice.expect.join('\n');
     $('self-go').href = `../playground/#lang=java&code=${YTB.b64url(starter(t))}`;
     drawList(); drawCode(t);
+    window.YTB_markDsa && window.YTB_markDsa(t.key);
   }
   function drawList() {
     const match = (t) => !q || (t.name + ' ' + t.cat + ' ' + t.intent).toLowerCase().includes(q);
@@ -297,6 +298,11 @@
   function go(key) { show(key); history.replaceState(null, '', '?t=' + cur.key); }
   const move = (d) => { const i = list.indexOf(cur); go(list[(i + d + list.length) % list.length].key); };
   $('plist').addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (b) go(b.dataset.k); });
+  // sidebar algorithm links switch topics in place (no reload)
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[data-dsa]'); if (!a || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    e.preventDefault(); go(a.dataset.dsa); window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
   $('plist').addEventListener('input', (e) => { if (e.target.id === 'pq') { q = e.target.value.trim().toLowerCase(); drawList(); } });
   $('prev').addEventListener('click', () => move(-1));
   $('next').addEventListener('click', () => move(1));
