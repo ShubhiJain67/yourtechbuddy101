@@ -3,6 +3,7 @@
 // Public:   GET  /api/health
 //           GET  /api/courses                 published courses (admins: ?all=1 includes drafts)
 //           GET  /api/courses/:slug
+//           GET  /api/videos/links?ids=a,b    GitHub links found in those videos' YouTube descriptions
 // Auth:     POST /api/auth/google             { credential }  -> { token, user }
 //           GET  /api/me
 //           GET  /api/progress                -> { progress: { [courseId]: [videoId] } }
@@ -57,6 +58,8 @@ async function route(req, env) {
   if (path === '/api/health') return json({ ok: true });
   if (path === '/api/auth/google' && m === 'POST') return authGoogle(req, env);
   if (path === '/api/me' && m === 'GET') return json({ user: await requireUser(req, env) });
+
+  if (path === '/api/videos/links' && m === 'GET') return videoLinks(env, url.searchParams.get('ids') || '');
 
   if (path === '/api/courses' && m === 'GET') {
     const admin = url.searchParams.get('all') === '1' && (await optionalUser(req, env))?.isAdmin;
@@ -496,6 +499,40 @@ async function videoDetails(env, ids) {
     const j = await ytApi(env, 'videos', { part: 'snippet,contentDetails', id: ids.slice(i, i + 50).join(','), maxResults: '50' });
     for (const v of j.items || []) out[v.id] = { title: v.snippet.title, duration: isoDuration(v.contentDetails.duration) };
   }
+  return out;
+}
+
+/* GitHub links from video descriptions, so editing a description on YouTube updates the site. Cached 6h per video. */
+const GH_RE = /https?:\/\/(?:www\.)?github\.com\/[^\s)"'<>\]]+/g;
+async function videoLinks(env, idsParam) {
+  const ids = [...new Set(idsParam.split(',').filter((id) => /^[A-Za-z0-9_-]{11}$/.test(id)))].slice(0, 10);
+  const cache = caches.default, key = (id) => new Request(`https://cache.yourtechbuddy/links/${id}`);
+  const out = {}, missing = [];
+  await Promise.all(ids.map(async (id) => { const r = await cache.match(key(id)); if (r) out[id] = await r.json(); else missing.push(id); }));
+  if (missing.length) {
+    const descs = await videoDescriptions(env, missing);
+    for (const id of missing) {
+      out[id] = [...new Set((String(descs[id] || '').match(GH_RE) || []).map((u) => u.replace(/[.,;:!?]+$/, '')))];
+      if (id in descs) await cache.put(key(id), new Response(JSON.stringify(out[id]), { headers: { ...JSON_HEADERS, 'Cache-Control': 'public, max-age=21600' } }));
+    }
+  }
+  return json({ links: out });
+}
+async function videoDescriptions(env, ids) {
+  const out = {};
+  if (env.YOUTUBE_API_KEY) {
+    const j = await ytApi(env, 'videos', { part: 'snippet', id: ids.join(','), maxResults: '50' });
+    for (const v of j.items || []) out[v.id] = v.snippet.description || '';
+    return out;
+  }
+  // no API key: read the description from the public watch page
+  await Promise.all(ids.map(async (id) => {
+    try {
+      const h = await (await fetch(`https://www.youtube.com/watch?v=${id}&hl=en`, { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept-Language': 'en' } })).text();
+      const m = h.match(/"shortDescription":"((?:[^"\\]|\\.)*)"/);
+      if (m) out[id] = JSON.parse(`"${m[1]}"`);
+    } catch {}
+  }));
   return out;
 }
 

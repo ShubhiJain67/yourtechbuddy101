@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" type="image/png" href="../assets/favicon.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<script src="../assets/theme.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSA: sorting algorithms, visualized — YourTechBuddy</title>
+<meta name="description" content="Sorting algorithms step by step: watch each one run, see its time and space complexity, watch the video explanation and read the Java code.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../courses/courses.css">
+<style>
+  .pl{display:grid;grid-template-columns:250px minmax(0,1fr);gap:22px;align-items:start}
+  .plist{position:sticky;top:20px;max-height:calc(100vh - 40px);overflow:auto;padding:10px}
+  .plist .field{margin:2px 2px 8px}
+  .plist h3{font:600 12px var(--sans);color:var(--faint);margin:12px 8px 4px;display:flex;justify-content:space-between}
+  .plist button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;padding:7px 10px;border-radius:var(--r-sm);font-size:14px;color:var(--muted)}
+  .plist button:hover{background:var(--panel2);color:var(--text)}
+  .plist button[aria-current="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+  .plist button .d{width:7px;height:7px;border-radius:50%;background:var(--border-strong);flex:none}
+  .plist button[aria-current="true"] .d{background:var(--accent)}
+  .plist .none{padding:10px;color:var(--muted);font-size:13.5px}
+
+  .view{padding:20px 22px;display:flex;flex-direction:column;gap:14px}
+  .vh{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap}
+  .vh h2{margin:0;font:600 24px/1.2 var(--sans);letter-spacing:-.01em}
+  .vh p{margin:6px 0 0;color:var(--muted);font-size:15px;max-width:62ch}
+  .vh .sp{flex:1}
+  .vh .nav{display:flex;gap:6px}
+  .when{display:flex;gap:12px;align-items:flex-start;font-size:14.5px}
+  .when b{flex:none;font-weight:600}
+  .when span{color:var(--muted)}
+  .acts{display:flex;gap:8px;flex-wrap:wrap}
+  .kbdhint{font-size:12.5px;color:var(--faint)}
+  .self{display:flex;flex-direction:column;gap:10px;padding:16px 18px;border:1px solid var(--accent);border-radius:var(--r);background:var(--accent-soft)}
+  .self-h{display:flex;align-items:center;gap:10px}
+  .self h3{margin:0;font:600 18px/1.3 var(--sans)}
+  .self p{margin:0;line-height:1.55;max-width:70ch}
+  .self-out span{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+  .self-out pre{margin:0;padding:10px 12px;border-radius:var(--r-sm);background:var(--panel);border:1px solid var(--border);font:13px/1.55 var(--mono);white-space:pre-wrap}
+  .vid{display:flex;flex-direction:column;gap:10px}
+  .vid b{font-weight:600}
+  .yt{position:relative;display:block;width:100%;max-width:720px;aspect-ratio:16/9;padding:0;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:#000;cursor:pointer}
+  .yt img{width:100%;height:100%;object-fit:cover;display:block;opacity:.85;transition:opacity .15s}
+  .yt:hover img{opacity:1}
+  .yt .play{position:absolute;left:50%;top:50%;width:68px;height:48px;margin:-24px 0 0 -34px;border-radius:12px;background:#f00}
+  .yt .play::after{content:"";position:absolute;left:27px;top:14px;border-style:solid;border-width:10px 0 10px 17px;border-color:transparent transparent transparent #fff}
+  .yt .yt-t{position:absolute;left:0;right:0;top:0;padding:12px 14px 28px;text-align:left;color:#fff;font:600 15px/1.35 var(--sans);background:linear-gradient(#000a,#0000)}
+  .yt iframe{width:100%;height:100%;border:0;display:block}
+
+  /* visualizer */
+  .viz{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:14px 14px 10px;display:flex;flex-direction:column;gap:10px}
+  .bars{display:flex;align-items:flex-end;gap:6px;height:220px;padding:0 4px}
+  .bar{flex:1;min-width:0;border-radius:6px 6px 2px 2px;background:var(--panel3);position:relative;transition:height .18s ease,background .12s}
+  .bar span{position:absolute;left:0;right:0;bottom:6px;text-align:center;font:600 12px var(--mono);color:var(--text)}
+  .bar.cmp{background:var(--accent)} .bar.cmp span{color:var(--on-accent)}
+  .bar.swap{background:var(--err)} .bar.swap span{color:#fff}
+  .bar.pivot{background:#d9a441} .bar.pivot span{color:#1b1b1b}
+  .bar.range{background:var(--accent-soft);outline:1px solid var(--accent)}
+  .bar.done{background:var(--ok)} .bar.done span{color:var(--on-accent)}
+  @media (prefers-reduced-motion:reduce){.bar{transition:none}}
+  .vnote{min-height:22px;font-size:14.5px;color:var(--text)}
+  .vctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .vctl .sp{flex:1}
+  .vctl label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  /* complexity */
+  .cx{display:flex;gap:8px;flex-wrap:wrap}
+  .cx div{padding:8px 12px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel)}
+  .cx small{display:block;font-size:12px;color:var(--muted)}
+  .cx b{font:600 14px var(--mono)}
+  .cmp-t{width:100%;border-collapse:collapse;font-size:14px}
+  .cmp-t th,.cmp-t td{padding:9px 10px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+  .cmp-t th{font-weight:600;color:var(--muted);font-size:13px}
+  .cmp-t td.m{font-family:var(--mono);font-size:13px}
+  .cmp-t a{color:var(--accent)}
+  .cmpwrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r);background:var(--panel)}
+  /* video language */
+  .vid-h{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .lang{display:inline-flex;gap:2px;padding:3px;border:1px solid var(--border);border-radius:99px;background:var(--panel)}
+  .lang button{border:0;background:none;padding:5px 13px;border-radius:99px;font:500 13px var(--sans);color:var(--text);cursor:pointer}
+  .lang button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+  .codebox h3{margin:0 0 8px;font:600 15px var(--sans)}
+  @media (max-width:640px){ .bars{height:170px;gap:3px} .bar span{font-size:10px} }
+
+  @media (max-width:900px){
+    .pl{grid-template-columns:minmax(0,1fr)}
+    .plist{position:static;max-height:none;display:flex;gap:6px;overflow-x:auto;padding:8px;scrollbar-width:none}
+    .plist .field,.plist h3,.plist .none{display:none}
+    .plist button{flex:none;width:auto;border:1px solid var(--border);border-radius:99px;padding:6px 12px;font-size:13px;white-space:nowrap}
+    .plist button .d{display:none}
+    .view{padding:16px}
+    .vh .nav{width:100%}
+    .vh .nav .btn{flex:1}
+    .kbdhint{display:none}
+  }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="../"><div class="logo">YTB</div><b>yourtechbuddy</b></a>
+  <nav><a href="../courses/">courses</a><a href="../practice/">practice</a><a href="../playground/">playground</a></nav>
+  <div id="auth"></div>
+</header>
+
+<main class="page">
+  <div class="ph"><div><h1>DSA</h1><p>Sorting algorithms and the building blocks behind them. Watch each one run step by step, then watch the video and read the code.</p></div></div>
+  <div class="pl">
+    <nav class="panel plist" id="plist" aria-label="Topics"></nav>
+    <section class="panel view" aria-live="polite">
+      <div class="vh">
+        <div><span class="chip" id="cat"></span><h2 id="name" style="margin-top:8px"></h2><p id="intent"></p></div>
+        <span class="sp"></span>
+        <div class="nav"><button class="btn sm" id="prev">← Prev</button><button class="btn sm" id="next">Next →</button></div>
+      </div>
+
+      <div class="viz" id="viz">
+        <div class="bars" id="bars" role="img" aria-label="Array being sorted"></div>
+        <div class="vnote" id="vnote"></div>
+        <div class="vctl">
+          <button class="btn primary sm" id="play">▶ Play</button>
+          <button class="btn sm" id="stepb">Step</button>
+          <button class="btn sm" id="shuffle">New array</button>
+          <span class="sp"></span>
+          <label>Speed <input type="range" id="speed" min="1" max="5" value="3" aria-label="Speed"></label>
+        </div>
+        <div class="legend"><span><i style="background:var(--accent)"></i>comparing</span><span><i style="background:var(--err)"></i>moving</span><span><i style="background:#d9a441"></i>pivot / key</span><span><i style="background:var(--ok)"></i>in place</span></div>
+      </div>
+      <div class="cmpwrap" id="cmpwrap" hidden></div>
+
+      <div class="cx" id="cx"></div>
+      <div class="when"><b>Use it when</b><span id="when"></span></div>
+
+      <div class="vid" id="vid" hidden>
+        <div class="vid-h"><b>Video explanation</b><div class="lang" id="lang" role="group" aria-label="Video language" hidden></div></div>
+        <button class="yt" id="yt" type="button"></button>
+      </div>
+
+      <div class="codebox" id="codebox" hidden>
+        <h3>Code from the video</h3>
+        <div id="codeview"></div>
+      </div>
+
+      <div class="self" id="self">
+        <div class="self-h"><b>Practise it yourself</b><span class="chip">No AI, no limit</span></div>
+        <h3 id="self-t"></h3>
+        <p id="self-q"></p>
+        <div class="self-out"><span>Aim for output like</span><pre id="self-e"></pre></div>
+        <div class="acts"><a class="btn primary" id="self-go">Solve it in the playground</a></div>
+      </div>
+      <span class="kbdhint">Tip: use ← and → to move between topics, space to play or pause.</span>
+    </section>
+  </div>
+</main>
+
+<footer><a href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a> · <a href="../privacy.html">Privacy</a></footer>
+
+<script src="../assets/config.js"></script>
+<script src="../assets/ytb.js"></script>
+<script src="../assets/dsa.js"></script>
+<script src="../assets/codeview.js"></script>
+<script>
+  const D = YTBDSA, esc = YTB.esc, $ = (id) => document.getElementById(id);
+  const list = D.list.slice().sort((a, b) => D.cats.indexOf(a.cat) - D.cats.indexOf(b.cat));
+  let cur = null, q = '';
+
+  /* ---------- visualizer ---------- */
+  let frames = null, timer = null, base = [];
+  const fresh = () => { const n = innerWidth < 640 ? 9 : 12; return Array.from({ length: n }, () => 1 + Math.floor(Math.random() * 30)); };
+  function drawFrame(f) {
+    const max = Math.max(...f.a, 1);
+    $('bars').innerHTML = f.a.map((v, i) => `<div class="bar ${f.mark?.[i] || ''}" style="height:${Math.max(8, v / max * 100)}%"><span>${v}</span></div>`).join('');
+    $('vnote').textContent = f.note || '';
+  }
+  function reset(newArr) {
+    stop();
+    if (newArr || !base.length) base = fresh();
+    if (!cur.viz) return;
+    frames = D.viz[cur.viz](base.slice());
+    const first = frames.next();
+    drawFrame(first.done ? { a: base } : first.value);
+    if (first.done) frames = null;
+    $('vnote').textContent = 'Press Play to watch it run, or Step through it.';
+  }
+  function step() {
+    if (!frames) reset();
+    const r = frames.next();
+    if (r.done) { frames = null; stop(); $('play').textContent = '↺ Replay'; return false; }
+    drawFrame(r.value); return true;
+  }
+  const delay = () => [900, 600, 380, 200, 80][+$('speed').value - 1];
+  function play() {
+    if (timer) return stop();
+    if (!frames) reset();
+    $('play').textContent = '❚❚ Pause';
+    const tick = () => { if (step()) timer = setTimeout(tick, delay()); };
+    tick();
+  }
+  function stop() { clearTimeout(timer); timer = null; $('play').textContent = '▶ Play'; }
+  $('play').addEventListener('click', play);
+  $('stepb').addEventListener('click', () => { stop(); step(); });
+  $('shuffle').addEventListener('click', () => reset(true));
+
+  /* ---------- comparison table ---------- */
+  function drawCompare() {
+    const yes = (b) => (b ? 'Yes' : 'No');
+    const rows = D.list.filter((t) => t.cat === 'Sorting' && t.cx);
+    $('cmpwrap').innerHTML = `<table class="cmp-t"><thead><tr><th>Sort</th><th>Best</th><th>Average</th><th>Worst</th><th>Space</th><th>Stable</th><th>In place</th></tr></thead><tbody>` +
+      rows.map((t) => `<tr><td><a href="?t=${t.key}" data-go="${t.key}">${esc(t.name)}</a></td><td class="m">${t.cx.best}</td><td class="m">${t.cx.avg}</td><td class="m">${t.cx.worst}</td><td class="m">${t.cx.space}</td><td>${yes(t.cx.stable)}</td><td>${yes(t.cx.inPlace)}</td></tr>`).join('') + '</tbody></table>';
+  }
+  $('cmpwrap').addEventListener('click', (e) => { const a = e.target.closest('[data-go]'); if (a) { e.preventDefault(); go(a.dataset.go); } });
+
+  /* ---------- video (Hindi / English) ---------- */
+  const langLabel = { hi: 'Hindi', en: 'English' };
+  const pickLang = (t) => { const p = YTB.LS.get('ytb:lang', 'hi'); return t.videos[p] ? p : Object.keys(t.videos)[0]; };
+  function drawVideo(t) {
+    const keys = Object.keys(t.videos || {});
+    $('vid').hidden = !keys.length; if (!keys.length) return;
+    const l = pickLang(t), id = t.videos[l];
+    $('lang').hidden = keys.length < 2;
+    $('lang').innerHTML = keys.map((k) => `<button type="button" data-lang="${k}" aria-pressed="${k === l}">${langLabel[k] || k}</button>`).join('');
+    const y = $('yt'); y.dataset.id = id; y.setAttribute('aria-label', `Play video: ${t.name}`);
+    y.innerHTML = `<img src="https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg" alt=""><span class="play" aria-hidden="true"></span><span class="yt-t">${esc(t.name)}</span>`;
+    return id;
+  }
+  $('lang').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-lang]'); if (!b || b.getAttribute('aria-pressed') === 'true') return;
+    const playing = !!$('yt').querySelector('iframe');
+    YTB.LS.set('ytb:lang', b.dataset.lang); drawVideo(cur); if (playing) $('yt').click();
+  });
+  $('yt').addEventListener('click', (e) => {
+    const y = e.currentTarget; if (!y.dataset.id || y.querySelector('iframe')) return;
+    y.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(y.dataset.id)}?autoplay=1&rel=0" title="${esc(y.getAttribute('aria-label') || 'Video')}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+  });
+
+  /* ---------- code: the GitHub link in the video description (falls back to the known link) ---------- */
+  async function linkFor(t) {
+    const ids = Object.values(t.videos || {});
+    const k = 'ytb:ghl:' + ids.join(','), c = YTB.LS.get(k, null);
+    if (c && Date.now() - c.at < 6 * 3600e3) return c.url || t.code;
+    let url = null;
+    try { const r = await YTB.api('/api/videos/links?ids=' + ids.join(',')); url = ids.map((id) => (r.links?.[id] || [])[0]).find(Boolean) || null; YTB.LS.set(k, { url, at: Date.now() }); } catch {}
+    return url || t.code;
+  }
+  async function drawCode(t) {
+    $('codebox').hidden = true;
+    const url = await linkFor(t); if (cur !== t || !url) return;
+    $('codebox').hidden = false;
+    const m = url.match(/^https?:\/\/(?:www\.)?github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+?)(?:[?#].*)?$/);
+    if (!m) { $('codeview').innerHTML = `<a class="btn" href="${esc(url)}" target="_blank" rel="noopener">View the code on GitHub ↗</a>`; return; }
+    const [, owner, repo, branch, path] = m, file = decodeURIComponent(path), name = file.split('/').pop();
+    $('codeview').innerHTML = '<div class="skel" style="height:260px"></div>';
+    try {
+      const r = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`);
+      if (!r.ok) throw new Error(r.status);
+      const content = (await r.text()).replace(/\r\n/g, '\n');
+      if (cur !== t) return;
+      LLDView.mount($('codeview'), { height: '460px', run: false, item: { id: t.key, title: name, readme: null, variants: [{ key: 'code', title: name, path: file, url, files: [{ path: file, content }], readme: null, run: null }] } });
+    } catch { if (cur === t) $('codeview').innerHTML = `<p class="note">Couldn't load the code right now. <a href="${esc(url)}" target="_blank" rel="noopener">View it on GitHub ↗</a></p>`; }
+  }
+
+  /* ---------- practise it yourself (Java, in the playground) ---------- */
+  function starter(t) {
+    const p = t.practice, wrap = (s) => s.match(/.{1,74}(\s|$)/g).map((l) => '// ' + l.trim()).join('\n');
+    return `// Practise: ${p.title}\n//\n${wrap(p.ask)}\n//\n// When you press Run, aim for output like:\n${p.expect.map((l) => '//   ' + l).join('\n')}\n\nimport java.util.*;\n\nclass Main {\n    // write your solution here\n\n    public static void main(String[] args) {\n        // try it out here\n    }\n}\n`;
+  }
+
+  /* ---------- page ---------- */
+  function show(key) {
+    cur = list.find((t) => t.key === key) || list[0];
+    const t = cur;
+    $('cat').textContent = t.cat; $('name').textContent = t.name; $('intent').textContent = t.intent; $('when').textContent = t.when;
+    document.title = `${t.name} — DSA — YourTechBuddy`;
+    $('viz').hidden = !t.viz; $('cmpwrap').hidden = !!t.viz;
+    if (t.viz) reset(); else { stop(); drawCompare(); }
+    $('cx').hidden = !t.cx;
+    if (t.cx) $('cx').innerHTML = [['Best', t.cx.best], ['Average', t.cx.avg], ['Worst', t.cx.worst], ['Space', t.cx.space], ['Stable', t.cx.stable ? 'Yes' : 'No'], ['In place', t.cx.inPlace ? 'Yes' : 'No']].map(([k, v]) => `<div><small>${k}</small><b>${v}</b></div>`).join('');
+    drawVideo(t);
+    $('self-t').textContent = t.practice.title; $('self-q').textContent = t.practice.ask; $('self-e').textContent = t.practice.expect.join('\n');
+    $('self-go').href = `../playground/#lang=java&code=${YTB.b64url(starter(t))}`;
+    drawList(); drawCode(t);
+  }
+  function drawList() {
+    const match = (t) => !q || (t.name + ' ' + t.cat + ' ' + t.intent).toLowerCase().includes(q);
+    $('plist').innerHTML = `<label class="field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="pq" placeholder="Filter topics" value="${esc(q)}" aria-label="Filter topics"></label>` +
+      D.cats.map((c) => {
+        const ts = list.filter((t) => t.cat === c && match(t));
+        return ts.length ? `<h3><span>${c}</span><span>${ts.length}</span></h3>` + ts.map((t) => `<button data-k="${t.key}" aria-current="${t.key === cur?.key}"><span class="d"></span>${esc(t.name)}</button>`).join('') : '';
+      }).join('') + (list.some(match) ? '' : '<div class="none">No topic matches.</div>');
+    const i = $('pq'); if (q) { i.focus(); i.setSelectionRange(q.length, q.length); }
+    $('plist').querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+  function go(key) { show(key); history.replaceState(null, '', '?t=' + cur.key); }
+  const move = (d) => { const i = list.indexOf(cur); go(list[(i + d + list.length) % list.length].key); };
+  $('plist').addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (b) go(b.dataset.k); });
+  $('plist').addEventListener('input', (e) => { if (e.target.id === 'pq') { q = e.target.value.trim().toLowerCase(); drawList(); } });
+  $('prev').addEventListener('click', () => move(-1));
+  $('next').addEventListener('click', () => move(1));
+  document.addEventListener('keydown', (e) => {
+    if (/INPUT|TEXTAREA|SELECT|BUTTON/.test(document.activeElement?.tagName || '') && e.key === ' ') return;
+    if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '')) return;
+    if (e.key === 'ArrowRight') move(1); else if (e.key === 'ArrowLeft') move(-1);
+    else if (e.key === ' ' && cur.viz) { e.preventDefault(); play(); }
+  });
+  show(new URLSearchParams(location.search).get('t') || 'bubble-sort');
+</script>
+</body>
+</html>

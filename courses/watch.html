@@ -43,14 +43,6 @@
   .crumb{font-size:13px;color:var(--muted);margin:18px 0 4px}
   .crumb a{color:var(--muted)}
   h1{font-size:clamp(20px,2.4vw,26px);margin:0 0 16px;letter-spacing:-.015em}
-  /* language switch: same lesson, other-language video */
-  .title-row{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap}
-  .title-row h1{flex:1;min-width:240px}
-  .lang{display:inline-flex;align-items:center;gap:2px;padding:3px;border:1px solid var(--border);border-radius:99px;background:var(--panel);margin-top:4px}
-  .lang span{font-size:13px;color:var(--muted);padding:0 8px 0 10px}
-  .lang button{border:0;background:none;padding:6px 14px;border-radius:99px;font:500 13.5px var(--sans);color:var(--text);cursor:pointer}
-  .lang button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
-  .lang button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   /* module quiz */
   .stage.quiz-mode > :not(#quiz){display:none!important}
   .quiz{display:flex;flex-direction:column;gap:18px;max-width:760px}
@@ -158,8 +150,7 @@
     </div>
 
     <div class="crumb"><a href="./">Courses</a> / <span id="crumb-course"></span> / <span id="crumb-sec"></span></div>
-    <div class="title-row"><h1 id="title">Loading…</h1>
-      <div class="lang" id="lang" role="group" aria-label="Video language" hidden></div></div>
+    <h1 id="title">Loading…</h1>
 
     <div class="actions">
       <div class="nav3">
@@ -439,36 +430,12 @@
     $('mark').textContent = isDone ? '✓ Completed' : '✓ Mark complete';
     $('mark').classList.toggle('done', !!isDone);
     $('on-yt').style.display = l.youtube ? '' : 'none';
-    if (l.youtube) $('on-yt').href = `https://www.youtube.com/watch?v=${encodeURIComponent(videoFor(l))}` + (course.playlist ? `&list=${course.playlist}` : '');
-    drawLang(l);
+    if (l.youtube) $('on-yt').href = `https://www.youtube.com/watch?v=${encodeURIComponent(l.youtube)}` + (course.playlist ? `&list=${course.playlist}` : '');
     // Only lesson-specific actions: a playground language set on this lesson, and a mock interview for this exact topic
     $('practice').hidden = !l.practice;
     if (l.practice) $('practice').href = `../playground/#lang=${encodeURIComponent(l.practice)}`;
     showLessonMock(l.title);
-    if (course.slug === YTB.config.codeCourse) showLessonCode(l.title);
-  }
-
-  /* ---------- Video language: courses/languages.json pairs the same lesson in each language ---------- */
-  let langs = null;
-  const langPref = () => YTB.LS.get('ytb:lang', null) || (langs && langs.default);
-  const pairOf = (id) => (langs && id && langs.pairs.find((p) => Object.values(p).includes(id))) || null;
-  const videoFor = (l) => { const p = pairOf(l.youtube); return (p && p[langPref()]) || l.youtube; };
-  function drawLang(l) {
-    const p = pairOf(l.youtube), el = $('lang');
-    el.hidden = !p; if (!p) return;
-    const cur = videoFor(l);
-    el.innerHTML = '<span>Watch in</span>' + Object.keys(p).map((k) => `<button type="button" data-lang="${esc(k)}" aria-pressed="${p[k] === cur}">${esc((langs.labels || {})[k] || k)}</button>`).join('');
-  }
-  $('lang').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-lang]'); if (!b || b.getAttribute('aria-pressed') === 'true') return;
-    YTB.LS.set('ytb:lang', b.dataset.lang);
-    const l = lessons[idx - 1], id = videoFor(l);
-    drawLang(l);
-    $('on-yt').href = `https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;
-    if (playerReady && player.loadVideoById) player.loadVideoById({ videoId: id, startSeconds: 0 }); else showVideo(id, true);
-  });
-  async function loadLangs() {
-    try { const r = await fetch('languages.json', { cache: 'no-cache' }); langs = r.ok ? await r.json() : null; } catch { langs = null; }
+    showLessonCode(l.title);
   }
   /* ---------- Module quizzes: courses/quizzes/<course>.json, matched to modules by name ---------- */
   let quizData = null, passPct = 70, quizOn = null;
@@ -624,7 +591,7 @@
   function render(autoplay = false) {
     if (!lessons.length) return;
     renderText();
-    showVideo(videoFor(lessons[idx - 1]), autoplay);
+    showVideo(lessons[idx - 1].youtube, autoplay);
     renderList();
     store.set('ytb:last:' + course.slug, lessons[idx - 1].youtube ? { v: lessons[idx - 1].youtube } : { l: idx });
   }
@@ -674,7 +641,7 @@
     $('on-yt').style.display = 'none';
   } else {
     idx = idxFromUrl(params);
-    await Promise.all([loadQuizzes(), loadLangs()]);
+    await loadQuizzes();
     const startQuiz = params.get('quiz') && quizBySlug(params.get('quiz'));
     if (startQuiz) { render(); openQuiz(startQuiz.section, false); }
     else { history.replaceState(null, '', urlFor(idx)); render(); }

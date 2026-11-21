@@ -16,7 +16,6 @@
   };
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   CFG.codeRepo = CFG.codeRepo || 'ShubhiJain67/low-level-design-101'; // GitHub repo with the LLD course code
-  CFG.codeCourse = CFG.codeCourse || 'lld'; // the course whose lessons get code from that repo
 
   /* ---------------- Small shared helpers (used across pages; don't copy them) ---------------- */
   const scripts = {};
@@ -308,6 +307,7 @@
     layers: '<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>',
     pattern: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="8.5" y="14" width="7" height="7" rx="1.5"/><path d="M6.5 10v2h11v-2M12 12v2"/>',
     folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="m10 11-2 2 2 2M14 11l2 2-2 2"/>',
+    bars: '<path d="M5 20V12M10 20V6M15 20v-9M20 20V3"/>',
     server: '<rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/>',
   };
   const icon = (n) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n] || ''}</svg>`;
@@ -336,6 +336,7 @@
       ${item('', 'Home', 'home')}
       ${item('courses/', 'Courses', 'courses')}
       ${item('patterns/', 'Design patterns', 'pattern')}
+      ${item('dsa/', 'DSA', 'bars')}
       <a class="sn-item ${pr ? 'on' : ''}" href="${ROOT}practice/" title="Mock interviews">${icon('practice')}<span>Mock interviews</span></a>
       ${sub('lld', 'LLD · classes &amp; code')}
       ${sub('hld', 'HLD · system design')}
@@ -409,6 +410,7 @@
       { g: 'Pages', t: 'Home', u: ROOT, ic: 'home' },
       { g: 'Pages', t: 'All courses', u: ROOT + 'courses/', ic: 'courses' },
       { g: 'Pages', t: 'Design patterns (all 23)', u: ROOT + 'patterns/', ic: 'pattern' },
+      { g: 'Pages', t: 'DSA: sorting algorithms', u: ROOT + 'dsa/', ic: 'bars' },
       { g: 'Pages', t: 'Mock interviews', u: ROOT + 'practice/', ic: 'practice' },
       { g: 'Pages', t: 'LLD mock interviews', u: ROOT + 'practice/?track=lld', ic: 'layers' },
       { g: 'Pages', t: 'HLD mock interviews', u: ROOT + 'practice/?track=hld', ic: 'server' },
@@ -418,6 +420,8 @@
     if (session && session.user.isAdmin) items.push({ g: 'Studio', t: 'Content planner', u: ROOT + 'planner/', ic: 'plan' }, { g: 'Studio', t: 'Ideas', u: ROOT + 'ideas/', ic: 'idea' }, { g: 'Studio', t: 'Interview problems', u: ROOT + 'admin/problems.html', ic: 'puzzle' }, { g: 'Studio', t: 'Courses admin', u: ROOT + 'admin/', ic: 'admin' });
     await loadScript(ROOT + 'assets/patterns.js').catch(() => {});
     (window.YTBPatterns?.list || []).forEach((p) => items.push({ g: 'Design patterns', t: p.name, s: p.cat, u: `${ROOT}patterns/?p=${p.key}`, ic: 'pattern' }));
+    await loadScript(ROOT + 'assets/dsa.js').catch(() => {});
+    (window.YTBDSA?.list || []).forEach((t) => items.push({ g: 'DSA', t: t.name, s: t.cat, u: `${ROOT}dsa/?t=${t.key}`, ic: 'bars' }));
     try {
       await loadScript(ROOT + 'assets/lldcode.js');
       const ci = window.LLDCode ? await window.LLDCode.load() : null;
