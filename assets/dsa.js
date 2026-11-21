@@ -244,7 +244,7 @@
     const fresh = () => Array.from({ length: size() }, () => 1 + Math.floor(Math.random() * 30));
     const draw = (f) => {
       const max = Math.max(...f.a, 1);
-      els.bars.innerHTML = f.a.map((v, i) => `<div class="bar ${f.mark?.[i] || ''}" style="height:${Math.max(8, v / max * 100)}%"><span>${v}</span></div>`).join('');
+      els.bars.innerHTML = f.a.map((v, i) => `<div class="sbar ${f.mark?.[i] || ''}" style="height:${Math.max(8, v / max * 100)}%"><span>${v}</span></div>`).join('');
       els.note.textContent = f.note || '';
     };
     const stop = () => { clearTimeout(timer); timer = null; els.play.textContent = '▶ Play'; };
