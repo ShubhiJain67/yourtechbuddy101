@@ -23,6 +23,9 @@
   .crumb{font-size:13px;color:var(--muted);margin:18px 0 4px}
   .crumb a{color:var(--muted)}
   h1{font-size:clamp(20px,2.4vw,26px);margin:0 0 16px;letter-spacing:-.015em}
+  .lcode{margin-top:28px;padding-top:22px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:14px;scroll-margin-top:16px}
+  .lcode-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .lcode-h h2{margin:0;font:600 18px var(--sans)}
   .actions{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
   .nav3,.more3{display:flex;gap:8px;flex-wrap:wrap}
   .more3 .btn{border:1px solid var(--border)}
@@ -99,10 +102,14 @@
       <div class="more3">
         <a class="btn ghost" href="../practice/">Mock interview</a>
         <a class="btn ghost" id="practice" href="../playground/">Practise in Playground</a>
-        <a class="btn ghost" id="lesson-code" hidden>Code for this lesson</a>
+        <a class="btn ghost" id="lesson-code" href="#lcode" hidden>Jump to code ↓</a>
         <a class="btn ghost" id="on-yt" target="_blank" rel="noopener">YouTube ↗</a>
       </div>
     </div>
+    <section class="lcode" id="lcode" hidden aria-labelledby="lcode-h">
+      <div class="lcode-h"><h2 id="lcode-h">Code for this lesson</h2><span class="chip" id="lcode-topic"></span></div>
+      <div id="lcode-view"><div class="skel" style="height:280px"></div></div>
+    </section>
   </main>
 
   <aside>
@@ -119,6 +126,7 @@
 <script src="courses.js"></script>
 <script src="../assets/ytb.js"></script>
 <script src="../assets/lldcode.js"></script>
+<script src="../assets/codeview.js"></script>
 <script>
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -354,12 +362,26 @@
     if (l.youtube) $('on-yt').href = `https://www.youtube.com/watch?v=${encodeURIComponent(l.youtube)}` + (course.playlist ? `&list=${course.playlist}` : '');
     const lang = l.practice || course.practice;
     $('practice').href = lang ? `../playground/#lang=${encodeURIComponent(lang)}` : '../playground/';
-    const want = l.title;
-    LLDCode.forLesson(l.title).then((t) => {
-      if (lessons[idx - 1]?.title !== want) return;
-      $('lesson-code').hidden = !t; if (t) $('lesson-code').href = LLDCode.url(t.id);
-    });
+    showLessonCode(l.title);
   }
+  /* ---------- Code for this lesson (live from the course repo on GitHub) ---------- */
+  let codeFor = null;
+  async function showLessonCode(title) {
+    if (codeFor === title) return;
+    codeFor = title;
+    const t = await LLDCode.forLesson(title);
+    if (codeFor !== title) return;
+    $('lesson-code').hidden = !t; $('lcode').hidden = !t;
+    if (!t) return;
+    $('lcode-topic').textContent = t.title + (t.section ? ' · ' + t.section.title : '');
+    $('lcode-view').innerHTML = '<div class="skel" style="height:280px"></div>';
+    try {
+      const [item, index] = await Promise.all([LLDCode.item(t.id), LLDCode.load()]);
+      if (codeFor !== title) return;
+      LLDView.mount($('lcode-view'), { item, live: !!(index && index.live), fullLink: LLDCode.url(t.id), height: '520px' });
+    } catch (e) { $('lcode-view').innerHTML = `<p class="note">Couldn't load the code right now. <a href="${LLDCode.url(t.id)}">Open it on the code page</a>.</p>`; }
+  }
+
   function render(autoplay = false) {
     if (!lessons.length) return;
     renderText();
