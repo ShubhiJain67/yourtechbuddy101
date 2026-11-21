@@ -112,10 +112,7 @@
     <div class="ph">
       <div><h1 id="title">Mock interviews</h1><p id="sub"></p></div>
       <span class="sp"></span>
-      <div class="tabs" role="tablist" aria-label="Interview type" id="track">
-        <button role="tab" data-track="lld" aria-selected="true">LLD · classes &amp; code</button>
-        <button role="tab" data-track="hld" aria-selected="false">HLD · system design</button>
-      </div>
+      <div class="tabs" role="tablist" aria-label="Interview type" id="track"></div>
     </div>
     <div class="flow" id="flow" aria-label="Interview steps"></div>
 
@@ -135,30 +132,22 @@
       <div id="rows"><div class="trow"><span class="stat"></span><span><b class="skel" style="height:16px;width:40%"></b></span></div></div>
     </div>
   </section>
-  <p class="note" style="margin-top:16px">AI reviews are free. Everyone gets one LLD and one HLD interview a day. Sign in with Google to start; your answers are saved so you can come back any time.</p>
+  <p class="note" style="margin-top:16px">AI reviews are free. Everyone gets one interview of each type a day. Sign in with Google to start; your answers are saved so you can come back any time.</p>
 </main>
 
 <footer><a href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a> · <a href="../privacy.html">Privacy</a></footer>
 
 <script src="../assets/config.js"></script>
 <script src="../assets/ytb.js"></script>
+<script src="../assets/tracks.js"></script>
 <script>
   const { esc } = YTB;
   const $ = (id) => document.getElementById(id);
-  const TRACKS = {
-    lld: { title: 'LLD mock interviews', sub: 'Design the classes, draw the UML, write the code. An AI interviewer scores each step and asks a follow-up.',
-      steps: ['Requirements', 'Entities', 'UML + patterns', 'Implementation', 'The twist'], ids: ['requirements', 'entities', 'uml', 'code', 'twist'] },
-    hld: { title: 'HLD mock interviews', sub: 'Design a system at scale: estimate, sketch the architecture, defend your trade-offs. Scored step by step by an AI interviewer.',
-      steps: ['Requirements', 'Estimation', 'APIs + data', 'Architecture', 'Scale & trade-offs', 'The twist'], ids: ['requirements', 'estimation', 'api', 'architecture', 'deepdive', 'twist'] },
-  };
-  const urlTrack = () => { const t = new URLSearchParams(location.search).get('track'); return t === 'hld' || t === 'lld' ? t : null; };
-  let track = urlTrack() || 'lld', mode = urlTrack() ? 'list' : 'choose';
-  const TRACK_META = {
-    lld: { name: 'LLD round', tag: 'Low Level Design · classes & code', icon: 'layers', time: '~45 min',
-      desc: 'Turn a vague problem like a parking lot or BookMyShow into clean classes: requirements, entities, a UML diagram with design patterns, working code, then a twist.' },
-    hld: { name: 'HLD round', tag: 'High Level Design · system design', icon: 'server', time: '~50 min',
-      desc: 'Design a system that serves millions, like WhatsApp or YouTube: requirements, capacity estimates, APIs and data model, architecture, scaling trade-offs, then a twist.' },
-  };
+  // track definitions live in assets/tracks.js
+  const TRACKS = Object.fromEntries(YTBTracks.KEYS.map((k) => { const t = YTBTracks.get(k); return [k, { title: t.title, sub: t.sub, steps: t.steps.map((s) => s.name), ids: t.steps.map((s) => s.id) }]; }));
+  const TRACK_META = Object.fromEntries(YTBTracks.KEYS.map((k) => { const t = YTBTracks.get(k); return [k, { name: t.round, tag: t.tag, icon: t.icon, time: t.time, desc: t.desc }]; }));
+  const urlTrack = () => { const t = new URLSearchParams(location.search).get('track'); return YTBTracks.valid(t) ? t : null; };
+  let track = urlTrack() || YTBTracks.KEYS[0], mode = urlTrack() ? 'list' : 'choose';
   let problems = null, attempts = [], diff = '', q = '', usage = null;
   const cls = (s) => s == null ? 'none' : s >= 7 ? 'hi' : s >= 5 ? 'mid' : 'lo';
   const ago = (t) => { const d = Math.floor(Date.now() / 1000 - t); return d < 3600 ? Math.max(1, Math.round(d / 60)) + 'm ago' : d < 86400 ? Math.round(d / 3600) + 'h ago' : Math.round(d / 86400) + 'd ago'; };
@@ -185,7 +174,7 @@
   });
 
   function drawChoose() {
-    $('rounds').innerHTML = ['lld', 'hld'].map((t) => {
+    $('rounds').innerHTML = YTBTracks.KEYS.map((t) => {
       const M = TRACK_META[t], T = TRACKS[t];
       const n = problems ? problems.filter((p) => (p.track || 'lld') === t).length : null;
       const mine = attempts.filter((a) => (a.problem.track || 'lld') === t);
@@ -206,7 +195,7 @@
     $('recent-all').innerHTML = recent.length ? `<div class="sec-h"><h2>Your recent interviews</h2></div><div class="recent">${recent.map(recentCard).join('')}</div>` : '';
   }
   function recentCard(a) {
-    const T = TRACKS[a.problem.track === 'hld' ? 'hld' : 'lld'], s = avg(a);
+    const T = TRACKS[a.problem.track] || TRACKS[YTBTracks.KEYS[0]], s = avg(a);
     return `<a class="card rc" href="session.html?id=${a.id}">
       <div class="top"><b>${esc(a.problem.title)}</b><span class="chip">${(a.problem.track || 'lld').toUpperCase()}</span><span class="chip diff ${esc(a.problem.difficulty)}">${esc(a.problem.difficulty)}</span></div>
       <div class="bars" title="Score per step">${T.ids.map((id) => { const v = a.scores[id]; return `<i style="height:${v != null ? Math.max(12, v * 10) : 10}%;${v != null ? `background:var(--${v >= 7 ? 'ok' : v >= 5 ? 'warn' : 'err'})` : ''}"></i>`; }).join('')}</div>
@@ -216,6 +205,7 @@
 
   function drawHead() {
     const T = TRACKS[track];
+    $('track').innerHTML = YTBTracks.KEYS.map((k) => `<button role="tab" data-track="${k}">${esc(YTBTracks.get(k).label)} · ${esc(YTBTracks.get(k).tag.split(' · ')[1] || '')}</button>`).join('');
     $('crumb-t').textContent = track.toUpperCase();
     $('title').textContent = T.title; $('sub').textContent = T.sub;
     document.title = `${T.title} — YourTechBuddy`;
@@ -233,11 +223,11 @@
       if (a.status === 'done') m.status = 'done'; else if (m.status !== 'done') m.status = 'active';
     });
     const locked = !!(usage && !usage.unlimited && usage.startedToday?.[track]);
-    const TR = track.toUpperCase(), OTHER = track === 'lld' ? 'HLD' : 'LLD';
-    $('quota').innerHTML = !YTB.user ? `<div class="panel quota"><i class="dot"></i><span><b>One ${TR} and one ${OTHER} interview a day</b>, free. Sign in to start.</span></div>`
+    const TR = YTBTracks.get(track).label;
+    $('quota').innerHTML = !YTB.user ? `<div class="panel quota"><i class="dot"></i><span><b>One free ${TR} interview a day.</b> Sign in to start.</span></div>`
       : !usage ? '' : usage.unlimited ? `<div class="panel quota"><i class="dot"></i><span><b>Admin:</b> no daily interview limit for you.</span></div>`
-      : locked ? `<div class="panel quota used"><i class="dot"></i><span><b>You've started today's ${TR} interview.</b> A new one unlocks at 5:30 AM IST.${usage.startedToday[track === 'lld' ? 'hld' : 'lld'] ? '' : ` Your ${OTHER} interview for today is still free.`}</span></div>`
-      : `<div class="panel quota"><i class="dot"></i><span><b>Today's ${TR} interview is free to start.</b> You get one ${TR} and one ${OTHER} interview a day.</span></div>`;
+      : locked ? `<div class="panel quota used"><i class="dot"></i><span><b>You've started today's ${TR} interview.</b> A new one unlocks at 5:30 AM IST.</span></div>`
+      : `<div class="panel quota"><i class="dot"></i><span><b>Today's ${TR} interview is free to start.</b> You get one interview of each type a day.</span></div>`;
     const list = problems.filter((p) => (p.track || 'lld') === track && (!diff || p.difficulty === diff) && (!q || (p.title + ' ' + p.summary).toLowerCase().includes(q)));
     $('count').textContent = `${list.length} problem${list.length === 1 ? '' : 's'}`;
     $('rows').innerHTML = list.map((p) => {

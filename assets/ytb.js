@@ -15,6 +15,38 @@
     del(k) { try { localStorage.removeItem(k); } catch {} },
   };
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  CFG.codeRepo = CFG.codeRepo || 'ShubhiJain67/low-level-design-101'; // GitHub repo with the LLD course code
+
+  /* ---------------- Small shared helpers (used across pages; don't copy them) ---------------- */
+  const scripts = {};
+  const loadScript = (src) => (scripts[src] ||= new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = src; s.onload = () => res(true); s.onerror = () => { delete scripts[src]; rej(new Error('Could not load ' + src)); };
+    document.head.appendChild(s);
+  }));
+  function b64url(str) {
+    const bytes = new TextEncoder().encode(str); let bin = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  /* Name matching: links lessons, problems, patterns and code topics by their names, so nothing needs a hand-made mapping.
+     match(text, candidates, keysOf) returns the candidate whose name best appears in text (or null).
+     A key matches when all its meaningful words are in the text, or its words joined equal adjacent words of the text
+     ("parkinglot" ~ "Parking Lot"). The longest matching key wins ("Abstract Factory" beats "Factory"). */
+  const STOP = new Set('a an and the of with for in on to how what is are design designing pattern patterns example system project sample lld hld full'.split(' '));
+  const words = (s) => String(s || '').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean).map((w) => (w.length > 3 && w.endsWith('s') && !w.endsWith('ss') ? w.slice(0, -1) : w));
+  function match(text, candidates, keysOf) {
+    const tw = words(text), tset = new Set(tw), joins = new Set();
+    for (let i = 0; i < tw.length; i++) for (let n = 1; n <= 4 && i + n <= tw.length; n++) joins.add(tw.slice(i, i + n).join(''));
+    let best = null, score = 0;
+    for (const c of candidates) for (const k of keysOf(c)) {
+      const kw = words(k).filter((w) => !STOP.has(w));
+      if (!kw.length) continue;
+      const flat = kw.join('');
+      if (flat.length < 3) continue;
+      if ((kw.every((w) => tset.has(w)) || joins.has(flat)) && flat.length > score) { best = c; score = flat.length; }
+    }
+    return best;
+  }
 
   let session = authOn ? LS.get('ytb:session', null) : null; // { token, user }
 
@@ -335,12 +367,10 @@
     ];
     if (session) items.push({ g: 'Pages', t: 'My learning', u: ROOT + 'me/', ic: 'me' });
     if (session && session.user.isAdmin) items.push({ g: 'Studio', t: 'Content planner', u: ROOT + 'planner/', ic: 'plan' }, { g: 'Studio', t: 'Ideas', u: ROOT + 'ideas/', ic: 'idea' }, { g: 'Studio', t: 'Interview problems', u: ROOT + 'admin/problems.html', ic: 'puzzle' }, { g: 'Studio', t: 'Courses admin', u: ROOT + 'admin/', ic: 'admin' });
-    if (!window.YTBPatterns) {
-      await new Promise((res) => { const s = document.createElement('script'); s.src = ROOT + 'assets/patterns.js'; s.onload = s.onerror = res; document.head.appendChild(s); });
-    }
+    await loadScript(ROOT + 'assets/patterns.js').catch(() => {});
     (window.YTBPatterns?.list || []).forEach((p) => items.push({ g: 'Design patterns', t: p.name, s: p.cat, u: `${ROOT}patterns/?p=${p.key}`, ic: 'pattern' }));
     try {
-      if (!window.LLDCode) await new Promise((res) => { const s = document.createElement('script'); s.src = ROOT + 'assets/lldcode.js'; s.onload = s.onerror = res; document.head.appendChild(s); });
+      await loadScript(ROOT + 'assets/lldcode.js');
       const ci = window.LLDCode ? await window.LLDCode.load() : null;
       (ci?.sections || []).forEach((s) => s.items.forEach((i) => items.push({ g: 'Course code', t: i.title + ' (Java)', s: s.title, u: `${ROOT}code/?t=${i.id}`, ic: 'folder' })));
     } catch {}
@@ -407,7 +437,7 @@
     get session() { return session; },
     get user() { return session && session.user; },
     get isAdmin() { return !!(session && session.user && session.user.isAdmin); },
-    getCourses, getCourse, progress, renderAuth, renderGoogleButton, signOut, toast: alertBox,
+    getCourses, getCourse, progress, renderAuth, renderGoogleButton, signOut, toast: alertBox, loadScript, b64url, match, words,
     get theme() { return getTheme(); }, setTheme, icon, thumb, openCmdk,
   };
 

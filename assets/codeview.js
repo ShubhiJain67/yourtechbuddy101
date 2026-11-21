@@ -1,14 +1,10 @@
 /* Embeddable code viewer for the LLD course code (used under the lesson video and on /code/).
    LLDView.mount(el, { item, live, root, compact, state, onChange }) renders examples, Code/Notes tabs, files, highlighted code, Run in Playground. */
 (function () {
-  const ROOT = (window.YTB && window.YTB.root) || '/';
-  const REPO = 'ShubhiJain67/low-level-design-101';
-  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const loadScript = (src) => new Promise((res) => { const s = document.createElement('script'); s.src = src; s.onload = () => res(true); s.onerror = () => res(false); document.head.appendChild(s); });
-  let libs = null;
-  const ensureLibs = () => libs ||= Promise.all([
-    window.marked ? true : loadScript(ROOT + 'assets/vendor/marked.min.js'),
-    window.hljs ? true : loadScript(ROOT + 'assets/vendor/highlight.min.js'),
+  const { root: ROOT, esc, b64url, loadScript } = YTB, REPO = YTB.config.codeRepo;
+  const ensureLibs = () => Promise.all([
+    loadScript(ROOT + 'assets/vendor/marked.min.js').catch(() => false),
+    loadScript(ROOT + 'assets/vendor/highlight.min.js').catch(() => false),
   ]);
   function md(src) {
     let html;
@@ -22,11 +18,6 @@
     return t.innerHTML;
   }
   const highlight = (code) => { if (window.hljs) { try { return hljs.highlight(code, { language: 'java' }).value; } catch {} } return esc(code); };
-  function b64url(str) {
-    const bytes = new TextEncoder().encode(str); let bin = '';
-    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
-    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  }
 
   const CSS = `
   .cv{display:flex;flex-direction:column;gap:12px;min-width:0}
@@ -134,7 +125,7 @@
             ${v.run && opts.run !== false ? `<a class="btn primary sm" href="${ROOT}playground/#lang=java&code=${b64url(v.run)}" target="_blank" rel="noopener">▶ Run in Playground</a>` : ''}
             <a class="btn sm ${opts.run === false ? 'primary' : ''}" href="https://github.com/${REPO}/tree/main/${esc(v.path)}" target="_blank" rel="noopener">${opts.run === false ? 'View on GitHub ↗' : 'GitHub ↗'}</a>
             ${opts.fullLink ? `<a class="btn sm ghost" href="${opts.fullLink}">Open full screen</a>` : ''}
-            <span class="note">${opts.run === false ? `${v.files.length} file${v.files.length === 1 ? '' : 's'}${opts.live === false ? ' · saved copy' : ' · live from GitHub'}` : v.run ? `${v.files.length} file${v.files.length === 1 ? '' : 's'}${opts.live === false ? ' · saved copy' : ' · live from GitHub'}` : 'Support files only'}</span>
+            <span class="note">${opts.run === false ? `${v.files.length} file${v.files.length === 1 ? '' : 's'} · live from GitHub` : v.run ? `${v.files.length} file${v.files.length === 1 ? '' : 's'} · live from GitHub` : 'Support files only'}</span>
           </div>` : '<p class="note">No code for this topic yet.</p>'}
       </div>`;
       opts.onChange && opts.onChange({ ...s });
@@ -151,5 +142,5 @@
     draw();
     return { get state() { return { ...s }; } };
   }
-  window.LLDView = { mount, md, ensureLibs, esc };
+  window.LLDView = { mount, md, ensureLibs };
 })();

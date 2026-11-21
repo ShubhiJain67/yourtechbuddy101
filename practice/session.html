@@ -132,49 +132,12 @@
 
 <script src="../assets/config.js"></script>
 <script src="../assets/ytb.js"></script>
+<script src="../assets/tracks.js"></script>
 <script src="../assets/lldcode.js"></script>
 <script>
   const { esc } = YTB;
   const root = document.getElementById('root');
-  const LLD_STEPS = [
-    { id: 'requirements', name: 'Requirements', short: 'Scope & questions',
-      hint: 'Start like a real interview: ask clarifying questions, then list functional and non-functional requirements and say what you are keeping out of scope.',
-      template: 'Clarifying questions:\n- \n\nFunctional requirements:\n- \n\nNon-functional requirements:\n- \n\nOut of scope:\n- ' },
-    { id: 'entities', name: 'Entities', short: 'Classes & relationships',
-      hint: 'List the core classes with their key attributes, and how they relate (is-a / has-a, one-to-many).',
-      template: 'Entities:\n- ClassName: attribute1, attribute2\n\nRelationships:\n- A has many B\n- C is a D' },
-    { id: 'uml', kind: 'diagram', name: 'UML + patterns', short: 'Class diagram', mark: '%% ---- patterns ----',
-      diagramLabel: 'Class diagram (Mermaid)', notesLabel: 'Design patterns used, and why', notesPh: 'Strategy: lets the rule change without touching the main class&#10;Factory: …', emptyMsg: 'Write a classDiagram to see it here.',
-      hint: 'Write a class diagram in Mermaid syntax (preview on the right), then name the design patterns you used and why.',
-      template: 'classDiagram\n  class ClassA {\n    -field: Type\n    +method(arg) ReturnType\n  }\n  class ClassB\n  ClassA "1" *-- "many" ClassB : has' },
-    { id: 'code', kind: 'code', name: 'Implementation', short: 'Core classes in code',
-      hint: 'Implement the core classes and the key methods. Focus on design (interfaces, responsibilities, thread safety), not boilerplate.' },
-    { id: 'twist', kind: 'twist', name: 'The twist', short: 'Follow-up change',
-      hint: 'The interviewer changes the requirements based on your design. Explain what changes in your classes and code, and why the change stays small.',
-      template: 'What changes:\n- \n\nNew/changed classes:\n- \n\nWhy the rest of the design stays the same:\n- ' },
-  ];
-  const HLD_STEPS = [
-    { id: 'requirements', name: 'Requirements', short: 'Scope & scale',
-      hint: 'Ask clarifying questions, then list functional and non-functional requirements (scale, latency, availability vs consistency) and what is out of scope.',
-      template: 'Clarifying questions:\n- \n\nFunctional requirements:\n- \n\nNon-functional requirements (scale, latency, availability, consistency):\n- \n\nOut of scope:\n- ' },
-    { id: 'estimation', name: 'Estimation', short: 'Back-of-the-envelope',
-      hint: 'Rough numbers are fine. Show your working: users, read and write QPS (average and peak), storage over a few years, bandwidth, and what these numbers mean for the design.',
-      template: 'Users / DAU:\n\nWrite QPS (avg, peak):\n\nRead QPS (avg, peak):\n\nStorage (per record x records x years):\n\nBandwidth:\n\nWhat this tells us:\n- ' },
-    { id: 'api', name: 'APIs + data model', short: 'Endpoints, tables, DB',
-      hint: 'List the main API endpoints, the core tables or collections with their keys, and which database you pick and why.',
-      template: 'APIs:\n- POST /... \n- GET /... \n\nData model:\n- table_name(id PK, ...)\n\nDatabase choice and why:\n- ' },
-    { id: 'architecture', kind: 'diagram', name: 'Architecture', short: 'Component diagram', mark: '%% ---- walkthrough ----',
-      hint: 'Draw the high-level components as a Mermaid flowchart (preview on the right), then walk through how the main request flows through them.',
-      diagramLabel: 'Architecture (Mermaid flowchart)', notesLabel: 'Walk through the main request', notesPh: '1. Client calls the load balancer…&#10;2. …', emptyMsg: 'Write a flowchart to see it here.',
-      template: 'flowchart LR\n  C[Client] --> LB[Load balancer]\n  LB --> S[App service]\n  S --> Cache[(Cache)]\n  S --> DB[(Database)]' },
-    { id: 'deepdive', name: 'Scale & trade-offs', short: 'Bottlenecks, CAP',
-      hint: 'Find the bottlenecks and fix them: caching, sharding keys, replication, queues, consistency choices (CAP / PACELC), what happens when a component fails.',
-      template: 'Bottlenecks:\n- \n\nCaching:\n- \n\nSharding / partitioning:\n- \n\nReplication and consistency (CAP):\n- \n\nFailures and how we handle them:\n- ' },
-    { id: 'twist', kind: 'twist', name: 'The twist', short: 'Follow-up change',
-      hint: 'The interviewer changes the requirements based on your design. Explain what changes in your architecture, which components you add or modify, and the trade-offs.',
-      template: 'What changes:\n- \n\nNew / changed components:\n- \n\nTrade-offs:\n- ' },
-  ];
-  let STEPS = LLD_STEPS;
+  let STEPS = YTBTracks.get('lld').steps; // step definitions live in assets/tracks.js
   const LANGS = { java: 'Java', python: 'Python', cpp: 'C++', go: 'Go', typescript: 'TypeScript', javascript: 'JavaScript', csharp: 'C#' };
   let attempt = null, cur = 0, busy = false, saveTimer = null, monacoEd = null, mermaidMod = null, usage = null, view = 'step';
 
@@ -198,7 +161,7 @@
       } else { location.href = './'; return; }
     } catch (e) { return gate(`<b>${e.status === 429 ? "That's today's interview done" : "Couldn't open this interview"}</b><span>${esc(e.message)}</span><a class="btn" href="./">Back to problems</a>`); }
     try { usage = await YTB.api('/api/practice/usage'); } catch {}
-    STEPS = attempt.problem.track === 'hld' ? HLD_STEPS : LLD_STEPS;
+    STEPS = YTBTracks.get(attempt.problem.track).steps;
     cur = Math.min(attempt.step, STEPS.length) - 1;
     if (attempt.status === 'done' && attempt.report) view = 'report';
     render();
@@ -251,7 +214,7 @@
       <div class="app">
         <aside class="rail">
           <div class="top">
-            <a href="./?track=${p.track === 'hld' ? 'hld' : 'lld'}">‹ all ${p.track === 'hld' ? 'HLD' : 'LLD'} problems</a>
+            <a href="./?track=${YTBTracks.get(p.track).key}">‹ all ${esc(YTBTracks.get(p.track).label)} problems</a>
             <h1>${esc(p.title)}</h1>
             <div class="meta"><span class="diff ${esc(p.difficulty)}">${esc(p.difficulty)}</span><span id="clock" title="Time since you started">${fmt(elapsed)}</span></div>
           </div>
@@ -355,15 +318,16 @@
           ${!R.complete ? '<button class="btn primary" data-act="resume">Continue the interview</button>' : ''}
           <a class="btn ${R.complete ? 'primary' : ''}" href="session.html?p=${encodeURIComponent(attempt.problem.slug)}">Retry this problem</a>
           <a class="btn" id="ref-sol" hidden>See a reference solution (Java)</a>
-          <a class="btn" href="./?track=${attempt.problem.track === 'hld' ? 'hld' : 'lld'}">Try another problem</a>
-          ${attempt.problem.track === 'hld' ? '<a class="btn" href="../courses/">Browse courses</a>' : '<a class="btn" href="../courses/watch.html?c=lld">Revise with the LLD course</a>'}
+          <a class="btn" href="./?track=${YTBTracks.get(attempt.problem.track).key}">Try another problem</a>
+          ${YTBTracks.get(attempt.problem.track).course ? `<a class="btn" href="../courses/watch.html?c=${YTBTracks.get(attempt.problem.track).course}">Revise with the ${esc(YTBTracks.get(attempt.problem.track).label)} course</a>` : '<a class="btn" href="../courses/">Browse courses</a>'}
         </div>
       </div>`;
     refSolution();
   }
 
   function refSolution() {
-    LLDCode.forProblem(attempt.problem.slug).then((t) => { const b = document.getElementById('ref-sol'); if (b && t) { b.href = LLDCode.url(t.id); b.hidden = false; } });
+    if (!YTBTracks.get(attempt.problem.track).course) return;
+    LLDCode.forProblem(attempt.problem).then((t) => { const b = document.getElementById('ref-sol'); if (b && t) { b.href = LLDCode.url(t.id, t.variant); b.hidden = false; } });
   }
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   setInterval(() => { const c = document.getElementById('clock'); if (c && attempt && attempt.status !== 'done') c.textContent = fmt(Math.floor(Date.now() / 1000 - attempt.created_at)); }, 1000);

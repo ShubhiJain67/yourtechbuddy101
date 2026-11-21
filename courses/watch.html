@@ -126,11 +126,12 @@
 <script src="../assets/config.js"></script>
 <script src="courses.js"></script>
 <script src="../assets/ytb.js"></script>
+<script src="../assets/tracks.js"></script>
 <script src="../assets/lldcode.js"></script>
 <script src="../assets/codeview.js"></script>
 <script>
   const $ = (id) => document.getElementById(id);
-  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const esc = YTB.esc;
   const store = {
     get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
@@ -369,17 +370,15 @@
   }
   /* ---------- Mock interview for this lesson (only when one exists for this topic) ---------- */
   let probList = null, mockFor = null;
-  const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   async function showLessonMock(title) {
     mockFor = title; $('mock').hidden = true;
     if (!YTB.apiOn || /pattern/i.test(title)) return; // pattern lessons use a design as an example; they aren't that design
     if (!probList) probList = YTB.api('/api/practice/problems').then((r) => r.problems).catch(() => []);
     const ps = await probList;
     if (mockFor !== title) return;
-    const t = norm(title);
-    const keys = (p) => [norm(p.slug), norm(p.title.replace(/\(.*\)/, ''))].filter((k) => k.length >= 4);
-    const hits = ps.filter((p) => keys(p).some((k) => t.includes(k)));
-    const p = hits.find((x) => (x.track || 'lld') === 'lld') || hits[0];
+    const keys = (p) => [p.title.replace(/\(.*\)/, ''), (p.title.match(/\((.*)\)/) || [])[1], p.slug.replace(/-/g, ' ')].filter(Boolean);
+    const own = ps.filter((p) => YTBTracks.get(p.track).course === course.slug); // prefer this course's own track
+    const p = YTB.match(title, own, keys) || YTB.match(title, ps, keys);
     if (!p) return;
     $('mock').href = `../practice/session.html?p=${encodeURIComponent(p.slug)}`;
     $('mock').textContent = `Mock interview: ${p.title.replace(/\s*\(.*\)$/, '')}`;
@@ -393,15 +392,21 @@
     codeFor = title;
     const t = await LLDCode.forLesson(title);
     if (codeFor !== title) return;
+    if (!t && !(await LLDCode.load())) {
+      // GitHub unreachable: no saved copy, just the link
+      $('lesson-code').hidden = true; $('lcode').hidden = false; $('lcode-topic').textContent = '';
+      $('lcode-view').innerHTML = `<p class="note">Couldn't load the code from GitHub right now. <a href="${LLDCode.github()}" target="_blank" rel="noopener">View the course code on GitHub ↗</a></p>`;
+      return;
+    }
     $('lesson-code').hidden = !t; $('lcode').hidden = !t;
     if (!t) return;
     $('lcode-topic').textContent = t.title + (t.section ? ' · ' + t.section.title : '');
     $('lcode-view').innerHTML = '<div class="skel" style="height:280px"></div>';
     try {
-      const [item, index] = await Promise.all([LLDCode.item(t.id), LLDCode.load()]);
+      const item = await LLDCode.item(t.id);
       if (codeFor !== title) return;
-      LLDView.mount($('lcode-view'), { item, live: !!(index && index.live), height: '520px', bigTabs: true, run: false, labels: { code: 'Code for this lesson', notes: 'Notes' } });
-    } catch (e) { $('lcode-view').innerHTML = `<p class="note">Couldn't load the code right now. <a href="${LLDCode.url(t.id)}">Open it on the code page</a>.</p>`; }
+      LLDView.mount($('lcode-view'), { item, height: '520px', bigTabs: true, run: false, state: { v: t.variant }, labels: { code: 'Code for this lesson', notes: 'Notes' } });
+    } catch (e) { $('lcode-view').innerHTML = `<p class="note">Couldn't load the code from GitHub right now. <a href="${LLDCode.github(t.path)}" target="_blank" rel="noopener">View it on GitHub ↗</a></p>`; }
   }
 
   function render(autoplay = false) {

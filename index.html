@@ -198,10 +198,7 @@
 
   <div class="sec-h">
     <h2>Mock interviews</h2>
-    <div class="tabs" role="tablist" aria-label="Interview type" id="ptrack">
-      <button role="tab" data-track="lld" aria-selected="true">LLD</button>
-      <button role="tab" data-track="hld" aria-selected="false">HLD</button>
-    </div>
+    <div class="tabs" role="tablist" aria-label="Interview type" id="ptrack"></div>
     <span class="sp"></span><a class="more" id="p-more" href="practice/?track=lld">All problems</a>
   </div>
   <div class="panel plist" id="plist"><div class="prow"><span class="ic skel"></span><span><b class="skel" style="height:16px;width:40%"></b></span></div></div>
@@ -222,6 +219,7 @@
 <script src="assets/config.js"></script>
 <script src="courses/courses.js"></script>
 <script src="assets/ytb.js"></script>
+<script src="assets/tracks.js"></script>
 <script src="assets/patterns.js"></script>
 <script>
   const esc = YTB.esc;
@@ -315,7 +313,8 @@
   })();
 
   /* ================= Mock interview list ================= */
-  let probs = null, track = 'lld';
+  let probs = null, track = YTBTracks.KEYS[0];
+  $('ptrack').innerHTML = YTBTracks.KEYS.map((k, i) => `<button role="tab" data-track="${k}" aria-selected="${i === 0}">${esc(YTBTracks.get(k).label)}</button>`).join('');
   async function drawProblems() {
     const list = $('plist');
     if (!YTB.apiOn) { list.innerHTML = '<div class="prow"><span></span><span class="note">Mock interviews need the API.</span></div>'; return; }
@@ -327,10 +326,10 @@
     const rows = probs.filter((p) => (p.track || 'lld') === track).slice(0, 5);
     list.innerHTML = rows.map((p) => `
       <a class="prow" href="practice/session.html?p=${encodeURIComponent(p.slug)}">
-        <span class="ic">${YTB.icon(track === 'hld' ? 'server' : 'layers')}</span>
+        <span class="ic">${YTB.icon(YTBTracks.get(track).icon)}</span>
         <span><b>${esc(p.title)}</b><small>${esc(p.summary)}</small></span>
         <span class="chip diff ${esc(p.difficulty)}">${esc(p.difficulty)}</span>
-        <span class="steps">${track === 'hld' ? 6 : 5} steps</span>
+        <span class="steps">${YTBTracks.get(track).steps.length} steps</span>
         <span class="go">→</span>
       </a>`).join('') || '<div class="prow"><span></span><span class="note">No problems yet.</span></div>';
     $('p-more').href = `practice/?track=${track}`;

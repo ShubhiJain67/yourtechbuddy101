@@ -7,4 +7,3 @@ api/.wrangler
 api/.dev.vars
 .dev.vars
 secrets/
-.lld-repo/

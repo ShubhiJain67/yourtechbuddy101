@@ -118,7 +118,7 @@
     drawList();
     const url = await PX.lessonFor(p, '../');
     $('watch').hidden = !url; if (url) $('watch').href = url;
-    const t = await LLDCode.forPattern(p.key);
+    const t = await LLDCode.forPattern(p);
     $('java').hidden = !t;
     if (t) {
       $('java-sub').textContent = `${t.variants.length} example${t.variants.length === 1 ? '' : 's'}, with notes and runnable code`;

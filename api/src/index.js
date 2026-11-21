@@ -15,6 +15,7 @@
 //           GET/PUT/DELETE /api/admin/problems[/:slug]   (practice problems + hidden rubrics)
 // Practice: GET /api/practice/problems[/:slug], /api/practice/usage, CRUD /api/practice/attempts[/:id], POST .../review|twist|finish
 //           GET/POST /api/admin/ideas, PUT/DELETE /api/admin/ideas/:id   (private ideas board)
+import SharedTracks from '../../assets/tracks.js';
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8' };
 const enc = new TextEncoder();
@@ -535,33 +536,12 @@ async function youtubeLookup(env, input, mode) {
 
 /* ------------------------- LLD + HLD interview practice ------------------------- */
 
-const TRACKS = {
-  lld: {
-    steps: ['requirements', 'entities', 'uml', 'code', 'twist'],
-    info: {
-      requirements: { name: 'Requirements', expect: 'Clarifying questions, functional and non-functional requirements, and an explicit scope (what is in and out).' },
-      entities: { name: 'Entities & relationships', expect: 'Core classes/entities, their key attributes, and relationships between them (is-a / has-a, multiplicities).' },
-      uml: { name: 'UML + design patterns', expect: 'A UML class diagram (Mermaid classDiagram syntax) and the design patterns used, each with a one-line reason.' },
-      code: { name: 'Implementation', expect: 'Code for the core classes and the key methods, consistent with the UML.' },
-      twist: { name: 'The twist', expect: "The candidate's answer to the interviewer's follow-up change: what changes in the design and code, and why the change stays contained." },
-    },
-    twistRubric: 'code',
-    twistJudge: 'Judge: does the change stay contained (good design) or force rewriting core classes (weak design)? Are concurrency/edge cases handled?',
-  },
-  hld: {
-    steps: ['requirements', 'estimation', 'api', 'architecture', 'deepdive', 'twist'],
-    info: {
-      requirements: { name: 'Requirements', expect: 'Clarifying questions, functional requirements, non-functional requirements (scale, latency, availability vs consistency, durability) and explicit scope.' },
-      estimation: { name: 'Capacity estimation', expect: 'Back-of-the-envelope numbers: users/DAU, read and write QPS (average and peak), storage over time, bandwidth, and what these numbers imply for the design.' },
-      api: { name: 'APIs + data model', expect: 'The main API endpoints (method, path, request/response), the core tables/collections with keys, and the database choice (SQL/NoSQL/etc.) with a reason.' },
-      architecture: { name: 'High-level architecture', expect: 'A component diagram (Mermaid flowchart syntax) of clients, load balancers, services, databases, caches, queues, CDN etc., plus a walkthrough of how the main request flows through it.' },
-      deepdive: { name: 'Scale & trade-offs', expect: 'Bottlenecks and how to scale them: caching, sharding/partitioning keys, replication, queues/async processing, consistency choices (CAP/PACELC), failure handling and monitoring.' },
-      twist: { name: 'The twist', expect: "The candidate's answer to the interviewer's follow-up: what changes in the architecture, which components are added or modified, and the trade-offs." },
-    },
-    twistRubric: 'deepdive',
-    twistJudge: 'Judge: does the answer adapt the existing architecture sensibly, with concrete components and numbers, and discuss trade-offs and failure modes?',
-  },
-};
+// Tracks and steps come from the site's shared definition (assets/tracks.js), bundled in by wrangler.
+const TRACKS = Object.fromEntries(Object.entries(SharedTracks.TRACKS).map(([k, t]) => [k, {
+  steps: t.steps.map((s) => s.id),
+  info: Object.fromEntries(t.steps.map((s) => [s.id, { name: s.long || s.name, expect: s.expect }])),
+  twistRubric: t.twistRubric, twistJudge: t.twistJudge, persona: t.persona, extraRules: t.extraRules || '',
+}]));
 const trackOf = (p) => (TRACKS[p && p.track] ? p.track : 'lld');
 const ALL_STEP_IDS = [...new Set(Object.values(TRACKS).flatMap((t) => t.steps))];
 const REVIEW_SCHEMA = {
@@ -627,7 +607,7 @@ async function practiceRoutes(req, env, path, m, url) {
       if (!p) throw httpError(404, 'Problem not found');
       const tr = trackOf(p);
       if (!user.isAdmin && (await startedToday(env, user))[tr]) {
-        throw httpError(429, `You've already started today's ${tr.toUpperCase()} interview. You get one ${tr.toUpperCase()} and one ${tr === 'lld' ? 'HLD' : 'LLD'} interview a day; a new one unlocks at 5:30 AM IST. You can keep working on the one you started.`);
+        throw httpError(429, `You've already started today's ${SharedTracks.get(tr).label} interview. You get one interview of each type a day; a new one unlocks at 5:30 AM IST. You can keep working on the one you started.`);
       }
       const t = now();
       const row = await env.DB.prepare("INSERT INTO attempts (user_id, problem_id, data, step, status, created_at, updated_at) VALUES (?, ?, '{}', 1, 'active', ?, ?) RETURNING *")
@@ -742,7 +722,7 @@ async function startedToday(env, user) {
   const rows = (await env.DB.prepare(
     "SELECT COALESCE(p.track, 'lld') AS track, COUNT(*) AS n FROM attempts a JOIN problems p ON p.id = a.problem_id WHERE a.user_id = ? AND a.created_at >= ? GROUP BY 1"
   ).bind(user.id, start).all()).results;
-  const out = { lld: false, hld: false };
+  const out = Object.fromEntries(Object.keys(TRACKS).map((k) => [k, false]));
   rows.forEach((r) => { if (r.track in out && r.n > 0) out[r.track] = true; });
   return out;
 }
@@ -804,10 +784,7 @@ const INTERVIEWER_RULES = `Rules:
 - The candidate may write in English or Hinglish; always reply in clear, simple English.
 - Score 0-10: 9-10 exceptional, 7-8 strong, 6 acceptable, 4-5 weak, 0-3 missing or wrong. verdict "ready" if score >= 6, else "revise".
 - summary: 1-2 sentences. strengths: up to 3 short bullets. gaps: up to 4 short, actionable bullets. followUp: one question you would ask next in the interview.`;
-const INTERVIEWERS = {
-  lld: `You are a senior software engineer running a Low Level Design (LLD) interview for an SDE-2 role at an Indian product company.\n${INTERVIEWER_RULES}`,
-  hld: `You are a senior backend engineer running a High Level Design (system design) interview for an SDE-2/SDE-3 role at an Indian product company.\n${INTERVIEWER_RULES}\n- Reward concrete numbers, named technologies with reasons, and explicit trade-offs. Penalise hand-waving like "we will scale it" without saying how.`,
-};
+const interviewer = (track) => `${TRACKS[track].persona}\n${INTERVIEWER_RULES}${TRACKS[track].extraRules ? '\n' + TRACKS[track].extraRules : ''}`;
 
 async function reviewStep(env, p, data, stepName, T) {
   const rubric = parseJSON(p.rubric, {});
@@ -826,7 +803,7 @@ async function reviewStep(env, p, data, stepName, T) {
     prior ? `### Candidate's earlier steps (check consistency with these)\n${prior}` : '',
     `### Candidate answer for this step\n${answer}`,
   ].filter(Boolean).join('\n\n');
-  const r = await aiJSON(env, INTERVIEWERS[trackOf(p)], user, REVIEW_SCHEMA);
+  const r = await aiJSON(env, interviewer(trackOf(p)), user, REVIEW_SCHEMA);
   const score = Math.max(0, Math.min(10, Math.round(Number(r.score) || 0)));
   const list = (x) => (Array.isArray(x) ? x : []).map((s) => str(s, 300)).filter(Boolean).slice(0, 4);
   return { score, verdict: score >= 6 ? 'ready' : 'revise', summary: str(r.summary, 400), strengths: list(r.strengths).slice(0, 3), gaps: list(r.gaps), followUp: str(r.followUp, 300) };
@@ -839,11 +816,11 @@ async function makeTwist(env, p, data, T) {
     .map((s) => `${T.info[s].name}${s === 'code' ? ` (${a.lang || ''})` : ''}:\n${clip(a[s], s === 'code' ? 3500 : 1600)}`).join('\n\n');
   const user = [
     `### Problem: ${p.title}\n${p.statement}`,
-    `### Candidate's ${trackOf(p) === 'hld' ? 'system design' : 'design'}\n${design}`,
+    `### Candidate's design\n${design}`,
     `### Possible follow-ups (pick or adapt the one that best stress-tests THIS design's weak spots)\n- ${(rubric.twist || []).join('\n- ')}`,
     'Write ONE concrete follow-up change request, 2-3 sentences, as the interviewer speaking to the candidate. focus: one or two words (e.g. "extensibility", "concurrency", "scale").',
   ].join('\n\n');
-  const r = await aiJSON(env, INTERVIEWERS[trackOf(p)], user, TWIST_SCHEMA, 300);
+  const r = await aiJSON(env, interviewer(trackOf(p)), user, TWIST_SCHEMA, 300);
   const question = str(r.question, 600);
   if (!question) throw httpError(502, 'Could not create a follow-up. Try again.');
   return { question, focus: str(r.focus, 40) };

@@ -88,7 +88,7 @@
   <div class="ph">
     <div><h1>Course code</h1><p>Every Java example from the Low Level Design course, straight from GitHub: patterns, machine coding projects and concurrency. Read the notes, browse the files, run it in the playground.</p></div>
     <span class="sp"></span>
-    <a class="btn" id="gh" href="https://github.com/ShubhiJain67/low-level-design-101" target="_blank" rel="noopener">View repo on GitHub ↗</a>
+    <a class="btn" id="gh" href="#" target="_blank" rel="noopener">View repo on GitHub ↗</a>
   </div>
   <div class="cl">
     <nav class="panel tree" id="tree" aria-label="Topics"><p class="note" style="padding:10px">Loading…</p></nav>
@@ -96,7 +96,7 @@
   </div>
 </main>
 
-<footer><a href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a> · <a href="https://github.com/ShubhiJain67/low-level-design-101" target="_blank" rel="noopener">GitHub</a> · <a href="../privacy.html">Privacy</a></footer>
+<footer><a href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a> · <a id="gh-foot" href="#" target="_blank" rel="noopener">GitHub</a> · <a href="../privacy.html">Privacy</a></footer>
 
 <script src="../assets/config.js"></script>
 <script src="../assets/ytb.js"></script>
@@ -104,9 +104,8 @@
 <script src="../assets/codeview.js"></script>
 <script>
   const { esc } = YTB, $ = (id) => document.getElementById(id);
-  const REPO = 'ShubhiJain67/low-level-design-101';
+  const REPO = YTB.config.codeRepo;
   let index = null, item = null, q = '', state = { t: null, v: null, f: null, tab: 'code' };
-  const cache = {};
 
   const ensureLibs = () => LLDView.ensureLibs();
   const md = (s) => LLDView.md(s);
@@ -136,17 +135,17 @@
   async function render() {
     await ensureLibs();
     if (!state.t) { item = null; drawTree(); return drawOverview(); }
-    try { item = await getItem(state.t); } catch { state.t = null; return render(); }
+    try { item = await getItem(state.t); } catch { $('view').innerHTML = `<p class="note">Couldn't load this topic from GitHub right now. <a href="${LLDCode.github(state.t.replace('__', '/'))}" target="_blank" rel="noopener">View it on GitHub ↗</a></p>`; return; }
     drawTree();
     const sec = index.sections.find((s) => s.key === item.sec);
     document.title = `${item.title} (Java) — YourTechBuddy`;
     $('view').innerHTML = `
       <div class="vh">
         <div><span class="chip">${esc(sec ? sec.title : '')}</span><h2>${esc(item.title)}</h2>
-          <p>${item.variants.length} example${item.variants.length === 1 ? '' : 's'} · ${item.variants.reduce((n, x) => n + x.files.length, 0)} Java files · ${index.live ? 'live from GitHub' : 'saved copy'}</p></div>
+          <p>${item.variants.length} example${item.variants.length === 1 ? '' : 's'} · ${item.variants.reduce((n, x) => n + x.files.length, 0)} Java files · live from GitHub</p></div>
       </div>
       <div id="cv"></div>`;
-    LLDView.mount($('cv'), { item, live: !!index.live, state: { v: state.v, f: state.f, tab: state.tab }, height: '640px',
+    LLDView.mount($('cv'), { item, state: { v: state.v, f: state.f, tab: state.tab }, height: '640px',
       onChange: (s) => { state = { ...state, ...s }; syncUrl(); } });
   }
   function syncUrl() {
@@ -162,7 +161,7 @@
     document.title = 'Course code (Java) — YourTechBuddy';
     const counts = index.sections.map((s) => ({ s, n: s.items.length }));
     $('view').innerHTML = `
-      <div class="vh"><div><span class="chip">${index.live ? `<i class="live-dot"></i>Live from GitHub` : 'Saved copy (GitHub unreachable)'}${index.commit ? ' · ' + esc(index.commit) : ''}</span><h2>Low Level Design 101, the code</h2><p>Pick a topic on the left, or jump into a machine coding project.</p></div></div>
+      <div class="vh"><div><span class="chip"><i class="live-dot"></i>Live from GitHub${index.commit ? ' · ' + esc(index.commit) : ''}</span><h2>Low Level Design 101, the code</h2><p>Pick a topic on the left, or jump into a machine coding project.</p></div></div>
       <div class="cards">${counts.map(({ s, n }) => `<a class="card" href="?t=${s.items[0].id}" data-t="${s.items[0].id}"><b>${esc(s.title)}</b><small>${n} topic${n === 1 ? '' : 's'} · ${s.items.slice(0, 3).map((i) => esc(i.title)).join(', ')}${n > 3 ? '…' : ''}</small></a>`).join('')}</div>
       <div class="md">${md(index.readme || '')}</div>`;
   }
@@ -185,9 +184,10 @@
   $('tree').addEventListener('input', (e) => { if (e.target.id === 'tq') { q = e.target.value.trim().toLowerCase(); drawTree(); } });
   window.addEventListener('popstate', () => { fromUrl(); render(); });
 
+  $('gh').href = $('gh-foot').href = LLDCode.github();
   (async () => {
     index = await LLDCode.load();
-    if (!index) { $('view').innerHTML = '<p class="note">The course code hasn\'t been synced yet. Run <code>make lld-code</code>.</p>'; $('tree').innerHTML = ''; return; }
+    if (!index) { $('view').innerHTML = `<p class="note">Couldn't reach GitHub right now. <a href="${LLDCode.github()}" target="_blank" rel="noopener">View the course code on GitHub ↗</a></p>`; $('tree').innerHTML = ''; return; }
     fromUrl(); render();
   })();
 </script>

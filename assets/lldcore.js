@@ -1,7 +1,6 @@
-/* Shared by the browser (live from GitHub) and tools/sync-lld-code.mjs (snapshot):
+/* Used by the browser (assets/lldcode.js, live from GitHub):
    turns the LLD course repo's file list + contents into topics, examples and one-file runnable Java. Pure functions, no I/O. */
 (function (root) {
-  const REPO = 'ShubhiJain67/low-level-design-101';
   const TOP = ['creational', 'structural', 'behavioral', 'concurrency', 'modern', 'projects'];
   const SECTIONS = {
     creational: 'Creational patterns', structural: 'Structural patterns', behavioral: 'Behavioral patterns',
@@ -69,9 +68,9 @@
   }
 
   /* Tree (all file paths in the repo) -> index of sections and topics. */
-  function buildIndex(paths, { readme = '', commit = '', generated = '' } = {}) {
+  function buildIndex(paths, { repo = '', readme = '', commit = '', generated = '' } = {}) {
     const files = paths.filter((p) => !hidden(p));
-    const index = { repo: REPO, branch: 'main', commit, generated, readme, sections: [] };
+    const index = { repo, branch: 'main', commit, generated, readme, sections: [] };
     for (const sec of ORDER) {
       const keys = [...new Set(files.filter((p) => p.startsWith(sec + '/') && p.split('/').length > 2).map((p) => p.split('/')[1]))].sort();
       const items = [];
@@ -108,7 +107,7 @@
     return { id, sec, key, title: pretty(key), path: itemPath, readme: contents[itemPath + '/README.md'] ?? null, variants };
   }
 
-  const api = { REPO, TOP, ORDER, SECTIONS, pretty, buildIndex, itemPaths, buildItem, mergeJava };
+  const api = { TOP, ORDER, SECTIONS, pretty, buildIndex, itemPaths, buildItem, mergeJava };
   root.LLDCore = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

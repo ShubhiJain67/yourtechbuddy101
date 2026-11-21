@@ -56,28 +56,14 @@
 
 <script src="../assets/config.js"></script>
 <script src="../assets/ytb.js"></script>
+<script src="../assets/tracks.js"></script>
 <script>
   const { esc } = YTB;
   const app = document.getElementById('app');
-  const RUBS = {
-    lld: [
-      ['requirements', 'Requirements checklist'],
-      ['entities', 'Entities checklist'],
-      ['uml', 'UML + patterns checklist'],
-      ['code', 'Implementation checklist (also used to judge the twist answer)'],
-      ['twist', 'Follow-up ideas (the AI picks or adapts one for each candidate)'],
-    ],
-    hld: [
-      ['requirements', 'Requirements checklist'],
-      ['estimation', 'Capacity estimation checklist'],
-      ['api', 'APIs + data model checklist'],
-      ['architecture', 'Architecture checklist'],
-      ['deepdive', 'Scale & trade-offs checklist (also used to judge the twist answer)'],
-      ['twist', 'Follow-up ideas (the AI picks or adapts one for each candidate)'],
-    ],
-  };
+  // checklist fields come from the track's steps (assets/tracks.js)
+  const RUBS = Object.fromEntries(YTBTracks.KEYS.map((k) => { const t = YTBTracks.get(k); return [k, t.steps.map((s) => [s.id, YTBTracks.rubricLabel(t, s)])]; }));
   let problems = [], cur = null, dirty = false;
-  const blank = () => ({ _orig: null, track: new URLSearchParams(location.search).get('track') === 'hld' ? 'hld' : 'lld', slug: '', title: '', difficulty: 'Medium', summary: '', statement: '', published: false, position: problems.length, rubric: {} });
+  const blank = () => ({ _orig: null, track: YTBTracks.valid(new URLSearchParams(location.search).get('track')) ? new URLSearchParams(location.search).get('track') : YTBTracks.KEYS[0], slug: '', title: '', difficulty: 'Medium', summary: '', statement: '', published: false, position: problems.length, rubric: {} });
   const gate = (h) => { app.innerHTML = `<div class="gate">${h}</div>`; };
   const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
   window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
@@ -103,7 +89,7 @@
     app.innerHTML = `
       <div class="layout">
         <aside class="side">
-          ${['lld', 'hld'].map((t) => `<h3 style="margin-top:14px">${t.toUpperCase()}</h3>` + problems.filter((p) => (p.track || 'lld') === t).map((p) => `<button class="c ${cur._orig === p.slug ? 'on' : ''}" data-open="${esc(p.slug)}">${esc(p.title)}<small>${esc(p.difficulty)} · ${p.published ? 'live' : 'draft'}</small></button>`).join('')).join('')}
+          ${YTBTracks.KEYS.map((t) => `<h3 style="margin-top:14px">${esc(YTBTracks.get(t).label)}</h3>` + problems.filter((p) => (p.track || 'lld') === t).map((p) => `<button class="c ${cur._orig === p.slug ? 'on' : ''}" data-open="${esc(p.slug)}">${esc(p.title)}<small>${esc(p.difficulty)} · ${p.published ? 'live' : 'draft'}</small></button>`).join('')).join('')}
           <button class="btn primary" style="margin-top:8px" data-act="new">+ New problem</button>
         </aside>
         <main class="main">
@@ -116,7 +102,7 @@
           <div class="fields">
             <label>Title<input data-f="title" value="${esc(cur.title)}"></label>
             <label>Slug<input data-f="slug" value="${esc(cur.slug)}"></label>
-            <label>Interview type<select data-f="track"><option value="lld" ${cur.track !== 'hld' ? 'selected' : ''}>LLD (classes &amp; code)</option><option value="hld" ${cur.track === 'hld' ? 'selected' : ''}>HLD (system design)</option></select></label>
+            <label>Interview type<select data-f="track">${YTBTracks.KEYS.map((k) => `<option value="${k}" ${(cur.track || YTBTracks.KEYS[0]) === k ? 'selected' : ''}>${esc(YTBTracks.get(k).label)} (${esc(YTBTracks.get(k).tag.split(' · ')[1] || '')})</option>`).join('')}</select></label>
             <label>Difficulty<select data-f="difficulty">${['Easy', 'Medium', 'Hard'].map((d) => `<option ${d === cur.difficulty ? 'selected' : ''}>${d}</option>`).join('')}</select></label>
             <label>Order<input data-f="position" type="number" value="${cur.position || 0}"></label>
             <label class="wide">One-line summary (shown on the problem card)<input data-f="summary" value="${esc(cur.summary)}"></label>
@@ -125,7 +111,7 @@
           </div>
           <h2>Hidden checklists</h2>
           <p class="hint">One point per line. Candidates never see these; the AI interviewer uses them to score each step and hint at what's missing.</p>
-          <div class="rub">${RUBS[cur.track === 'hld' ? 'hld' : 'lld'].map(([k, label]) => `<label>${label}<textarea data-rub="${k}">${esc((cur.rubric[k] || []).join('\n'))}</textarea></label>`).join('')}</div>
+          <div class="rub">${(RUBS[cur.track] || RUBS[YTBTracks.KEYS[0]]).map(([k, label]) => `<label>${label}<textarea data-rub="${k}">${esc((cur.rubric[k] || []).join('\n'))}</textarea></label>`).join('')}</div>
         </main>
       </div>`;
   }

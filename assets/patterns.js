@@ -892,7 +892,7 @@ print("GST:     ", sum(i.accept(GstVisitor()) for i in cart))
 
   /* ======================= Layout + rendering ======================= */
   const W = 620, M = 10, NAME_H = 34, STEREO_H = 14, LINE = 20, PAD = 12, ROW_GAP = 64;
-  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const esc = (s) => (window.YTB ? YTB.esc(s) : String(s));
   const tw = (s, px) => s.length * px;
   function sizeBox(b) {
     const nameH = NAME_H + (b.stereo ? STEREO_H : 0);
@@ -1013,24 +1013,17 @@ print("GST:     ", sum(i.accept(GstVisitor()) for i in cart))
     const boxes = Object.values(B);
     return { svg: edgesSvg(p, B).replace(/<g class="edge"/g, `<g class="edge${anim ? ' fade' : ''}" style="animation-delay:.6s"`) + boxes.map((b, i) => boxSvg(b, i, anim)).join(''), height: H, B };
   }
-  function b64url(str) {
-    const bytes = new TextEncoder().encode(str); let bin = '';
-    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
-    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  }
+  const b64url = (s) => YTB.b64url(s);
 
-  /* Find a lesson for a pattern in the user's courses (title match). */
-  let lessonIdx = null;
+  /* The lesson about a pattern: the first lesson whose title best matches this pattern (by name, see YTB.match). */
+  let lessons = null;
   async function lessonFor(p, root = '') {
-    if (!lessonIdx) {
-      lessonIdx = [];
-      try {
-        const courses = await window.YTB.getCourses();
-        courses.forEach((c) => (c.sections || []).forEach((s) => s.lessons.forEach((l) => { if (l.youtube) lessonIdx.push({ c: c.slug, v: l.youtube, t: l.title.toLowerCase() }); })));
-      } catch {}
+    if (!lessons) {
+      lessons = [];
+      try { (await YTB.getCourses()).forEach((c) => (c.sections || []).forEach((s) => s.lessons.forEach((l) => { if (l.youtube) lessons.push({ c: c.slug, v: l.youtube, title: l.title }); }))); } catch {}
     }
-    const names = (p.aliases || []).concat(p.name.toLowerCase());
-    const hit = lessonIdx.find((l) => names.some((n) => l.t.includes(n.toLowerCase())) && !(p.key === 'factory' && l.t.includes('abstract')));
+    const keys = (x) => [x.name, ...(x.aliases || [])];
+    const hit = lessons.find((l) => YTB.match(l.title, P, keys) === p);
     return hit ? `${root}courses/watch.html?c=${encodeURIComponent(hit.c)}&v=${encodeURIComponent(hit.v)}` : null;
   }
 

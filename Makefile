@@ -1,7 +1,7 @@
 # Usage:  make ship m="what you changed"
 # Commits everything, pushes to GitHub, and GitHub Pages puts it live on yourtechbuddy101.com (~1 min).
 
-.PHONY: ship status dev lld-code api-deploy api-schema api-logs
+.PHONY: ship status dev api-deploy api-schema api-logs
 
 ship:
 ifndef m
@@ -22,13 +22,6 @@ status:
 dev:
 	@echo "Open http://localhost:8000  (Ctrl+C to stop)"
 	@python3 -m http.server 8000
-
-# ---- LLD course code (github.com/ShubhiJain67/low-level-design-101) ----
-# The site reads the course repo LIVE from GitHub. This refreshes the saved copy used only if GitHub is unreachable.
-LLD_REPO ?= https://github.com/ShubhiJain67/low-level-design-101.git
-lld-code:
-	@if [ -d .lld-repo/.git ]; then git -C .lld-repo pull --ff-only -q; else git clone -q --depth 1 $(LLD_REPO) .lld-repo; fi
-	node tools/sync-lld-code.mjs .lld-repo
 
 # ---- Backend (Cloudflare Worker + D1) ----
 # Deploy API changes in api/src/index.js
