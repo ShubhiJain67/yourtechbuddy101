@@ -734,7 +734,7 @@ class YouTubeChannel:
 channel = YouTubeChannel()
 channel.subscribe(EmailAlert("priya@example.com"))
 channel.subscribe(PushAlert())
-channel.upload("Observer Pattern in Hindi")
+channel.upload("Observer Pattern explained")
 ` });
 
   add({ key: 'state', name: 'State', cat: 'Behavioral',
