@@ -1,0 +1,31 @@
+Backpressure explained in Hindi with Java code: what happens when a producer is faster than its consumer, and three ways to handle it with a BlockingQueue: blocking with put(), waiting with a timeout using offer(), and rejecting messages when the queue is full.
+
+📚 Full LLD Course (Free): https://yourtechbuddy101.com/courses/watch.html?c=lld
+📺 LLD Playlist: https://www.youtube.com/playlist?list=PLBcZYF21PlE4
+
+⏮️ Previous: Producer Consumer → https://youtu.be/AKWvUxf5ZaA
+
+⏱️ Timestamps
+00:00 What Is Backpressure
+00:41 Problem: A Fast Producer Fills Up Memory
+01:21 Ways to Handle Backpressure
+02:01 Code: Producer With a BlockingQueue
+02:44 put(): Block Until There's Space
+03:20 Waiting With a Timeout Instead
+03:57 offer() With a Timeout
+04:36 Accepted vs Rejected Messages
+05:19 Rejecting Messages When the Queue Is Full
+
+🎥 Gear I Use
+💻 Laptop: https://link.amazon/B0j8Q60KH
+🖥️ Monitor: https://link.amazon/B07mPJ5W6
+⌨️ Keyboard: https://link.amazon/B0eCYbgEw
+🎙️ Mic: https://link.amazon/B00AHVZjW
+✍️ Pen Tab: https://link.amazon/B0cl4Auty
+
+🌐 Website: https://yourtechbuddy101.com
+🔔 Subscribe: https://www.youtube.com/@yourtechbuddy101
+
+Some links are affiliate links. I earn a small commission at no extra cost to you.
+
+#Backpressure #BlockingQueue #ProducerConsumer #Concurrency #JavaConcurrency #LowLevelDesign #LLD #SDEInterview

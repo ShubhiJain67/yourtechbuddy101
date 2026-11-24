@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" type="image/png" href="../assets/favicon.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<script src="../assets/theme.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prepare by company — YourTechBuddy</title>
+<meta name="description" content="Company-wise interview checklists: DSA problems, low level design and high level design, with mock interviews to practise each one.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../courses/courses.css">
+<style>
+  /* company list */
+  .cos{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+  .co{display:flex;flex-direction:column;gap:10px;padding:20px 22px;text-decoration:none;color:var(--text);transition:border-color .12s}
+  .co:hover{border-color:var(--accent)}
+  .co h2{margin:0;font:600 20px var(--sans)}
+  .co p{margin:0;color:var(--muted);font-size:14px;line-height:1.5}
+  .co .tr{display:flex;gap:8px;flex-wrap:wrap}
+  .co .tr span{font:500 12.5px var(--mono);padding:3px 9px;border-radius:99px;background:var(--panel2);color:var(--muted)}
+  .co .pbar{height:6px;border-radius:99px;background:var(--panel3);overflow:hidden;margin-top:auto}
+  .co .pbar i{display:block;height:100%;background:var(--ok)}
+  .soon{padding:20px 22px;color:var(--muted);font-size:14px;border-style:dashed}
+
+  /* one company */
+  .crumb{font-size:13.5px;color:var(--muted);margin-bottom:6px}
+  .crumb a{color:var(--muted)}
+  .ttabs{display:flex;gap:6px;margin:14px 0 0;flex-wrap:wrap}
+  .ttabs button{display:flex;align-items:center;gap:8px;padding:9px 16px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font:600 14.5px var(--sans);cursor:pointer}
+  .ttabs button small{font:500 12px var(--mono);color:var(--muted)}
+  .ttabs button[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+  .ttabs button[aria-selected="true"] small{color:var(--accent)}
+  .sticky{position:sticky;top:0;z-index:4;background:var(--bg);padding:14px 0 12px;margin-bottom:6px;border-bottom:1px solid var(--border)}
+  .stats{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .stat{font-size:13.5px;color:var(--muted)}
+  .stat b{font:600 16px var(--mono);color:var(--text);margin-right:3px}
+  .prog{height:7px;border-radius:99px;background:var(--panel3);overflow:hidden;margin-top:10px}
+  .prog i{display:block;height:100%;background:var(--ok);transition:width .3s}
+  .ctl{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+  .ctl .btn[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+  .grp{margin:22px 0 8px;font:600 13px var(--sans);color:var(--accent)}
+  details.sec{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
+  details.sec > summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:12px;padding:12px 16px;font-weight:600;font-size:15px}
+  details.sec > summary::-webkit-details-marker{display:none}
+  details.sec > summary::before{content:"▸";color:var(--faint);margin-right:8px;transition:transform .15s;display:inline-block}
+  details.sec[open] > summary::before{transform:rotate(90deg)}
+  details.sec > summary .n{font:500 12.5px var(--mono);color:var(--muted);white-space:nowrap}
+  details.sec > summary .n.full{color:var(--ok)}
+  details.sec > summary > span:first-child{flex:1}
+  .items{list-style:none;margin:0;padding:0 8px 8px}
+  .it{border-top:1px solid var(--border);padding:10px 8px;display:flex;gap:12px;align-items:flex-start}
+  .it:first-child{border-top:0}
+  .it input{width:18px;height:18px;margin-top:2px;flex:none;accent-color:var(--ok);cursor:pointer}
+  .it .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+  .it .nm{font-size:15px;font-weight:500;cursor:pointer}
+  .it .star{color:#d9a441;margin-left:4px}
+  .it .lock{font-size:12px;color:var(--muted);margin-left:6px;font-weight:400}
+  .it .hint{font-size:13.5px;color:var(--muted);line-height:1.5}
+  .it.done .nm{color:var(--muted);text-decoration:line-through}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chips a,.chips span{font-size:12px;padding:2px 9px;border-radius:99px;text-decoration:none;white-space:nowrap}
+  .chips .ext{color:var(--accent);border:1px solid var(--accent);}
+  .chips .pat{color:var(--muted);border:1px solid var(--border-strong)}
+  .chips a.pat:hover{color:var(--accent);border-color:var(--accent)}
+  .chips .mock{background:var(--accent);color:var(--on-accent);font-weight:600;border:1px solid var(--accent)}
+  .chips .mock.closest{background:none;color:var(--accent)}
+  .chips .own{color:var(--ok);border:1px solid var(--ok)}
+  details.pd summary{cursor:pointer;font-size:13px;color:var(--accent);list-style:none}
+  details.pd summary::-webkit-details-marker{display:none}
+  .prow{display:grid;grid-template-columns:130px minmax(0,1fr);gap:2px 12px;padding:8px 0;border-top:1px solid var(--border);font-size:13.5px}
+  .prow:first-of-type{margin-top:6px}
+  .prow b{font-weight:600;overflow-wrap:anywhere}
+  .prow span:last-child{grid-column:2;color:var(--muted)}
+  body.staronly .it.nostar{display:none}
+  .tips{margin-top:24px;padding:16px 20px;border:1px dashed var(--accent);border-radius:var(--r);background:var(--panel)}
+  .tips b{display:block;margin-bottom:6px}
+  .tips ul{margin:0;padding-left:18px;line-height:1.6;font-size:14.5px}
+  @media (max-width:640px){
+    .ctl{margin-left:0;width:100%} .ctl .btn{flex:1}
+    .prow{grid-template-columns:minmax(0,1fr)} .prow span:last-child{grid-column:1}
+    .it{padding:10px 4px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="../"><div class="logo">YTB</div><b>yourtechbuddy</b></a>
+  <nav><a href="../courses/">courses</a><a href="../practice/">practice</a><a href="../playground/">playground</a></nav>
+  <div id="auth"></div>
+</header>
+
+<main class="page" id="root"></main>
+
+<footer><a href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a> · <a href="../privacy.html">Privacy</a></footer>
+
+<script src="../assets/config.js"></script>
+<script src="../assets/ytb.js"></script>
+<script src="../assets/companies.js"></script>
+<script>
+  const C = YTBCompanies, esc = YTB.esc, root = document.getElementById('root');
+  const PAT = { Singleton: 'singleton', Factory: 'factory', 'Abstract Factory': 'abstract-factory', Builder: 'builder', Strategy: 'strategy', State: 'state', Observer: 'observer', Composite: 'composite', 'Chain of Responsibility': 'chain', Decorator: 'decorator', Adapter: 'adapter', Command: 'command' };
+  const store = (k) => YTB.LS.get('ytb:co:' + k, {});
+  const flat = (co, t) => C.items(co, t).flatMap((g) => g.sections.flatMap((s) => s.items));
+  const count = (co, t, st = store(co.key)) => { const all = flat(co, t), stars = all.filter((i) => i.star); return { all: all.length, done: all.filter((i) => st[i.id]).length, stars: stars.length, starsDone: stars.filter((i) => st[i.id]).length }; };
+
+  /* ---------- all companies ---------- */
+  function drawList() {
+    document.title = 'Prepare by company — YourTechBuddy';
+    root.innerHTML = `<div class="ph"><div><h1>Prepare by company</h1><p>A checklist per company: the DSA problems to solve, the low level and high level designs to practise, with a mock interview for each design. Your ticks are saved in this browser.</p></div></div>
+      <div class="cos">${C.list.map((co) => {
+        const per = C.tracks.map(([t, l]) => [l, count(co, t)]), tot = per.reduce((a, [, c]) => ({ s: a.s + c.stars, d: a.d + c.starsDone }), { s: 0, d: 0 });
+        return `<a class="panel co" href="?c=${co.key}"><h2>${esc(co.name)}</h2><p>${esc(co.blurb)}</p>
+          <div class="tr">${per.map(([l, c]) => `<span>${l} ${c.done}/${c.all}</span>`).join('')}</div>
+          <div class="pbar" title="Must-do done"><i style="width:${tot.s ? Math.round(tot.d / tot.s * 100) : 0}%"></i></div></a>`;
+      }).join('')}
+      <div class="panel soon">More companies are on the way.</div></div>`;
+  }
+
+  /* ---------- one company ---------- */
+  let co = null, track = 'dsa', starOnly = false;
+  function drawCompany() {
+    document.title = `${co.name} interview prep — YourTechBuddy`;
+    root.innerHTML = `<div class="crumb"><a href="./">Prepare by company</a> / ${esc(co.name)}</div>
+      <div class="ph"><div><h1>${esc(co.name)}</h1><p>${esc(co.blurb)}</p></div></div>
+      <div class="ttabs" role="tablist" id="ttabs"></div>
+      <div class="sticky">
+        <div class="stats"><span class="stat" id="st-star"></span><span class="stat" id="st-all"></span>
+          <div class="ctl"><button class="btn sm" id="b-star" aria-pressed="${starOnly}">⭐ only</button><button class="btn sm" id="b-fold">Collapse all</button><button class="btn sm" id="b-reset">Reset</button></div></div>
+        <div class="prog" title="Must-do done"><i id="prog"></i></div>
+      </div>
+      <div id="list"></div>
+      <div class="tips"><b>How to use this list</b><ul>${co.tips.map((t) => `<li>${esc(t)}</li>`).join('')}<li>Mock interviews here are AI-reviewed, one LLD and one HLD a day. <a href="${esc(YTB.config.topmate)}" target="_blank" rel="noopener">Book a 1:1 mock ↗</a> for a real interviewer.</li></ul></div>`;
+    document.getElementById('b-star').onclick = (e) => { starOnly = !starOnly; e.target.setAttribute('aria-pressed', starOnly); document.body.classList.toggle('staronly', starOnly); };
+    document.getElementById('b-fold').onclick = (e) => {
+      const ds = [...document.querySelectorAll('details.sec')], open = !ds.some((d) => d.open);
+      ds.forEach((d) => (d.open = open)); e.target.textContent = open ? 'Collapse all' : 'Expand all';
+    };
+    document.getElementById('b-reset').onclick = () => {
+      const label = C.tracks.find(([t]) => t === track)[1];
+      if (!confirm(`Clear all your ${label} ticks for ${co.name}?`)) return;
+      const st = store(co.key); Object.keys(st).forEach((k) => { if (k.startsWith(track + ':')) delete st[k]; });
+      YTB.LS.set('ytb:co:' + co.key, st); drawTrack();
+    };
+    document.body.classList.toggle('staronly', starOnly);
+    drawTrack();
+  }
+  function drawTabs() {
+    document.getElementById('ttabs').innerHTML = C.tracks.map(([t, l]) => { const c = count(co, t); return `<button role="tab" data-t="${t}" aria-selected="${t === track}">${l}<small>${c.done}/${c.all}</small></button>`; }).join('');
+  }
+  function drawStats() {
+    const c = count(co, track);
+    document.getElementById('st-star').innerHTML = `<b>${c.starsDone}/${c.stars}</b> must-do`;
+    document.getElementById('st-all').innerHTML = `<b>${c.done}/${c.all}</b> total`;
+    document.getElementById('prog').style.width = (c.stars ? Math.round(c.starsDone / c.stars * 100) : 0) + '%';
+    document.querySelectorAll('details.sec').forEach((d) => {
+      const boxes = [...d.querySelectorAll('input')], n = boxes.filter((b) => b.checked).length, el = d.querySelector('.n');
+      el.textContent = `${n}/${boxes.length}`; el.classList.toggle('full', n === boxes.length);
+    });
+    drawTabs();
+  }
+  function itemHtml(i) {
+    const st = store(co.key), done = !!st[i.id];
+    const chips = [
+      i.practice ? `<a class="mock ${i.practice.closest ? 'closest' : ''}" href="../practice/session.html?p=${encodeURIComponent(i.practice.slug)}">${i.practice.closest ? 'Practise a similar mock' : 'Practise in a mock interview'}</a>` : '',
+      i.site ? `<a class="own" href="../${i.site}">On this site</a>` : '',
+      ...i.links.map(([n, u]) => `<a class="ext" href="${esc(u)}" target="_blank" rel="noopener">${esc(n)} ↗</a>`),
+      ...[...new Set(i.patterns.map((p) => p[0]))].map((p) => PAT[p] ? `<a class="pat" href="../patterns/?p=${PAT[p]}">${esc(p)}</a>` : `<span class="pat">${esc(p)}</span>`),
+    ].filter(Boolean).join('');
+    return `<li class="it ${i.star ? '' : 'nostar'} ${done ? 'done' : ''}">
+      <input type="checkbox" id="${esc(i.id)}" data-id="${esc(i.id)}" ${done ? 'checked' : ''}>
+      <div class="body"><label class="nm" for="${esc(i.id)}">${esc(i.name)}${i.star ? '<span class="star" title="Must-do">⭐</span>' : ''}${i.premium ? '<span class="lock">🔒 LeetCode Premium</span>' : ''}</label>
+        ${i.hint ? `<span class="hint">${esc(i.hint)}</span>` : ''}
+        ${chips ? `<div class="chips">${chips}</div>` : ''}
+        ${i.patterns.length ? `<details class="pd"><summary>Where each pattern is used</summary>${i.patterns.map(([p, w, y]) => `<div class="prow"><span class="chips"><span class="pat">${esc(p)}</span></span><b>${esc(w)}</b><span>${esc(y)}</span></div>`).join('')}</details>` : ''}
+      </div></li>`;
+  }
+  function drawTrack() {
+    document.getElementById('list').innerHTML = C.items(co, track).map((g) => `<div class="grp">${esc(g.group)}</div>` +
+      g.sections.map((s) => `<details class="sec" open><summary><span>${esc(s.name)}</span><span class="n"></span></summary><ul class="items">${s.items.map(itemHtml).join('')}</ul></details>`).join('')).join('');
+    drawStats();
+  }
+
+  root.addEventListener('change', (e) => {
+    const b = e.target.closest('input[data-id]'); if (!b) return;
+    const st = store(co.key); b.checked ? (st[b.dataset.id] = 1) : delete st[b.dataset.id];
+    YTB.LS.set('ytb:co:' + co.key, st);
+    b.closest('.it').classList.toggle('done', b.checked);
+    drawStats();
+  });
+  root.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-t]'); if (!t) return;
+    track = t.dataset.t; history.replaceState(null, '', `?c=${co.key}&t=${track}`); drawTrack();
+  });
+
+  const q = new URLSearchParams(location.search);
+  co = C.get(q.get('c'));
+  if (co) { track = C.tracks.some(([t]) => t === q.get('t')) ? q.get('t') : 'dsa'; drawCompany(); } else drawList();
+</script>
+</body>
+</html>

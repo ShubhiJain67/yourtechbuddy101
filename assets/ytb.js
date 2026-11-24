@@ -313,6 +313,7 @@
     layers: '<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>',
     pattern: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="8.5" y="14" width="7" height="7" rx="1.5"/><path d="M6.5 10v2h11v-2M12 12v2"/>',
     folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="m10 11-2 2 2 2M14 11l2 2-2 2"/>',
+    building: '<rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1M10 21v-3h4v3"/>',
     doc: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
     bars: '<path d="M5 20V12M10 20V6M15 20v-9M20 20V3"/>',
     server: '<rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/>',
@@ -360,6 +361,7 @@
       <div class="sn-top"><a class="sn-brand" href="${ROOT}" title="YourTechBuddy"><img class="sn-logo" src="${ROOT}assets/logo.png" alt="" width="34" height="34"><span><b>YourTechBuddy</b><small>Learn · build · practise</small></span></a></div>
       <button class="sn-search" data-cmdk title="Search (⌘K)">${icon('search')}<span>Search</span><kbd>⌘K</kbd></button>
       ${item('', 'Home', 'home')}
+      ${item('companies/', 'Prepare by company', 'building')}
       ${SECTIONS.map(section).join('')}
       <div class="sn-label">More</div>
       <a class="sn-item ${here === ROOT + 'courses/' ? 'on' : ''}" href="${ROOT}courses/" title="All courses">${icon('courses')}<span>All courses</span></a>
@@ -422,12 +424,15 @@
       { g: 'Pages', t: 'HLD mock interviews', u: ROOT + 'practice/?track=hld', ic: 'server' },
       { g: 'Pages', t: 'Code playground', u: ROOT + 'playground/', ic: 'code' },
       { g: 'Pages', t: 'Resume review', u: ROOT + 'resume/', ic: 'doc' },
+      { g: 'Pages', t: 'Prepare by company', u: ROOT + 'companies/', ic: 'building' },
       { g: 'Pages', t: 'Book a 1:1 session (Topmate)', u: CFG.topmate, ic: 'plan' },
     ];
     if (session) items.push({ g: 'Pages', t: 'My learning', u: ROOT + 'me/', ic: 'me' });
     if (session && session.user.isAdmin) items.push({ g: 'Studio', t: 'Content planner', u: ROOT + 'planner/', ic: 'plan' }, { g: 'Studio', t: 'Ideas', u: ROOT + 'ideas/', ic: 'idea' }, { g: 'Studio', t: 'Interview problems', u: ROOT + 'admin/problems.html', ic: 'puzzle' }, { g: 'Studio', t: 'Courses admin', u: ROOT + 'admin/', ic: 'admin' });
     await loadScript(ROOT + 'assets/patterns.js').catch(() => {});
     (window.YTBPatterns?.list || []).forEach((p) => items.push({ g: 'Design patterns', t: p.name, s: p.cat, u: `${ROOT}patterns/?p=${p.key}`, ic: 'pattern' }));
+    await loadScript(ROOT + 'assets/companies.js').catch(() => {});
+    (window.YTBCompanies?.list || []).forEach((c) => items.push({ g: 'Prepare by company', t: `${c.name} interview prep`, s: 'DSA · LLD · HLD', u: `${ROOT}companies/?c=${c.key}`, ic: 'building' }));
     await loadScript(ROOT + 'assets/dsa.js').catch(() => {});
     (window.YTBDSA?.list || []).forEach((t) => items.push({ g: 'DSA', t: t.name, s: t.cat, u: `${ROOT}dsa/?t=${t.key}`, ic: 'bars' }));
     try {
