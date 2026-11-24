@@ -332,3 +332,25 @@ footer a:hover{color:var(--text)}
 .book-strip p{margin:2px 0 0;color:var(--muted);font-size:14px;max-width:60ch}
 .book-strip .sp{flex:1}
 @media (max-width:640px){ .book-strip .btn{width:100%;justify-content:center} }
+
+/* graph visualizer (DSA page) */
+.sbars.is-graph{display:block;height:300px;padding:0}
+.gsvg{width:100%;height:100%;display:block;overflow:visible}
+.gsvg .ge line{stroke:var(--border-strong);stroke-width:2.5}
+.gsvg .ge.cmp line{stroke:var(--accent);stroke-width:4}
+.gsvg .ge.tree line{stroke:var(--ok);stroke-width:4.5}
+.gsvg .ge.bad line{stroke:var(--err);stroke-width:3.5;stroke-dasharray:7 5}
+.gsvg .ge text{font:600 13px var(--mono);fill:var(--text);text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:var(--bg);stroke-width:5px}
+.gsvg .gm{fill:var(--border-strong)} .gsvg .gm.cmp{fill:var(--accent)} .gsvg .gm.tree{fill:var(--ok)} .gsvg .gm.bad{fill:var(--err)}
+.gsvg .gn circle{fill:var(--panel);stroke:var(--border-strong);stroke-width:2;transition:fill .15s,stroke .15s}
+.gsvg .gn text.n{font:600 15px var(--sans);fill:var(--text);text-anchor:middle;dominant-baseline:central}
+.gsvg .gn text.lab{font:600 12.5px var(--mono);fill:var(--muted);text-anchor:middle;dominant-baseline:central}
+.gsvg .gn.q circle{stroke:var(--accent);stroke-width:3;stroke-dasharray:4 3}
+.gsvg .gn.cur circle{fill:var(--accent);stroke:var(--accent)} .gsvg .gn.cur text.n{fill:var(--on-accent)}
+.gsvg .gn.path circle{fill:#d9a441;stroke:#d9a441} .gsvg .gn.path text.n{fill:#1b1b1b}
+.gsvg .gn.done circle{fill:var(--ok);stroke:var(--ok)} .gsvg .gn.done text.n{fill:var(--on-accent)}
+.gsvg .gn.c0 circle{fill:var(--accent);stroke:var(--accent)} .gsvg .gn.c0 text.n{fill:var(--on-accent)}
+.gsvg .gn.c1 circle{fill:#d9a441;stroke:#d9a441} .gsvg .gn.c1 text.n{fill:#1b1b1b}
+.gsvg .gn.bad circle{fill:var(--err);stroke:var(--err)} .gsvg .gn.bad text.n{fill:#fff}
+@media (prefers-reduced-motion:reduce){.gsvg .gn circle{transition:none}}
+@media (max-width:640px){ .sbars.is-graph{height:auto;aspect-ratio:640/300} }

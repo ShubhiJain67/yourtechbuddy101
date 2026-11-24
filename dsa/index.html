@@ -54,6 +54,7 @@
   /* visualizer */
   .viz{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:14px 14px 10px;display:flex;flex-direction:column;gap:10px}
   .vnote{min-height:22px;font-size:14.5px;color:var(--text)}
+  .vnote small{display:block;margin-top:3px;font:500 13px var(--mono);color:var(--muted)}
   .vctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .vctl .sp{flex:1}
   .vctl label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
@@ -98,7 +99,7 @@
 </header>
 
 <main class="page">
-  <div class="ph"><div><h1>DSA</h1><p>Sorting algorithms and the building blocks behind them. Watch each one run step by step, then watch the video and read the code.</p></div></div>
+  <div class="ph"><div><h1>DSA</h1><p>Sorting and graph algorithms, step by step. Watch each one run, then read the code and practise a related problem.</p></div></div>
   <div class="pl">
     <nav class="panel plist" id="plist" aria-label="Topics"></nav>
     <section class="panel view" aria-live="polite">
@@ -118,7 +119,7 @@
           <span class="sp"></span>
           <label>Speed <input type="range" id="speed" min="1" max="5" value="3" aria-label="Speed"></label>
         </div>
-        <div class="legend"><span><i style="background:var(--accent)"></i>comparing</span><span><i style="background:var(--err)"></i>moving</span><span><i style="background:#d9a441"></i>pivot / key</span><span><i style="background:var(--ok)"></i>in place</span></div>
+        <div class="legend" id="legend"></div>
       </div>
       <div class="cmpwrap" id="cmpwrap" hidden></div>
 
@@ -160,6 +161,9 @@
 
   /* ---------- visualizer (shared player in assets/dsa.js) ---------- */
   const viz = D.player({ bars: $('bars'), note: $('vnote'), play: $('play'), step: $('stepb'), shuffle: $('shuffle'), speed: $('speed') });
+
+  const LEGEND_SORT = [['var(--accent)', 'comparing'], ['var(--err)', 'moving'], ['#d9a441', 'pivot / key'], ['var(--ok)', 'in place']];
+  const LEGEND_GRAPH = [['var(--accent)', 'current / checking'], ['#d9a441', 'on the path'], ['var(--ok)', 'done / chosen edge'], ['var(--err)', 'conflict / skipped']];
 
   /* ---------- comparison table ---------- */
   function drawCompare() {
@@ -204,6 +208,12 @@
   }
   async function drawCode(t) {
     $('codebox').hidden = true;
+    if (t.java) {
+      $('codebox').hidden = false; $('codebox').querySelector('h3').textContent = 'Code (Java)';
+      LLDView.mount($('codeview'), { height: '460px', run: false, item: { id: t.key, title: 'Main.java', readme: null, variants: [{ key: 'code', title: 'Main.java', path: 'Main.java', github: false, files: [{ path: 'Main.java', content: t.java }], readme: null, run: null }] } });
+      return;
+    }
+    $('codebox').querySelector('h3').textContent = 'Code from the video';
     const url = await linkFor(t); if (cur !== t || !url) return;
     $('codebox').hidden = false;
     const m = url.match(/^https?:\/\/(?:www\.)?github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+?)(?:[?#].*)?$/);
@@ -234,7 +244,10 @@
     $('viz').hidden = !t.viz; $('cmpwrap').hidden = !!t.viz;
     if (t.viz) viz.load(t); else { viz.stop(); drawCompare(); }
     $('cx').hidden = !t.cx;
-    if (t.cx) $('cx').innerHTML = [['Best', t.cx.best], ['Average', t.cx.avg], ['Worst', t.cx.worst], ['Space', t.cx.space], ['Stable', t.cx.stable ? 'Yes' : 'No'], ['In place', t.cx.inPlace ? 'Yes' : 'No']].map(([k, v]) => `<div><small>${k}</small><b>${v}</b></div>`).join('');
+    const cxRows = !t.cx ? [] : t.cx.time ? [['Time', t.cx.time], ['Space', t.cx.space], ['Works on', t.cx.graph]]
+      : [['Best', t.cx.best], ['Average', t.cx.avg], ['Worst', t.cx.worst], ['Space', t.cx.space], ['Stable', t.cx.stable ? 'Yes' : 'No'], ['In place', t.cx.inPlace ? 'Yes' : 'No']];
+    $('cx').innerHTML = cxRows.map(([k, v]) => `<div><small>${k}</small><b>${v}</b></div>`).join('');
+    $('legend').innerHTML = (t.graph ? LEGEND_GRAPH : LEGEND_SORT).map(([c, l]) => `<span><i style="background:${c}"></i>${l}</span>`).join('');
     drawVideo(t);
     $('self-t').textContent = t.practice.title; $('self-q').textContent = t.practice.ask; $('self-e').textContent = t.practice.expect.join('\n');
     $('self-go').href = `../playground/#lang=java&code=${YTB.b64url(starter(t))}`;
