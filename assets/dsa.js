@@ -139,6 +139,33 @@
       when: "Splitting into two groups with no conflicts: teams, matching problems, \u201cis graph bipartite\u201d, possible bipartition.",
       cx: { time: 'O(V + E)', space: 'O(V)', graph: 'Undirected' }, java: "import java.util.*;\n\n// Bipartite check: colour nodes with two colours using BFS so every edge joins different colours.\n// If an edge joins two nodes of the same colour, there is an odd cycle and the graph is not bipartite.\nclass Main {\n    static boolean isBipartite(int n, int[][] edges) {\n        List<List<Integer>> adj = new ArrayList<>();\n        for (int i = 0; i < n; i++) adj.add(new ArrayList<>());\n        for (int[] e : edges) { adj.get(e[0]).add(e[1]); adj.get(e[1]).add(e[0]); }\n        int[] color = new int[n];\n        Arrays.fill(color, -1);\n        for (int s = 0; s < n; s++) {          // the graph may have several components\n            if (color[s] != -1) continue;\n            color[s] = 0;\n            Deque<Integer> queue = new ArrayDeque<>(List.of(s));\n            while (!queue.isEmpty()) {\n                int u = queue.poll();\n                for (int v : adj.get(u)) {\n                    if (color[v] == -1) { color[v] = 1 - color[u]; queue.add(v); }\n                    else if (color[v] == color[u]) return false;\n                }\n            }\n        }\n        return true;\n    }\n\n    public static void main(String[] args) {\n        int[][] evenCycles = {{0,1},{0,2},{1,3},{2,4},{3,5},{4,5},{5,6}};\n        System.out.println(\"Bipartite: \" + isBipartite(7, evenCycles));\n        int[][] triangle = {{0,1},{1,2},{2,0}};\n        System.out.println(\"Triangle bipartite: \" + isBipartite(3, triangle));\n    }\n}\n",
       practice: { title: "Is Graph Bipartite?", ask: "Adjacency lists. Graph 1: [[1,2,3],[0,2],[0,1,3],[0,2]]. Graph 2: [[1,3],[0,2],[1,3],[0,2]]. Print whether each is bipartite.", expect: ["graph 1: false", "graph 2: true"] } },
+
+    /* ---------- Rate limiters (interactive + code) ---------- */
+    { key: 'token-bucket', name: "Token Bucket", cat: 'Rate limiters', viz: 'tokenBucket', rl: true, videos: {}, code: null,
+      intent: "A bucket holds up to N tokens and refills at a steady rate. Each request spends one token; no token, no entry.",
+      when: "The default choice for APIs (AWS, Stripe and most gateways use it): allows short bursts up to the bucket size while holding the average rate.",
+      cx: { time: 'O(1)', space: 'O(1): tokens + last refill time', bursts: "Allowed, up to the bucket size" }, java: "// Token bucket: the bucket holds up to CAPACITY tokens and refills at a steady rate.\n// Each request takes one token; with no token left, the request is rejected.\n// Allows short bursts (up to CAPACITY) while keeping the long-run rate fixed.\nclass TokenBucket {\n    private final double capacity, refillPerMs;\n    private double tokens;\n    private long last;\n\n    TokenBucket(int capacity, double tokensPerSecond, long now) {\n        this.capacity = capacity;\n        this.refillPerMs = tokensPerSecond / 1000.0;\n        this.tokens = capacity;                  // start full\n        this.last = now;\n    }\n\n    synchronized boolean allow(long now) {      // synchronized: safe when many threads share one bucket\n        tokens = Math.min(capacity, tokens + (now - last) * refillPerMs); // refill lazily, only when asked\n        last = now;\n        if (tokens >= 1) { tokens -= 1; return true; }\n        return false;\n    }\n}\n\nclass Main {\n    public static void main(String[] args) {\n        double[] seconds = {0.5, 2, 3.5, 6.4, 6.8, 7.2, 7.6, 8, 8.4, 8.8, 9.2, 12, 13, 14, 14.5, 16.5, 17, 19, 21, 22, 22.5, 23};\n        TokenBucket bucket = new TokenBucket(4, 0.5, 0); // 4 tokens, 1 new token every 2 s\n        StringBuilder out = new StringBuilder();\n        int allowed = 0;\n        for (double s : seconds) {\n            boolean ok = bucket.allow(Math.round(s * 1000));\n            if (ok) allowed++;\n            out.append(s).append(ok ? \" ok\" : \" REJECTED\").append('\\n');\n        }\n        System.out.print(out);\n        System.out.println(\"Allowed \" + allowed + \" of \" + seconds.length);\n    }\n}\n",
+      practice: { title: "Token bucket for one user", ask: "Capacity 3, refills 1 token per second, starts full. Requests arrive at t = 0, 0, 0, 0, 1, 1, 3 seconds. Print true or false for each.", expect: ["true true true false true false true"] } },
+    { key: 'leaky-bucket', name: "Leaky Bucket", cat: 'Rate limiters', viz: 'leakyBucket', rl: true, videos: {}, code: null,
+      intent: "Requests wait in a bucket of size N and leak out at a constant rate. A request that finds the bucket full is dropped.",
+      when: "When the downstream needs a smooth, steady flow (a payment provider, a slow database, network traffic shaping). Adds waiting time instead of passing bursts through.",
+      cx: { time: 'O(1)', space: 'O(N): the waiting queue', bursts: "Smoothed: queued, never passed through at once" }, java: "import java.util.*;\n\n// Leaky bucket (as a queue): requests wait in a bucket of size CAPACITY and are let out\n// at a constant rate, one every INTERVAL. A request that finds the bucket full is rejected.\n// Unlike the token bucket, bursts are not passed through: the output is always smooth.\nclass LeakyBucket {\n    private final int capacity;\n    private final long intervalMs;\n    private final Deque<Long> queue = new ArrayDeque<>(); // when each waiting request will be handled\n    private long lastStart = Long.MIN_VALUE / 2;\n\n    LeakyBucket(int capacity, long intervalMs) { this.capacity = capacity; this.intervalMs = intervalMs; }\n\n    /** Returns the time this request will be handled, or -1 if the bucket is full. */\n    synchronized long offer(long now) {\n        while (!queue.isEmpty() && queue.peekFirst() <= now) queue.pollFirst(); // already leaked out\n        if (queue.size() >= capacity) return -1;\n        long start = Math.max(now, lastStart + intervalMs);  // next free slot at the steady rate\n        lastStart = start;\n        queue.addLast(start);\n        return start;\n    }\n}\n\nclass Main {\n    public static void main(String[] args) {\n        double[] seconds = {0.5, 2, 3.5, 6.4, 6.8, 7.2, 7.6, 8, 8.4, 8.8, 9.2, 12, 13, 14, 14.5, 16.5, 17, 19, 21, 22, 22.5, 23};\n        LeakyBucket bucket = new LeakyBucket(4, 2000); // holds 4, lets one out every 2 s\n        int allowed = 0;\n        for (double s : seconds) {\n            long at = bucket.offer(Math.round(s * 1000));\n            if (at >= 0) allowed++;\n            System.out.println(s + (at >= 0 ? \" ok, handled at \" + at / 1000.0 : \" REJECTED\"));\n        }\n        System.out.println(\"Allowed \" + allowed + \" of \" + seconds.length);\n    }\n}\n",
+      practice: { title: "Leaky bucket with a queue", ask: "Bucket holds 2 waiting requests and handles 1 per second. Requests arrive at t = 0, 0.2, 0.4, 0.6, 3. For each, print when it is handled, or rejected.", expect: ["0 -> handled at 0", "0.2 -> handled at 1", "0.4 -> handled at 2", "0.6 -> rejected", "3 -> handled at 3"] } },
+    { key: 'fixed-window', name: "Fixed Window Counter", cat: 'Rate limiters', viz: 'fixedWindow', rl: true, videos: {}, code: null,
+      intent: "Split time into fixed windows (0\u20138 s, 8\u201316 s\u2026) and count requests in the current one. Reset the counter when a new window starts.",
+      when: "Simple quotas where exactness doesn\u2019t matter (\u201c1,000 calls per day\u201d). Cheapest to run, but a burst at the end of one window plus the start of the next lets up to 2\u00d7 the limit through.",
+      cx: { time: 'O(1)', space: 'O(1): window start + count', bursts: "Up to 2\u00d7 the limit around a window edge" }, java: "import java.util.*;\n\n// Fixed window counter: split time into windows (e.g. 0-8 s, 8-16 s) and allow LIMIT requests per window.\n// Simple and cheap, but a burst at the end of one window plus the start of the next can let 2 x LIMIT through.\nclass FixedWindowLimiter {\n    private final int limit;\n    private final long windowMs;\n    private long windowStart = -1;\n    private int count;\n\n    FixedWindowLimiter(int limit, long windowMs) { this.limit = limit; this.windowMs = windowMs; }\n\n    synchronized boolean allow(long now) {\n        long start = now / windowMs * windowMs;  // which window are we in?\n        if (start != windowStart) { windowStart = start; count = 0; } // new window: reset the counter\n        if (count < limit) { count++; return true; }\n        return false;\n    }\n}\n\nclass Main {\n    public static void main(String[] args) {\n        double[] seconds = {0.5, 2, 3.5, 6.4, 6.8, 7.2, 7.6, 8, 8.4, 8.8, 9.2, 12, 13, 14, 14.5, 16.5, 17, 19, 21, 22, 22.5, 23};\n        FixedWindowLimiter limiter = new FixedWindowLimiter(4, 8000); // 4 requests per 8 s window\n        int allowed = 0;\n        for (double s : seconds) {\n            boolean ok = limiter.allow(Math.round(s * 1000));\n            if (ok) allowed++;\n            System.out.println(s + (ok ? \" ok\" : \" REJECTED\"));\n        }\n        System.out.println(\"Allowed \" + allowed + \" of \" + seconds.length);\n    }\n}\n",
+      practice: { title: "Fixed window quota", ask: "Limit 3 requests per 10-second window (0\u201310, 10\u201320\u2026). Requests at t = 1, 2, 3, 4, 9, 10, 11. Print true or false for each.", expect: ["true true true false false true true"] } },
+    { key: 'sliding-window-log', name: "Sliding Window Log", cat: 'Rate limiters', viz: 'slidingLog', rl: true, videos: {}, code: null,
+      intent: "Keep a log of the times of allowed requests. Allow a new one only if fewer than N happened in the last window.",
+      when: "When the limit must be exact for any window (login attempts, OTP sends, paid API tiers). Costs memory: up to N timestamps per user.",
+      cx: { time: 'O(N) worst case to drop old entries', space: 'O(N) timestamps', bursts: "Never more than N in any window" }, java: "import java.util.*;\n\n// Sliding window log: remember the time of every allowed request.\n// A new request is allowed only if fewer than LIMIT requests happened in the last WINDOW.\n// Exact, with no boundary burst, but it stores up to LIMIT timestamps per user.\nclass SlidingLogLimiter {\n    private final int limit;\n    private final long windowMs;\n    private final Deque<Long> log = new ArrayDeque<>();\n\n    SlidingLogLimiter(int limit, long windowMs) { this.limit = limit; this.windowMs = windowMs; }\n\n    synchronized boolean allow(long now) {\n        while (!log.isEmpty() && log.peekFirst() <= now - windowMs) log.pollFirst(); // drop old entries\n        if (log.size() < limit) { log.addLast(now); return true; }\n        return false;\n    }\n}\n\nclass Main {\n    public static void main(String[] args) {\n        double[] seconds = {0.5, 2, 3.5, 6.4, 6.8, 7.2, 7.6, 8, 8.4, 8.8, 9.2, 12, 13, 14, 14.5, 16.5, 17, 19, 21, 22, 22.5, 23};\n        SlidingLogLimiter limiter = new SlidingLogLimiter(4, 8000); // 4 requests in any 8 s\n        int allowed = 0;\n        for (double s : seconds) {\n            boolean ok = limiter.allow(Math.round(s * 1000));\n            if (ok) allowed++;\n            System.out.println(s + (ok ? \" ok\" : \" REJECTED\"));\n        }\n        System.out.println(\"Allowed \" + allowed + \" of \" + seconds.length);\n    }\n}\n",
+      practice: { title: "Sliding log for logins", ask: "Allow at most 3 login attempts in any 10 seconds. Attempts at t = 1, 2, 3, 9, 11, 12, 13. Print true or false for each.", expect: ["true true true false true true true"] } },
+    { key: 'sliding-window-counter', name: "Sliding Window Counter", cat: 'Rate limiters', viz: 'slidingCounter', rl: true, videos: {}, code: null,
+      intent: "Keep just two counters: this window and the previous one. Estimate the last full window as previous \u00d7 overlap + current.",
+      when: "Large-scale limiting (Cloudflare-style): almost as smooth as the log with O(1) memory. The estimate assumes the previous window\u2019s requests were evenly spread.",
+      cx: { time: 'O(1)', space: 'O(1): two counters', bursts: "Smoothed; small error from the estimate" }, java: "// Sliding window counter: keep only two counters, this window and the previous one.\n// Estimate the last WINDOW as previous * (part of it still inside) + current.\n// Nearly as smooth as the log, with O(1) memory. The estimate assumes the previous window was evenly spread.\nclass SlidingCounterLimiter {\n    private final int limit;\n    private final long windowMs;\n    private long currentStart = 0;\n    private int current, previous;\n\n    SlidingCounterLimiter(int limit, long windowMs) { this.limit = limit; this.windowMs = windowMs; }\n\n    synchronized boolean allow(long now) {\n        long start = now / windowMs * windowMs;\n        if (start != currentStart) {             // moved into a new window\n            previous = (start - currentStart == windowMs) ? current : 0; // older than one window: forget it\n            current = 0;\n            currentStart = start;\n        }\n        double overlap = 1.0 - (double) (now - start) / windowMs; // share of the previous window still in view\n        double estimate = previous * overlap + current;\n        if (estimate < limit) { current++; return true; }\n        return false;\n    }\n}\n\nclass Main {\n    public static void main(String[] args) {\n        double[] seconds = {0.5, 2, 3.5, 6.4, 6.8, 7.2, 7.6, 8, 8.4, 8.8, 9.2, 12, 13, 14, 14.5, 16.5, 17, 19, 21, 22, 22.5, 23};\n        SlidingCounterLimiter limiter = new SlidingCounterLimiter(4, 8000); // about 4 requests in any 8 s\n        int allowed = 0;\n        for (double s : seconds) {\n            boolean ok = limiter.allow(Math.round(s * 1000));\n            if (ok) allowed++;\n            System.out.println(s + (ok ? \" ok\" : \" REJECTED\"));\n        }\n        System.out.println(\"Allowed \" + allowed + \" of \" + seconds.length);\n    }\n}\n",
+      practice: { title: "Sliding window counter", ask: "Limit 4 per 10 s. Requests at t = 1, 2, 3, 4 (window 0\u201310), then 13, 14, 15. Use previous \u00d7 overlap + current and allow while the estimate is under 4. Print true or false for each.", expect: ["true true true true true true false"] } },
   ];
 
   /* ---------------- visualizers ---------------- */
@@ -519,15 +546,118 @@
       ${GN.map(([n, x, y], i) => `<g class="gn ${f.nm[i] || ''}"><circle cx="${x}" cy="${y}" r="${R}"/><text class="n" x="${x}" y="${y}">${n}</text>${f.lab[i] != null ? `<text class="lab" x="${x}" y="${y < 120 ? y - 36 : y + 37}">${f.lab[i]}</text>` : ''}</g>`).join('')}</svg>`;
   }
 
+  /* ---------------- rate limiters: a timeline of requests, limit 4 per 8 s ---------------- */
+  const RL_DEFAULT = [0.5, 2, 3.5, 6.4, 6.8, 7.2, 7.6, 8, 8.4, 8.8, 9.2, 12, 13, 14, 14.5, 16.5, 17, 19, 21, 22, 22.5, 23];
+  const RL = { cap: 4, win: 8, rate: 0.5, iv: 2 };
+  function rlPattern() {                          // random bursts + quiet gaps
+    const out = []; let t = Math.random() * 1.5;
+    while (t < 23.5) {
+      if (Math.random() < 0.35) { const n = 3 + Math.floor(Math.random() * 4); for (let i = 0; i < n && t < 23.5; i++) { out.push(+t.toFixed(1)); t += 0.4; } }
+      else { out.push(+t.toFixed(1)); t += 0.8 + Math.random() * 2.2; }
+    }
+    return out;
+  }
+  const fmt = (x) => (Math.round(x * 10) / 10).toString();
+  function* rlRun(kind, times) {
+    const reqs = times.map((t) => ({ t, s: null, out: null }));
+    let tokens = RL.cap, last = 0, lastStart = -1e9, ws = -1, wc = 0, cs = 0, cur = 0, prev = 0;
+    const q = [], log = [], counts = {};
+    const snap = (t, note, info, extra = {}) => ({ rl: { kind, t, reqs: reqs.map((r) => ({ ...r })), counts: { ...counts }, ...extra }, note, info });
+    yield snap(0, 'Requests arrive over 24 seconds. The limit is about 4 per 8 seconds. Press Play.', '', kind === 'token' ? { level: tokens } : kind === 'leaky' ? { queue: [] } : { log: [] });
+    for (const r of reqs) {
+      const t = r.t; let ok, note, info = '', extra = {};
+      if (kind === 'token') {
+        tokens = Math.min(RL.cap, tokens + (t - last) * RL.rate); last = t;
+        const had = tokens; ok = tokens >= 1; if (ok) tokens -= 1;
+        note = ok ? `t=${fmt(t)}s: ${had.toFixed(2)} tokens in the bucket, take one. Allowed.` : `t=${fmt(t)}s: only ${had.toFixed(2)} tokens, not a whole one. Rejected.`;
+        info = `Bucket refills 1 token every 2 s, up to 4`; extra = { level: tokens };
+      } else if (kind === 'leaky') {
+        while (q.length && q[0] <= t) q.shift();
+        ok = q.length < RL.cap;
+        if (ok) { const s = Math.max(t, lastStart + RL.iv); lastStart = s; q.push(s); r.out = s; note = `t=${fmt(t)}s: room in the bucket. Queued, handled at ${fmt(s)}s.`; }
+        else note = `t=${fmt(t)}s: bucket already holds 4 waiting requests. Rejected.`;
+        info = 'Lets one request out every 2 s'; extra = { queue: q.slice() };
+      } else if (kind === 'fixed') {
+        const s = Math.floor(t / RL.win) * RL.win; if (s !== ws) { ws = s; wc = 0; }
+        ok = wc < RL.cap; if (ok) wc++; counts[s] = wc;
+        note = ok ? `t=${fmt(t)}s: window ${s}–${s + RL.win}s has used ${wc} of 4. Allowed.` : `t=${fmt(t)}s: window ${s}–${s + RL.win}s is full. Rejected.`;
+        const inLast = reqs.filter((x) => x.s === 'ok' && x.t > t - RL.win).length + (ok ? 1 : 0);
+        info = inLast > RL.cap ? `Careful: ${inLast} allowed in the last 8 s, across the window edge` : '';
+      } else if (kind === 'log') {
+        while (log.length && log[0] <= t - RL.win) log.shift();
+        ok = log.length < RL.cap; if (ok) log.push(t);
+        note = ok ? `t=${fmt(t)}s: ${log.length - 1} requests in the last 8 s. Allowed and logged.` : `t=${fmt(t)}s: already 4 requests in the last 8 s. Rejected.`;
+        info = 'Log: ' + (log.map(fmt).join(', ') || 'empty'); extra = { log: log.slice() };
+      } else {
+        const s = Math.floor(t / RL.win) * RL.win;
+        if (s !== cs) { prev = s - cs === RL.win ? cur : 0; cur = 0; cs = s; }
+        const ov = 1 - (t - s) / RL.win, est = prev * ov + cur;
+        ok = est < RL.cap; if (ok) cur++; counts[s] = cur; if (s - RL.win >= 0) counts[s - RL.win] = counts[s - RL.win] ?? prev;
+        note = `t=${fmt(t)}s: estimate = previous ${prev} × ${ov.toFixed(2)} + current ${ok ? cur - 1 : cur} = ${est.toFixed(2)}. ${ok ? 'Under 4: allowed.' : 'Not under 4: rejected.'}`;
+        info = 'Only two counters per user';
+      }
+      r.s = ok ? 'ok' : 'bad';
+      yield snap(t, note, info, extra);
+    }
+    const n = reqs.filter((x) => x.s === 'ok').length;
+    yield snap(24, `Done: ${n} of ${reqs.length} requests allowed.`, '', kind === 'token' ? { level: tokens } : kind === 'leaky' ? { queue: [] } : {});
+  }
+  Object.assign(V, {
+    *tokenBucket(p) { yield* rlRun('token', p); },
+    *leakyBucket(p) { yield* rlRun('leaky', p); },
+    *fixedWindow(p) { yield* rlRun('fixed', p); },
+    *slidingLog(p) { yield* rlRun('log', p); },
+    *slidingCounter(p) { yield* rlRun('counter', p); },
+  });
+
+  function drawRL(f) {
+    const { kind, t, reqs, counts } = f.rl, TMAX = kind === 'leaky' ? 32 : 24, X0 = 40, X1 = 620;
+    const x = (s) => X0 + (Math.min(s, TMAX) / TMAX) * (X1 - X0), AX = 262, RY = 238, OY = 208;
+    let s = '';
+    // fixed / counter: the windows
+    if (kind === 'fixed' || kind === 'counter') for (let w = 0; w < 24; w += RL.win) {
+      s += `<rect class="rl-win ${(w / RL.win) % 2 ? 'b' : ''}" x="${x(w)}" y="${RY - 22}" width="${x(w + RL.win) - x(w)}" height="${AX - RY + 22}"/>`;
+      if (counts[w] != null) s += `<text class="rl-cnt" x="${(x(w) + x(w + RL.win)) / 2}" y="${RY - 30}">${counts[w]}/4 in ${w}–${w + RL.win}s</text>`;
+    }
+    // log / counter: the sliding last-8-seconds view
+    if ((kind === 'log' || kind === 'counter') && t > 0 && t < 24) s += `<rect class="rl-slide" x="${x(Math.max(0, t - RL.win))}" y="${RY - 16}" width="${x(t) - x(Math.max(0, t - RL.win))}" height="${AX - RY + 16}" rx="4"/><text class="rl-cnt s" x="${x(Math.max(0, t - RL.win)) + 4}" y="${RY - 20}" text-anchor="start">last 8 s</text>`;
+    // axis + ticks
+    s += `<line class="rl-axis" x1="${X0}" y1="${AX}" x2="${X1}" y2="${AX}"/>`;
+    for (let k = 0; k <= TMAX; k += 4) s += `<line class="rl-axis" x1="${x(k)}" y1="${AX}" x2="${x(k)}" y2="${AX + 5}"/><text class="rl-tick" x="${x(k)}" y="${AX + 18}">${k}s</text>`;
+    // leaky: when each queued request is handled
+    if (kind === 'leaky') {
+      s += `<text class="rl-row" x="${X0 - 6}" y="${OY}">out</text><text class="rl-row" x="${X0 - 6}" y="${RY}">in</text>`;
+      reqs.forEach((r) => { if (r.out != null) s += `<line class="rl-link" x1="${x(r.t)}" y1="${RY - 6}" x2="${x(r.out)}" y2="${OY + 6}"/><rect class="rl-out" x="${x(r.out) - 5}" y="${OY - 5}" width="10" height="10" rx="2"/>`; });
+    }
+    const rr = kind === 'leaky' ? 3.4 : 4.2; // small enough that a burst (0.4 s apart) doesn't overlap
+    reqs.forEach((r) => (s += `<circle class="rl-req ${r.s || ''}" cx="${x(r.t)}" cy="${RY}" r="${rr}"/>`));
+    if (t > 0 && t < 24) s += `<line class="rl-now" x1="${x(t)}" y1="${OY - 18}" x2="${x(t)}" y2="${AX}"/>`;
+    // state panel
+    if (kind === 'token' || kind === 'leaky') {
+      const lvl = kind === 'token' ? f.rl.level : f.rl.queue.length, H = 120, BX = 60, BY = 24, BW = 110;
+      s += `<path class="rl-bucket" d="M${BX} ${BY} L${BX + 8} ${BY + H} L${BX + BW - 8} ${BY + H} L${BX + BW} ${BY}"/>`;
+      s += `<rect class="rl-fill" x="${BX + 8}" y="${BY + H - (lvl / RL.cap) * H}" width="${BW - 16}" height="${(lvl / RL.cap) * H}"/>`;
+      if (kind === 'leaky') f.rl.queue.forEach((h, i) => (s += `<text class="rl-qi" x="${BX + BW / 2}" y="${BY + H - 15 - i * 30}">at ${fmt(h)}s</text>`));
+      s += `<text class="rl-big" x="200" y="60">${kind === 'token' ? `${lvl.toFixed(2)} / 4 tokens` : `${lvl} / 4 waiting`}</text>`;
+      s += `<text class="rl-sub" x="200" y="86">${kind === 'token' ? 'Refills 1 token every 2 s' : 'Lets 1 request out every 2 s'}</text>`;
+    } else if (kind === 'log') {
+      s += `<text class="rl-big" x="${X0}" y="60">${(f.rl.log || []).length} / 4 in the last 8 s</text><text class="rl-sub" x="${X0}" y="86">Log: ${(f.rl.log || []).map(fmt).join(', ') || 'empty'}</text>`;
+    } else {
+      const ok = reqs.filter((r) => r.s === 'ok').length, bad = reqs.filter((r) => r.s === 'bad').length;
+      s += `<text class="rl-big" x="${X0}" y="60">${ok} allowed · ${bad} rejected</text><text class="rl-sub" x="${X0}" y="86">${kind === 'fixed' ? 'One counter per 8 s window, reset at each edge' : 'Estimate = previous window × overlap + current window'}</text>`;
+    }
+    return `<svg class="gsvg rlsvg" viewBox="0 0 640 300" role="img" aria-label="Requests over time">${s}</svg>`;
+  }
+
   /* A bar-chart player for any topic's visualizer. els: { bars, note, play, step, shuffle, speed } (speed optional). */
   function player(els, { size = () => (innerWidth < 640 ? 9 : 12) } = {}) {
     let topic = null, frames = null, timer = null, base = [];
-    const fresh = () => topic && topic.graph
+    const fresh = () => topic && topic.rl ? rlPattern() : topic && topic.graph
       ? (topic.viz === 'bellman' ? BF_DEFAULT.map((d) => (d < 0 ? -1 - Math.floor(Math.random() * 3) : 1 + Math.floor(Math.random() * 9))) : W_DEFAULT.map(() => 1 + Math.floor(Math.random() * 9)))
       : Array.from({ length: size() }, () => 1 + Math.floor(Math.random() * 30));
     const draw = (f) => {
-      els.bars.classList.toggle('is-graph', !!f.graph);
-      if (f.graph) { els.bars.innerHTML = drawGraph(f); els.note.innerHTML = `${YTB.esc(f.note || '')}${f.info ? `<small>${YTB.esc(f.info)}</small>` : ''}`; return; }
+      els.bars.classList.toggle('is-graph', !!(f.graph || f.rl));
+      if (f.graph || f.rl) { els.bars.innerHTML = f.rl ? drawRL(f) : drawGraph(f); els.note.innerHTML = `${YTB.esc(f.note || '')}${f.info ? `<small>${YTB.esc(f.info)}</small>` : ''}`; return; }
       const max = Math.max(...f.a, 1);
       els.bars.innerHTML = f.a.map((v, i) => `<div class="sbar ${f.mark?.[i] || ''}" style="height:${Math.max(8, v / max * 100)}%"><span>${v}</span></div>`).join('');
       els.note.textContent = f.note || '';
@@ -536,7 +666,8 @@
     function reset(newArr) {
       stop();
       if (!topic || !topic.viz) return;
-      if (topic.graph) base = newArr ? fresh() : (topic.viz === 'bellman' ? BF_DEFAULT.slice() : W_DEFAULT.slice());
+      if (topic.rl) base = newArr ? fresh() : RL_DEFAULT.slice();
+      else if (topic.graph) base = newArr ? fresh() : (topic.viz === 'bellman' ? BF_DEFAULT.slice() : W_DEFAULT.slice());
       else if (newArr || !base.length || base.length !== size()) base = fresh();
       frames = V[topic.viz](base.slice());
       const first = frames.next();
@@ -563,14 +694,14 @@
     els.shuffle.addEventListener('click', () => reset(true));
     return {
       load(t) {
-        const wasGraph = topic && topic.graph; topic = t;
-        if (wasGraph && !t.graph) base = [];
+        const special = topic && (topic.graph || topic.rl); topic = t;
+        if (special && !(t.graph || t.rl)) base = [];
         els.shuffle.hidden = !!(t.graph && !t.weighted);
-        els.shuffle.textContent = t.graph ? 'New weights' : 'New array';
+        els.shuffle.textContent = t.rl ? 'New requests' : t.graph ? 'New weights' : 'New array';
         reset();
       }, play, stop,
     };
   }
 
-  window.YTBDSA = { list: T, cats: ['Sorting', 'Building blocks', 'Problems', 'Graphs'], viz: V, player, get: (k) => T.find((t) => t.key === k) };
+  window.YTBDSA = { list: T, cats: ['Sorting', 'Building blocks', 'Problems', 'Graphs', 'Rate limiters'], viz: V, player, get: (k) => T.find((t) => t.key === k) };
 })();

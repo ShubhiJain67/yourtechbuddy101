@@ -354,3 +354,25 @@ footer a:hover{color:var(--text)}
 .gsvg .gn.bad circle{fill:var(--err);stroke:var(--err)} .gsvg .gn.bad text.n{fill:#fff}
 @media (prefers-reduced-motion:reduce){.gsvg .gn circle{transition:none}}
 @media (max-width:640px){ .sbars.is-graph{height:auto;aspect-ratio:640/300} }
+
+/* rate limiter timeline (DSA page) */
+.rlsvg .rl-axis{stroke:var(--border-strong);stroke-width:1.5}
+.rlsvg .rl-tick{font:500 11.5px var(--mono);fill:var(--muted);text-anchor:middle}
+.rlsvg .rl-row{font:600 11px var(--mono);fill:var(--faint);text-anchor:end;dominant-baseline:central}
+.rlsvg .rl-req{fill:none;stroke:var(--border-strong);stroke-width:1.8}
+.rlsvg .rl-req.ok{fill:var(--ok);stroke:var(--ok)}
+.rlsvg .rl-req.bad{fill:var(--err);stroke:var(--err)}
+.rlsvg .rl-out{fill:var(--ok);opacity:.85}
+.rlsvg .rl-link{stroke:var(--ok);stroke-width:1;opacity:.45}
+.rlsvg .rl-now{stroke:var(--accent);stroke-width:2;stroke-dasharray:4 3}
+.rlsvg .rl-win{fill:var(--panel2);stroke:var(--border);stroke-width:1}
+.rlsvg .rl-win.b{fill:var(--panel3)}
+.rlsvg .rl-slide{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.5}
+.rlsvg .rl-cnt{font:600 12px var(--mono);fill:var(--muted);text-anchor:middle}
+.rlsvg .rl-cnt.s{fill:var(--accent)}
+.rlsvg .rl-bucket{fill:none;stroke:var(--text);stroke-width:2.5;stroke-linejoin:round}
+.rlsvg .rl-fill{fill:var(--accent);opacity:.75;transition:y .2s,height .2s}
+.rlsvg .rl-qi{font:600 11.5px var(--mono);fill:var(--on-accent);text-anchor:middle}
+.rlsvg .rl-big{font:600 20px var(--sans);fill:var(--text)}
+.rlsvg .rl-sub{font:500 13px var(--sans);fill:var(--muted)}
+@media (prefers-reduced-motion:reduce){.rlsvg .rl-fill{transition:none}}

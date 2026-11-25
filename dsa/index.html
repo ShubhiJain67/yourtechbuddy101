@@ -17,6 +17,14 @@
   .plist{position:sticky;top:20px;max-height:calc(100vh - 40px);overflow:auto;padding:10px}
   .plist .field{margin:2px 2px 8px}
   .plist h3{font:600 12px var(--sans);color:var(--faint);margin:12px 8px 4px;display:flex;justify-content:space-between}
+  /* collapsible categories */
+  .plist button.cat-h{margin-top:8px;padding:7px 10px;font:600 12.5px var(--sans);color:var(--faint);gap:8px}
+  .plist button.cat-h:hover{color:var(--text)}
+  .plist button.cat-h .ct{margin-left:auto;font:500 11.5px var(--mono)}
+  .plist button.cat-h svg{width:12px;height:12px;flex:none;transition:transform .15s}
+  .plist button.cat-h[aria-expanded="true"] svg{transform:rotate(90deg)}
+  .plist button.cat-h.has-cur{color:var(--accent)}
+  .plist .cat-items.shut{display:none}
   .plist button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;padding:7px 10px;border-radius:var(--r-sm);font-size:14px;color:var(--muted)}
   .plist button:hover{background:var(--panel2);color:var(--text)}
   .plist button[aria-current="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
@@ -81,7 +89,8 @@
   @media (max-width:900px){
     .pl{grid-template-columns:minmax(0,1fr)}
     .plist{position:static;max-height:none;display:flex;gap:6px;overflow-x:auto;padding:8px;scrollbar-width:none}
-    .plist .field,.plist h3,.plist .none{display:none}
+    .plist .field,.plist h3,.plist .none,.plist button.cat-h{display:none}
+    .plist .cat-items,.plist .cat-items.shut{display:contents}
     .plist button{flex:none;width:auto;border:1px solid var(--border);border-radius:99px;padding:6px 12px;font-size:13px;white-space:nowrap}
     .plist button .d{display:none}
     .view{padding:16px}
@@ -99,7 +108,7 @@
 </header>
 
 <main class="page">
-  <div class="ph"><div><h1>DSA</h1><p>Sorting and graph algorithms, step by step. Watch each one run, then read the code and practise a related problem.</p></div></div>
+  <div class="ph"><div><h1>DSA</h1><p>Sorting, graph and rate-limiting algorithms, step by step. Watch each one run, then read the code and practise a related problem.</p></div></div>
   <div class="pl">
     <nav class="panel plist" id="plist" aria-label="Topics"></nav>
     <section class="panel view" aria-live="polite">
@@ -163,6 +172,7 @@
   const viz = D.player({ bars: $('bars'), note: $('vnote'), play: $('play'), step: $('stepb'), shuffle: $('shuffle'), speed: $('speed') });
 
   const LEGEND_SORT = [['var(--accent)', 'comparing'], ['var(--err)', 'moving'], ['#d9a441', 'pivot / key'], ['var(--ok)', 'in place']];
+  const LEGEND_RL = [['var(--ok)', 'allowed'], ['var(--err)', 'rejected'], ['var(--border-strong)', 'not arrived yet'], ['var(--accent)', 'now / last 8 s']];
   const LEGEND_GRAPH = [['var(--accent)', 'current / checking'], ['#d9a441', 'on the path'], ['var(--ok)', 'done / chosen edge'], ['var(--err)', 'conflict / skipped']];
 
   /* ---------- comparison table ---------- */
@@ -244,29 +254,46 @@
     $('viz').hidden = !t.viz; $('cmpwrap').hidden = !!t.viz;
     if (t.viz) viz.load(t); else { viz.stop(); drawCompare(); }
     $('cx').hidden = !t.cx;
-    const cxRows = !t.cx ? [] : t.cx.time ? [['Time', t.cx.time], ['Space', t.cx.space], ['Works on', t.cx.graph]]
+    const cxRows = !t.cx ? [] : t.rl ? [['Time per request', t.cx.time], ['Memory per user', t.cx.space], ['Bursts', t.cx.bursts]]
+      : t.cx.time ? [['Time', t.cx.time], ['Space', t.cx.space], ['Works on', t.cx.graph]]
       : [['Best', t.cx.best], ['Average', t.cx.avg], ['Worst', t.cx.worst], ['Space', t.cx.space], ['Stable', t.cx.stable ? 'Yes' : 'No'], ['In place', t.cx.inPlace ? 'Yes' : 'No']];
     $('cx').innerHTML = cxRows.map(([k, v]) => `<div><small>${k}</small><b>${v}</b></div>`).join('');
-    $('legend').innerHTML = (t.graph ? LEGEND_GRAPH : LEGEND_SORT).map(([c, l]) => `<span><i style="background:${c}"></i>${l}</span>`).join('');
+    $('legend').innerHTML = (t.rl ? LEGEND_RL : t.graph ? LEGEND_GRAPH : LEGEND_SORT).map(([c, l]) => `<span><i style="background:${c}"></i>${l}</span>`).join('');
     drawVideo(t);
     $('self-t').textContent = t.practice.title; $('self-q').textContent = t.practice.ask; $('self-e').textContent = t.practice.expect.join('\n');
     $('self-go').href = `../playground/#lang=java&code=${YTB.b64url(starter(t))}`;
     drawList(); drawCode(t);
     window.YTB_markDsa && window.YTB_markDsa(t.key);
   }
+  // categories you closed stay closed; the one holding the open topic always opens
+  const closed = new Set(YTB.LS.get('ytb:dsa-closed', []));
+  const saveClosed = () => YTB.LS.set('ytb:dsa-closed', [...closed]);
   function drawList() {
+    if (cur && closed.delete(cur.cat)) saveClosed();
     const match = (t) => !q || (t.name + ' ' + t.cat + ' ' + t.intent).toLowerCase().includes(q);
     $('plist').innerHTML = `<label class="field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="pq" placeholder="Filter topics" value="${esc(q)}" aria-label="Filter topics"></label>` +
       D.cats.map((c) => {
         const ts = list.filter((t) => t.cat === c && match(t));
-        return ts.length ? `<h3><span>${c}</span><span>${ts.length}</span></h3>` + ts.map((t) => `<button data-k="${t.key}" aria-current="${t.key === cur?.key}"><span class="d"></span>${esc(t.name)}</button>`).join('') : '';
+        if (!ts.length) return '';
+        const open = !!q || !closed.has(c), hasCur = ts.some((t) => t.key === cur?.key);
+        return `<button class="cat-h ${hasCur ? 'has-cur' : ''}" data-cat="${esc(c)}" aria-expanded="${open}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>${esc(c)}<span class="ct">${ts.length}</span></button>
+          <div class="cat-items ${open ? '' : 'shut'}">${ts.map((t) => `<button data-k="${t.key}" aria-current="${t.key === cur?.key}"><span class="d"></span>${esc(t.name)}</button>`).join('')}</div>`;
       }).join('') + (list.some(match) ? '' : '<div class="none">No topic matches.</div>');
     const i = $('pq'); if (q) { i.focus(); i.setSelectionRange(q.length, q.length); }
     $('plist').querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
   function go(key) { show(key); history.replaceState(null, '', '?t=' + cur.key); }
   const move = (d) => { const i = list.indexOf(cur); go(list[(i + d + list.length) % list.length].key); };
-  $('plist').addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (b) go(b.dataset.k); });
+  $('plist').addEventListener('click', (e) => {
+    const h = e.target.closest('[data-cat]');
+    if (h) {
+      const c = h.dataset.cat, open = h.getAttribute('aria-expanded') !== 'true';
+      open ? closed.delete(c) : closed.add(c); saveClosed();
+      h.setAttribute('aria-expanded', open); h.nextElementSibling.classList.toggle('shut', !open);
+      return;
+    }
+    const b = e.target.closest('[data-k]'); if (b) go(b.dataset.k);
+  });
   // sidebar algorithm links switch topics in place (no reload)
   document.addEventListener('click', (e) => {
     const a = e.target.closest('a[data-dsa]'); if (!a || e.metaKey || e.ctrlKey || e.shiftKey) return;
