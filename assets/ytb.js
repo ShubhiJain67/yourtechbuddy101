@@ -378,6 +378,9 @@
     const ons = sn.querySelectorAll('.sn-item.on:not(.sn-sub)');
     if (ons.length > 1) ons.forEach((a, i) => { if (i < ons.length - 1 && a.getAttribute('href').length < ons[ons.length - 1].getAttribute('href').length) a.classList.remove('on'); });
     header.prepend(sn);
+    // the same footer on every page
+    const foot = document.querySelector('body > footer');
+    if (foot && !foot.dataset.keep) foot.innerHTML = `<a href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a> · <a href="${ROOT}privacy.html">Privacy</a> · <a href="${ROOT}terms.html">Terms</a> · <a href="${esc(CFG.topmate)}" target="_blank" rel="noopener">Book a 1:1</a>`;
     const auth = document.getElementById('auth');
     const slot = sn.querySelector('.sn-slot');
     if (auth) slot.replaceWith(auth); else slot.remove();

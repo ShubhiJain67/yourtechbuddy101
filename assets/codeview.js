@@ -34,6 +34,7 @@
   .cv-vtabs button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
   .cv-vtabs button i{font-style:normal;font:11.5px var(--mono);color:var(--faint);margin-left:4px}
   .cv-ide{display:grid;grid-template-columns:210px minmax(0,1fr);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:var(--bg)}
+  .cv-ide.one{grid-template-columns:minmax(0,1fr)} .cv-ide.one .cv-files{display:none}
   .cv-files{background:var(--panel2);border-right:1px solid var(--border);padding:6px 0;overflow:auto;max-height:var(--cv-h,600px)}
   .cv-files .dir{font:500 11.5px var(--mono);color:var(--faint);padding:8px 12px 2px}
   .cv-files button{display:block;width:100%;text-align:left;border:0;background:none;padding:5px 12px 5px 18px;font:12.5px var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -114,7 +115,7 @@
           ${item.variants.length > 1 ? `<div class="cv-vtabs" role="group" aria-label="Examples">${item.variants.map((x) => `<button data-cvv="${esc(x.key)}" aria-pressed="${x.key === s.v}">${esc(x.title)}<i>${x.files.length}</i></button>`).join('')}</div>` : ''}
         </div>
         ${s.tab === 'notes' ? `<div class="cv-md">${md(notes)}</div>` : v ? `
-          <div class="cv-ide">
+          <div class="cv-ide ${v && v.files.length === 1 ? 'one' : ''}">
             <nav class="cv-files" aria-label="Files">${fileList}</nav>
             <div class="cv-pane">
               <div class="cv-bar"><span class="p">${esc(f ? short(f.path) : '')}</span><span>${lines} lines</span><button data-cvact="copy">Copy</button></div>

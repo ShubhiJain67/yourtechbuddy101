@@ -23,7 +23,7 @@
   .co .tr span{font:500 12.5px var(--mono);padding:3px 9px;border-radius:99px;background:var(--panel2);color:var(--muted)}
   .co .pbar{height:6px;border-radius:99px;background:var(--panel3);overflow:hidden;margin-top:auto}
   .co .pbar i{display:block;height:100%;background:var(--ok)}
-  .soon{padding:20px 22px;color:var(--muted);font-size:14px;border-style:dashed}
+  .co-soon{padding:20px 22px;color:var(--muted);font-size:14px;border-style:dashed;display:flex;align-items:center}
 
   /* one company */
   .crumb{font-size:13.5px;color:var(--muted);margin-bottom:6px}
@@ -116,7 +116,7 @@
           <div class="tr">${per.map(([l, c]) => `<span>${l} ${c.done}/${c.all}</span>`).join('')}</div>
           <div class="pbar" title="Must-do done"><i style="width:${tot.s ? Math.round(tot.d / tot.s * 100) : 0}%"></i></div></a>`;
       }).join('')}
-      <div class="panel soon">More companies are on the way.</div></div>`;
+      <div class="panel co-soon">More companies are on the way.</div></div>`;
   }
 
   /* ---------- one company ---------- */

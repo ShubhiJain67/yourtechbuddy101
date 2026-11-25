@@ -325,6 +325,8 @@
     dag: [[0, 1], [0, 2], [1, 3], [2, 3], [2, 4], [3, 5], [4, 5], [5, 6]],
     cyc: [[0, 1], [0, 2], [1, 3], [2, 3], [2, 4], [3, 5], [4, 5], [5, 6], [6, 3]],
   };
+  // phones: the same graph stacked top to bottom, so nodes stay big. [name, x, y, label dx, label dy]
+  const GN_M = [['A', 170, 50, 0, -34], ['B', 60, 160, -38, 0], ['C', 280, 160, 38, 0], ['D', 60, 290, -38, 0], ['E', 280, 290, 38, 0], ['F', 170, 385, 40, 0], ['G', 170, 470, 40, 0]];
   const W_DEFAULT = [4, 2, 1, 5, 8, 2, 6, 3, 1];          // weights for GE.und (Dijkstra, Prim, Kruskal)
   const BF_EDGES = [[0, 1], [0, 2], [2, 1], [1, 3], [2, 4], [3, 4], [3, 5], [4, 5], [5, 6]]; // directed, for Bellman-Ford
   const BF_DEFAULT = [4, 2, -1, 5, 8, -2, 6, 3, 1];
@@ -533,17 +535,18 @@
 
   /* draw one graph frame as SVG */
   function drawGraph(f) {
-    const { edges, directed, w } = f.graph, R = 21;
+    const { edges, directed, w } = f.graph, R = 21, narrow = window.innerWidth < 640, P = narrow ? GN_M : GN;
     const line = ([u, v], k) => {
-      const [, x1, y1] = GN[u], [, x2, y2] = GN[v], dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L;
+      const [, x1, y1] = P[u], [, x2, y2] = P[v], dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L;
       const sx = x1 + ux * R, sy = y1 + uy * R, ex = x2 - ux * (R + (directed ? 6 : 0)), ey = y2 - uy * (R + (directed ? 6 : 0));
       const cls = f.em[k] || '', mx = (x1 + x2) / 2 - uy * 13, my = (y1 + y2) / 2 + ux * 13;
       return `<g class="ge ${cls}"><line x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}" ${directed ? `marker-end="url(#ga-${cls || 'n'})"` : ''}/>${w ? `<text x="${mx}" y="${my}">${w[k]}</text>` : ''}</g>`;
     };
     const marker = (c) => `<marker id="ga-${c}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="gm ${c}"/></marker>`;
-    return `<svg class="gsvg" viewBox="0 0 640 300" role="img" aria-label="Graph"><defs>${['n', 'cmp', 'tree', 'bad'].map(marker).join('')}</defs>
+    const labAt = (i, x, y) => (narrow ? [x + P[i][3], y + P[i][4]] : [x, y < 120 ? y - 36 : y + 37]);
+    return `<svg class="gsvg" viewBox="${narrow ? '0 0 340 505' : '0 0 640 300'}" role="img" aria-label="Graph"><defs>${['n', 'cmp', 'tree', 'bad'].map(marker).join('')}</defs>
       ${edges.map(line).join('')}
-      ${GN.map(([n, x, y], i) => `<g class="gn ${f.nm[i] || ''}"><circle cx="${x}" cy="${y}" r="${R}"/><text class="n" x="${x}" y="${y}">${n}</text>${f.lab[i] != null ? `<text class="lab" x="${x}" y="${y < 120 ? y - 36 : y + 37}">${f.lab[i]}</text>` : ''}</g>`).join('')}</svg>`;
+      ${P.map(([n, x, y], i) => { const [lx, ly] = labAt(i, x, y); return `<g class="gn ${f.nm[i] || ''}"><circle cx="${x}" cy="${y}" r="${R}"/><text class="n" x="${x}" y="${y}">${n}</text>${f.lab[i] != null ? `<text class="lab" x="${lx}" y="${ly}">${f.lab[i]}</text>` : ''}</g>`; }).join('')}</svg>`;
   }
 
   /* ---------------- rate limiters: a timeline of requests, limit 4 per 8 s ---------------- */
@@ -657,7 +660,13 @@
       : Array.from({ length: size() }, () => 1 + Math.floor(Math.random() * 30));
     const draw = (f) => {
       els.bars.classList.toggle('is-graph', !!(f.graph || f.rl));
-      if (f.graph || f.rl) { els.bars.innerHTML = f.rl ? drawRL(f) : drawGraph(f); els.note.innerHTML = `${YTB.esc(f.note || '')}${f.info ? `<small>${YTB.esc(f.info)}</small>` : ''}`; return; }
+      els.bars.classList.toggle('is-rl', !!f.rl);
+      if (f.graph || f.rl) {
+        els.bars.innerHTML = f.rl ? drawRL(f) : drawGraph(f);
+        if (f.rl && els.bars.scrollWidth > els.bars.clientWidth) { // phones: keep "now" in view as the timeline scrolls
+          const frac = (40 + (Math.min(f.rl.t, 24) / (f.rl.kind === 'leaky' ? 32 : 24)) * 580) / 640;
+          els.bars.scrollLeft = Math.max(0, frac * els.bars.scrollWidth - els.bars.clientWidth / 2);
+        } els.note.innerHTML = `${YTB.esc(f.note || '')}${f.info ? `<small>${YTB.esc(f.info)}</small>` : ''}`; return; }
       const max = Math.max(...f.a, 1);
       els.bars.innerHTML = f.a.map((v, i) => `<div class="sbar ${f.mark?.[i] || ''}" style="height:${Math.max(8, v / max * 100)}%"><span>${v}</span></div>`).join('');
       els.note.textContent = f.note || '';

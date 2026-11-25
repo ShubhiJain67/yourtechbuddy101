@@ -56,7 +56,17 @@
 
   /* hero */
   .hero{display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
-  .hero-main .stats{max-width:620px}
+  .hero-main{display:grid!important;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:28px;align-items:stretch}
+  .hero-l{display:flex;flex-direction:column;gap:16px;min-width:0}
+  .hero-r{display:flex;flex-direction:column;gap:8px;min-width:0}
+  .hero-r-h{font:600 12.5px var(--sans);color:var(--faint)}
+  .qt{display:flex;align-items:center;gap:12px;padding:11px 14px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);text-decoration:none;color:var(--text);transition:border-color .12s,background .12s}
+  .qt:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .qt .qi{width:34px;height:34px;flex:none;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+  .qt .qi svg{width:18px;height:18px}
+  .qt b{display:block;font-size:14.5px;font-weight:600}
+  .qt small{display:block;font-size:12.5px;color:var(--muted);line-height:1.35}
+  @media (max-width:900px){ .hero-main{grid-template-columns:minmax(0,1fr)} }
   /* design patterns + sorting, side by side, same size */
   .live-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;margin-top:22px;align-items:stretch}
   .live-row .explorer{height:100%}
@@ -79,6 +89,7 @@
   .explorer .tabs{width:100%;display:flex}
   .explorer .tabs button{flex:1;padding:6px 8px;font-size:13px}
   #dg{width:100%;height:auto;display:block;overflow:visible;margin:4px 0}
+  .sec-h .more{white-space:nowrap}
   .sx .sbars{flex:1;height:auto;min-height:200px;margin-top:4px}
   .sx .acts{justify-content:flex-start}
   .sx .acts #sx-watch{margin-left:auto}
@@ -160,6 +171,7 @@
 <main class="page">
   <section class="hero">
     <div class="panel hero-main" id="hero-main">
+     <div class="hero-l">
       <span class="chip" style="align-self:flex-start">Free · always</span>
       <h1 id="hero-h">Level up your tech skills.</h1>
       <p id="hero-p">Short video lessons on OOP, design patterns and system design, with hands-on practice and AI feedback on every step.</p>
@@ -172,6 +184,14 @@
         <div class="stat"><b id="st-probs">–</b><span>interview problems</span></div>
         <div class="stat"><b id="st-done">₹0</b><span id="st-done-l">to use, always</span></div>
       </div>
+     </div>
+     <nav class="hero-r" aria-label="Start here">
+      <span class="hero-r-h">Start here</span>
+      <a class="qt" href="companies/?c=amazon"><span class="qi" data-ic="building"></span><span><b>Prepare for Amazon</b><small>DSA, LLD and HLD checklist with mock interviews</small></span></a>
+      <a class="qt" href="dsa/"><span class="qi" data-ic="bars"></span><span><b>Algorithms, visualized</b><small>Sorting, graphs and rate limiters, step by step</small></span></a>
+      <a class="qt" href="patterns/"><span class="qi" data-ic="pattern"></span><span><b>All 23 design patterns</b><small>Interactive UML with runnable code</small></span></a>
+      <a class="qt" href="resume/"><span class="qi" data-ic="doc"></span><span><b>Free resume review</b><small>Upload it, get suggestions by email</small></span></a>
+     </nav>
     </div>
   </section>
 
@@ -279,6 +299,7 @@
     SX.load(t);
   }
   document.querySelector('.sxtabs').addEventListener('click', (e) => { const b = e.target.closest('[data-sx]'); if (b) showSort(b.dataset.sx); });
+  document.querySelectorAll('.qi[data-ic]').forEach((el) => (el.innerHTML = YTB.icon(el.dataset.ic)));
   showSort('bubble-sort');
 
   /* ================= 1:1 sessions (booked on Topmate; prices live there) ================= */
