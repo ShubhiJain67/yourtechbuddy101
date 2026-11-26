@@ -363,7 +363,7 @@
 
   function refSolution() {
     if (!YTBTracks.get(attempt.problem.track).course) return;
-    LLDCode.forProblem(attempt.problem).then((t) => { const b = document.getElementById('ref-sol'); if (b && t) { b.href = LLDCode.url(t.id, t.variant); b.hidden = false; } });
+    LLDCode.forProblem(attempt.problem).then((t) => { const b = document.getElementById('ref-sol'); if (b && t) { const v = (t.variants || []).find((x) => x.key === t.variant); b.href = LLDCode.github(v ? v.path : t.path); b.target = '_blank'; b.rel = 'noopener'; b.hidden = false; } });
   }
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   setInterval(() => { const c = document.getElementById('clock'); if (c && attempt && attempt.status !== 'done') c.textContent = fmt(Math.floor(Date.now() / 1000 - attempt.created_at)); }, 1000);

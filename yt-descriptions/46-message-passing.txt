@@ -1,0 +1,36 @@
+Message Passing in concurrency, explained in Hindi with Java code: instead of components sharing data behind locks, each one owns its own state and they talk by sending messages, shown with Order and Payment services using BlockingQueue mailboxes.
+
+📚 Full LLD Course (Free): https://yourtechbuddy101.com/courses/watch.html?c=lld
+📺 LLD Playlist: https://www.youtube.com/playlist?list=PLBcZYF21PlE4
+
+⏮️ Previous: Backpressure → https://youtu.be/9U0Sa906QCM
+
+⏱️ Timestamps
+00:00 What Is Message Passing
+00:43 Problem: Shared Data Between Components
+01:23 Each Component Owns Its Own Data
+02:03 Example: Order & Payment Services
+02:41 BlockingQueues as Mailboxes
+03:59 Benefit: No Shared Data to Lock
+04:37 Code: Message Interfaces
+05:17 OrderProcessor & Its Mailbox
+06:31 Handling Different Message Types
+07:10 PaymentProcessor Reading Its Mailbox
+07:52 Why Use a BlockingQueue Here
+08:31 Demo: Placing Three Orders
+09:42 Walking Through the Output
+10:19 Real-World Message Passing: Kafka & SQS
+
+🎥 Gear I Use
+💻 Laptop: https://link.amazon/B0j8Q60KH
+🖥️ Monitor: https://link.amazon/B07mPJ5W6
+⌨️ Keyboard: https://link.amazon/B0eCYbgEw
+🎙️ Mic: https://link.amazon/B00AHVZjW
+✍️ Pen Tab: https://link.amazon/B0cl4Auty
+
+🌐 Website: https://yourtechbuddy101.com
+🔔 Subscribe: https://www.youtube.com/@yourtechbuddy101
+
+Some links are affiliate links. I earn a small commission at no extra cost to you.
+
+#MessagePassing #BlockingQueue #Concurrency #JavaConcurrency #Multithreading #LowLevelDesign #LLD #SDEInterview

@@ -1,0 +1,28 @@
+Everything about coordination in concurrency in one video, explained in Hindi with Java code: the Producer Consumer problem with wait() and notify(), BlockingQueue, backpressure, and message passing between services.
+
+📚 Full LLD Course (Free): https://yourtechbuddy101.com/courses/watch.html?c=lld
+📺 LLD Playlist: https://www.youtube.com/playlist?list=PLBcZYF21PlE4
+
+⏱️ Timestamps
+0:00 Producer Consumer Problem
+6:01 Building It With Locks, wait() & notify()
+19:30 Using BlockingQueue
+20:39 Backpressure
+22:40 Backpressure in Code: put() vs offer()
+26:19 Message Passing
+30:56 Message Passing in Code: Order & Payment Mailboxes
+36:38 Real-World Message Passing: Kafka & SQS
+
+🎥 Gear I Use
+💻 Laptop: https://link.amazon/B0j8Q60KH
+🖥️ Monitor: https://link.amazon/B07mPJ5W6
+⌨️ Keyboard: https://link.amazon/B0eCYbgEw
+🎙️ Mic: https://link.amazon/B00AHVZjW
+✍️ Pen Tab: https://link.amazon/B0cl4Auty
+
+🌐 Website: https://yourtechbuddy101.com
+🔔 Subscribe: https://www.youtube.com/@yourtechbuddy101
+
+Some links are affiliate links. I earn a small commission at no extra cost to you.
+
+#Concurrency #ProducerConsumer #BlockingQueue #Backpressure #MessagePassing #JavaConcurrency #LowLevelDesign #LLD

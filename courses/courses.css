@@ -2,32 +2,33 @@
    Left sidebar + command palette (⌘K), raised surfaces you can act on, progress everywhere. */
 
 :root{
-  --bg:#0E1322; --side:#0A0F1C; --panel:#161D31; --panel2:#1F2842; --panel3:#28334F;
-  --border:#2E3A5C; --border-strong:#4A5A86;
-  --text:#ECF0FA; --muted:#A3AFCB; --faint:#7D89A8;
-  --accent:#5CC6D0; --accent-soft:rgba(92,198,208,.14); --on-accent:#06191D;
-  --ok:#3DDC97; --ok-soft:rgba(61,220,151,.14);
-  --warn:#F7BE54; --warn-soft:rgba(247,190,84,.14);
-  --err:#FF7B7B; --err-soft:rgba(255,123,123,.14);
-  --shadow:0 1px 0 rgba(255,255,255,.04) inset,0 8px 24px rgba(3,6,18,.35);
-  --shadow-hover:0 1px 0 rgba(255,255,255,.06) inset,0 14px 34px rgba(3,6,18,.5);
+  /* calm palette: one accent, quiet surfaces, hairline borders */
+  --bg:#0F1419; --side:#0C1015; --panel:#151B22; --panel2:#1B222B; --panel3:#252E39;
+  --border:#252E3A; --border-strong:#3A4655;
+  --text:#E8ECF1; --muted:#9AA5B3; --faint:#6F7A88;
+  --accent:#5CC6D0; --accent-soft:rgba(92,198,208,.12); --on-accent:#06191D;
+  --ok:#3DDC97; --ok-soft:rgba(61,220,151,.12);
+  --warn:#F7BE54; --warn-soft:rgba(247,190,84,.12);
+  --err:#FF7B7B; --err-soft:rgba(255,123,123,.12);
+  --shadow:0 1px 2px rgba(0,0,0,.25);
+  --shadow-hover:0 6px 18px rgba(0,0,0,.3);
   --sans:'IBM Plex Sans', system-ui, -apple-system, Segoe UI, sans-serif;
   --mono:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  --r:10px; --r-sm:7px; --side-w:236px;
+  --r:12px; --r-sm:8px; --side-w:240px;
   /* legacy names still used by some pages */
   --grid:var(--panel2); --edge:transparent; --lift:var(--accent);
   color-scheme:dark;
 }
 [data-theme="light"]{
-  --bg:#F3F5FA; --side:#FFFFFF; --panel:#FFFFFF; --panel2:#EEF1F8; --panel3:#E2E7F2;
-  --border:#D3DAE8; --border-strong:#9AA6C0;
-  --text:#111A2E; --muted:#4F5B78; --faint:#6E7A96;
-  --accent:#1A6E80; --accent-soft:rgba(26,110,128,.10); --on-accent:#FFFFFF;
-  --ok:#0B8457; --ok-soft:rgba(11,132,87,.10);
-  --warn:#9A5B00; --warn-soft:rgba(154,91,0,.10);
-  --err:#C0332B; --err-soft:rgba(192,51,43,.10);
-  --shadow:0 1px 2px rgba(17,26,46,.06),0 4px 14px rgba(17,26,46,.06);
-  --shadow-hover:0 2px 4px rgba(17,26,46,.08),0 12px 28px rgba(17,26,46,.12);
+  --bg:#FFFFFF; --side:#FAFBFC; --panel:#FFFFFF; --panel2:#F5F7F9; --panel3:#E9EDF1;
+  --border:#E4E8EC; --border-strong:#C7CED6;
+  --text:#16202B; --muted:#5B6673; --faint:#8A94A0;
+  --accent:#13707E; --accent-soft:rgba(19,112,126,.08); --on-accent:#FFFFFF;
+  --ok:#0B8457; --ok-soft:rgba(11,132,87,.09);
+  --warn:#9A5B00; --warn-soft:rgba(154,91,0,.09);
+  --err:#C0332B; --err-soft:rgba(192,51,43,.08);
+  --shadow:0 1px 2px rgba(16,24,40,.04);
+  --shadow-hover:0 4px 14px rgba(16,24,40,.08);
   color-scheme:light;
 }
 
@@ -381,3 +382,42 @@ footer a:hover{color:var(--text)}
 .rlsvg .rl-big{font:600 20px var(--sans);fill:var(--text)}
 .rlsvg .rl-sub{font:500 13px var(--sans);fill:var(--muted)}
 @media (prefers-reduced-motion:reduce){.rlsvg .rl-fill{transition:none}}
+
+/* ================= Calm layer: fewer boxes, more air (inspired by clean learning dashboards) ================= */
+.page{max-width:1160px}
+.ph{margin-bottom:26px}
+.ph h1{font:700 28px/1.2 var(--sans);letter-spacing:-.02em}
+.ph p{font-size:15.5px;margin-top:6px}
+.sec-h{margin:44px 0 14px}
+.sec-h h2{font:600 19px var(--sans);letter-spacing:-.01em}
+.btn.primary{box-shadow:none}
+.btn.primary:hover:not(:disabled){box-shadow:none;filter:brightness(1.06)}
+.card:hover{transform:none;box-shadow:var(--shadow-hover)}
+.tabs{background:var(--panel2);border-color:transparent}
+.tabs button[aria-selected="true"]{box-shadow:0 1px 2px rgba(16,24,40,.08)}
+.chip{background:var(--panel2)}
+footer{border-top:1px solid var(--border);color:var(--faint)}
+
+/* sidebar */
+body.shell > header{gap:1px;padding:14px 12px}
+.sn-top{padding:2px 0 12px}
+.sn-brand small{font-size:11.5px;color:var(--faint)}
+.sn-search{margin-bottom:10px;background:var(--panel);border-color:var(--border)}
+.sn a.sn-item{font-size:14px;font-weight:500;padding:7px 10px;gap:10px;color:var(--muted)}
+.sn a.sn-item svg{width:17px;height:17px;opacity:.8}
+.sn a.sn-item.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.sn a.sn-item.on svg{opacity:1}
+.sn a.sn-sub{padding:6px 10px 6px 37px;font-size:13.5px;font-weight:400}
+.sn a.sn-sub.on{font-weight:600}
+.sn-sec{margin-top:0}
+.sn-sec.has-on > .sn-grp-row a.sn-sec-a{color:var(--text)}
+.sn-sec .sn-grp-tog{color:var(--faint)}
+.sn-div{height:1px;background:var(--border);margin:10px 8px}
+.sn-label{padding:8px 10px 4px;font-size:11.5px}
+.sn-foot{border-top:1px solid var(--border);padding-top:10px}
+.sn-row{gap:6px}
+.sn-icon-btn{width:34px;height:34px;flex:none;border-radius:50%;display:grid;place-items:center;color:var(--muted);border:1px solid var(--border);background:var(--panel);text-decoration:none}
+.sn-icon-btn:hover{color:var(--text);border-color:var(--border-strong)}
+.sn-icon-btn svg{width:16px;height:16px}
+html.side-mini .sn-div{margin:8px 4px}
+@media (max-width:900px){ body.shell > header .sn-icon-btn{display:none} body.drawer-open .sn-icon-btn{display:grid} }

@@ -54,35 +54,37 @@
   .diff.Easy{color:var(--ok)} .diff.Medium{color:var(--warn)} .diff.Hard{color:var(--err)}
   @media (max-width:900px){ .pick{grid-template-columns:1fr;gap:20px} }
 
-  /* hero */
-  .hero{display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
-  .hero-main{display:grid!important;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:28px;align-items:stretch}
-  .hero-l{display:flex;flex-direction:column;gap:16px;min-width:0}
-  .hero-r{display:flex;flex-direction:column;gap:8px;min-width:0}
-  .hero-r-h{font:600 12.5px var(--sans);color:var(--faint)}
-  .qt{display:flex;align-items:center;gap:12px;padding:11px 14px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);text-decoration:none;color:var(--text);transition:border-color .12s,background .12s}
-  .qt:hover{border-color:var(--accent);background:var(--accent-soft)}
-  .qt .qi{width:34px;height:34px;flex:none;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
-  .qt .qi svg{width:18px;height:18px}
-  .qt b{display:block;font-size:14.5px;font-weight:600}
-  .qt small{display:block;font-size:12.5px;color:var(--muted);line-height:1.35}
-  @media (max-width:900px){ .hero-main{grid-template-columns:minmax(0,1fr)} }
+  /* banner + start-here actions */
+  .banner{display:flex;align-items:center;gap:24px;flex-wrap:wrap;padding:30px 34px;border-radius:16px;color:#fff;
+    background:linear-gradient(120deg,#0F5560 0%,#13707E 55%,#2A97A3 100%)}
+  [data-theme="dark"] .banner{background:linear-gradient(120deg,#0B3A42 0%,#0F5560 60%,#17808C 100%)}
+  .banner-t{flex:1;min-width:260px}
+  .banner h1{margin:0;font:700 clamp(26px,3.2vw,36px)/1.15 var(--sans);letter-spacing:-.02em}
+  .banner p{margin:8px 0 0;font-size:15.5px;line-height:1.5;opacity:.88;max-width:58ch}
+  .banner-a{display:flex;gap:10px;flex-wrap:wrap}
+  .btn.on-dark-primary{background:#fff;color:#0F5560;border-color:#fff;font-weight:600}
+  .btn.on-dark-primary:hover{background:#EAF6F7}
+  .btn.on-dark{background:transparent;color:#fff;border-color:rgba(255,255,255,.55)}
+  .btn.on-dark:hover{background:rgba(255,255,255,.12);border-color:#fff}
+  .actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:14px}
+  .act{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--r);background:var(--panel);text-decoration:none;color:var(--text);transition:border-color .12s,background .12s}
+  .act:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .act .ai{width:38px;height:38px;flex:none;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+  .act .ai svg{width:18px;height:18px}
+  .act > span:nth-child(2){flex:1;min-width:0}
+  .act b{display:block;font-size:14.5px;font-weight:600}
+  .act small{display:block;font-size:12.5px;color:var(--muted);line-height:1.35;margin-top:1px}
+  .act .go{color:var(--faint);font-size:20px;line-height:1}
+  @media (max-width:1100px){ .actions{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  @media (max-width:640px){ .banner{padding:24px 22px} .banner-a{width:100%} .banner-a .btn{flex:1} .actions{grid-template-columns:minmax(0,1fr)} }
   /* design patterns + sorting, side by side, same size */
-  .live-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;margin-top:22px;align-items:stretch}
+  .live-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
   .live-row .explorer{height:100%}
   @media (max-width:1100px){.live-row{grid-template-columns:minmax(0,1fr)}}
-  .hero-main{padding:30px 32px;display:flex;flex-direction:column;gap:16px;background:
-    radial-gradient(120% 90% at 0% 0%,var(--accent-soft),transparent 60%),var(--panel)}
-  .hero-main h1{font:700 clamp(28px,3.4vw,40px)/1.12 var(--sans);letter-spacing:-.025em;margin:0}
-  .hero-main p{margin:0;color:var(--muted);font-size:16px;max-width:46ch}
-  .hero-main .ctas{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
-  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:auto}
-  .stat{background:var(--panel2);border-radius:var(--r-sm);padding:12px 14px}
-  .stat b{display:block;font:600 22px/1.1 var(--mono)}
-  .stat span{font-size:12.5px;color:var(--muted)}
-  .explorer{padding:14px 16px 16px;display:flex;flex-direction:column}
-  .explorer .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
-  .explorer .top h2{font:600 15px var(--sans);margin:0}
+  .home-book{margin-top:44px}
+  .explorer{padding:18px 20px 18px;display:flex;flex-direction:column;box-shadow:none}
+  .explorer .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  .explorer .top h3{font:600 16px var(--sans);margin:0}
   .explorer .top .more-all{margin-left:auto;font-size:13.5px;font-weight:500;color:var(--accent);text-decoration:none}
   .explorer .top .more-all:hover{text-decoration:underline}
   .explorer .top .live{font:600 11px var(--sans);color:var(--ok);background:var(--ok-soft);padding:2px 8px;border-radius:99px}
@@ -93,7 +95,7 @@
   .sx .sbars{flex:1;height:auto;min-height:200px;margin-top:4px}
   .sx .acts{justify-content:flex-start}
   .sx .acts #sx-watch{margin-left:auto}
-  .info{min-height:46px;margin:6px 0 12px;padding:9px 12px;background:var(--panel2);border-radius:var(--r-sm);font-size:14px;line-height:1.5}
+  .info{min-height:44px;margin:6px 0 12px;padding:0;font-size:14px;line-height:1.5;color:var(--muted)}
   .info b{font:600 13.5px var(--mono);color:var(--accent)}
   .info .tip{color:var(--muted)}
   .explorer .acts{display:flex;gap:8px;justify-content:flex-end;margin-top:auto}
@@ -118,46 +120,10 @@
   .ccard .meta .progress{flex:1}
 
 
-  /* problem rows */
-  .plist{overflow:hidden}
-  .prow{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto 24px;gap:14px;align-items:center;padding:13px 18px;text-decoration:none;color:var(--text);border-top:1px solid var(--border)}
-  .prow:first-child{border-top:0}
-  .prow:hover{background:var(--panel2)}
-  .prow .ic{width:36px;height:36px;border-radius:9px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
-  .prow .ic svg{width:18px;height:18px}
-  .prow b{display:block;font-weight:600;font-size:15px}
-  .prow small{display:block;color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .prow .steps{font-size:12.5px;color:var(--faint);white-space:nowrap}
-  .prow .go{color:var(--faint);transition:transform .15s,color .15s}
-  .prow:hover .go{color:var(--accent);transform:translateX(3px)}
-
-  .tm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
-  .tm{display:flex;flex-direction:column;gap:6px;padding:16px 18px;text-decoration:none;color:var(--text);transition:border-color .12s,transform .12s}
-  .tm:hover{border-color:var(--accent);transform:translateY(-1px)}
-  .tm b{font-size:15px;font-weight:600}
-  .tm span{font-size:13px;color:var(--muted)}
-  .tm i{font-style:normal;margin-top:auto;padding-top:6px;font-size:13.5px;font-weight:600;color:var(--accent)}
-  @media (prefers-reduced-motion:reduce){.tm{transition:none}.tm:hover{transform:none}}
-  .cta-strip{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:20px 24px;margin-top:34px}
-  .cta-strip .ic{width:44px;height:44px;border-radius:12px;background:var(--panel2);display:grid;place-items:center;color:var(--accent)}
-  .cta-strip .ic svg{width:22px;height:22px}
-  .cta-strip h3{margin:0;font:600 16px var(--sans)}
-  .cta-strip p{margin:2px 0 0;color:var(--muted);font-size:14px}
-  .cta-strip .sp{flex:1}
-
-  @media (max-width:1100px){.hero{grid-template-columns:minmax(0,1fr)}}
   @media (max-width:700px){
-    .hero-main .ctas{grid-template-columns:minmax(0,1fr)}
-    .cta-strip{flex-direction:column;align-items:stretch;text-align:left}
-    .cta-strip .btn{width:100%}
-    .cta-strip .sp{display:none}
     .explorer .acts{grid-template-columns:1fr 1fr}
     .explorer .tabs button{font-size:12.5px;padding:6px 4px}
-    .hero-main{padding:22px 20px}
     .resume{grid-template-columns:minmax(0,1fr)}
-    .prow{grid-template-columns:36px minmax(0,1fr) auto;padding:12px 14px}
-    .prow .steps,.prow .go{display:none}
-    .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
   }
 </style>
 </head>
@@ -168,37 +134,32 @@
   <div id="auth"></div>
 </header>
 
-<main class="page">
-  <section class="hero">
-    <div class="panel hero-main" id="hero-main">
-     <div class="hero-l">
-      <span class="chip" style="align-self:flex-start">Free · always</span>
+<main class="page home">
+  <section class="banner">
+    <div class="banner-t">
       <h1 id="hero-h">Level up your tech skills.</h1>
-      <p id="hero-p">Short video lessons on OOP, design patterns and system design, with hands-on practice and AI feedback on every step.</p>
-      <div class="ctas" id="hero-ctas">
-        <a class="btn primary lg" id="cta-start" href="courses/watch.html?c=lld">Start the LLD course</a>
-        <a class="btn lg" href="practice/">Try a mock interview</a>
-      </div>
-      <div class="stats">
-        <div class="stat"><b id="st-lessons">–</b><span>video lessons</span></div>
-        <div class="stat"><b id="st-probs">–</b><span>interview problems</span></div>
-        <div class="stat"><b id="st-done">₹0</b><span id="st-done-l">to use, always</span></div>
-      </div>
-     </div>
-     <nav class="hero-r" aria-label="Start here">
-      <span class="hero-r-h">Start here</span>
-      <a class="qt" href="companies/?c=amazon"><span class="qi" data-ic="building"></span><span><b>Prepare for Amazon</b><small>DSA, LLD and HLD checklist with mock interviews</small></span></a>
-      <a class="qt" href="dsa/"><span class="qi" data-ic="bars"></span><span><b>Algorithms, visualized</b><small>Sorting, graphs and rate limiters, step by step</small></span></a>
-      <a class="qt" href="patterns/"><span class="qi" data-ic="pattern"></span><span><b>All 23 design patterns</b><small>Interactive UML with runnable code</small></span></a>
-      <a class="qt" href="resume/"><span class="qi" data-ic="doc"></span><span><b>Free resume review</b><small>Upload it, get suggestions by email</small></span></a>
-     </nav>
+      <p id="hero-p">Videos, interactive visuals and mock interviews for DSA, low level and high level design. Free, always.</p>
+    </div>
+    <div class="banner-a">
+      <a class="btn on-dark-primary" id="cta-start" href="courses/watch.html?c=lld">Start the LLD course</a>
+      <a class="btn on-dark" href="practice/">Try a mock interview</a>
     </div>
   </section>
 
+  <nav class="actions" aria-label="Start here">
+    <a class="act" href="practice/"><span class="ai" data-ic="practice"></span><span><b>Mock interviews</b><small>LLD and HLD rounds with AI feedback</small></span><span class="go" aria-hidden="true">›</span></a>
+    <a class="act" href="companies/"><span class="ai" data-ic="building"></span><span><b>Prepare by company</b><small>Amazon checklist: DSA, LLD, HLD</small></span><span class="go" aria-hidden="true">›</span></a>
+    <a class="act" href="dsa/"><span class="ai" data-ic="bars"></span><span><b>Algorithms, visualized</b><small>Sorting, graphs, rate limiters</small></span><span class="go" aria-hidden="true">›</span></a>
+    <a class="act" href="resume/"><span class="ai" data-ic="doc"></span><span><b>Resume review</b><small>Suggestions by email, free</small></span><span class="go" aria-hidden="true">›</span></a>
+  </nav>
+
+  <div id="resume-wrap"></div>
+
+  <div class="sec-h"><h2>Try it live</h2></div>
   <div class="live-row">
-    <section class="panel explorer" aria-label="Design patterns, live">
+    <section class="panel explorer" aria-label="Design patterns">
       <div class="top">
-        <h2>Design patterns, live</h2><span class="live">interactive</span><a class="more-all" id="dg-all" href="patterns/">All 23 patterns →</a>
+        <h3>Design patterns</h3><a class="more-all" id="dg-all" href="patterns/">All 23 →</a>
         <div class="tabs ptabs" role="tablist" aria-label="Choose a design pattern">
           <button role="tab" data-pat="strategy" aria-selected="true">Strategy</button>
           <button role="tab" data-pat="observer" aria-selected="false">Observer</button>
@@ -209,53 +170,35 @@
       <svg id="dg" viewBox="0 0 600 340" role="img" aria-labelledby="dg-t"><title id="dg-t">UML class diagram</title></svg>
       <div class="info" id="dg-info" aria-live="polite"></div>
       <div class="acts">
-        <a class="btn sm" id="dg-watch" target="_blank" rel="noopener" hidden>Video explanation ↗</a>
+        <a class="btn sm" id="dg-watch" target="_blank" rel="noopener" hidden>Video ↗</a>
         <a class="btn sm primary" id="dg-run" href="playground/">Run this code</a>
       </div>
     </section>
-    <section class="panel explorer sx" aria-label="Sorting algorithms, live">
-    <div class="top">
-      <h2>Sorting algorithms, live</h2><span class="live">interactive</span><a class="more-all" id="sx-all" href="dsa/">All algorithms →</a>
-      <div class="tabs sxtabs" role="tablist" aria-label="Choose a sorting algorithm">
-        <button role="tab" data-sx="bubble-sort" aria-selected="true">Bubble</button>
-        <button role="tab" data-sx="insertion-sort" aria-selected="false">Insertion</button>
-        <button role="tab" data-sx="merge-sort" aria-selected="false">Merge</button>
-        <button role="tab" data-sx="quick-sort" aria-selected="false">Quick</button>
+    <section class="panel explorer sx" aria-label="Sorting algorithms">
+      <div class="top">
+        <h3>Sorting algorithms</h3><a class="more-all" id="sx-all" href="dsa/">All algorithms →</a>
+        <div class="tabs sxtabs" role="tablist" aria-label="Choose a sorting algorithm">
+          <button role="tab" data-sx="bubble-sort" aria-selected="true">Bubble</button>
+          <button role="tab" data-sx="insertion-sort" aria-selected="false">Insertion</button>
+          <button role="tab" data-sx="merge-sort" aria-selected="false">Merge</button>
+          <button role="tab" data-sx="quick-sort" aria-selected="false">Quick</button>
+        </div>
       </div>
-    </div>
-    <div class="sbars" id="sx-bars" role="img" aria-label="Array being sorted"></div>
-    <div class="info" id="sx-note" aria-live="polite"></div>
-    <div class="acts">
-      <button class="btn sm primary" id="sx-play">▶ Play</button>
-      <button class="btn sm" id="sx-step">Step</button>
-      <button class="btn sm" id="sx-new">New array</button>
-      <a class="btn sm" id="sx-watch" target="_blank" rel="noopener">Video explanation ↗</a>
-    </div>
-  </section>
+      <div class="sbars" id="sx-bars" role="img" aria-label="Array being sorted"></div>
+      <div class="info" id="sx-note" aria-live="polite"></div>
+      <div class="acts">
+        <button class="btn sm primary" id="sx-play">▶ Play</button>
+        <button class="btn sm" id="sx-step">Step</button>
+        <button class="btn sm" id="sx-new">New array</button>
+        <a class="btn sm" id="sx-watch" target="_blank" rel="noopener">Video ↗</a>
+      </div>
+    </section>
   </div>
-
-  <div id="resume-wrap"></div>
-
-
-  <div class="sec-h">
-    <h2>Mock interviews</h2>
-    <div class="tabs" role="tablist" aria-label="Interview type" id="ptrack"></div>
-    <span class="sp"></span><a class="more" id="p-more" href="practice/?track=lld">All problems</a>
-  </div>
-  <div class="panel plist" id="plist"><div class="prow"><span class="ic skel"></span><span><b class="skel" style="height:16px;width:40%"></b></span></div></div>
 
   <div class="sec-h"><h2>Courses</h2><span class="sp"></span><a class="more" href="courses/">See all</a></div>
   <div class="cgrid" id="cgrid"></div>
 
-  <div class="sec-h"><h2>1:1 sessions</h2><span class="sp"></span><a class="more" id="tm-all" target="_blank" rel="noopener">See all on Topmate ↗</a></div>
-  <div class="tm-grid" id="tm-grid"></div>
-
-  <div class="panel cta-strip">
-    <span class="ic" id="pg-ic"></span>
-    <div><h3>Write and run code in your browser</h3><p>Java, Python, C++, Go, JavaScript. No install, share a link to your code.</p></div>
-    <span class="sp"></span>
-    <a class="btn" href="playground/">Open the playground</a>
-  </div>
+  <div id="book" class="home-book"></div>
 </main>
 
 <footer><a href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener">YouTube</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></footer>
@@ -263,7 +206,6 @@
 <script src="assets/config.js"></script>
 <script src="courses/courses.js"></script>
 <script src="assets/ytb.js"></script>
-<script src="assets/tracks.js"></script>
 <script src="assets/patterns.js"></script>
 <script src="assets/dsa.js"></script>
 <script>
@@ -299,37 +241,24 @@
     SX.load(t);
   }
   document.querySelector('.sxtabs').addEventListener('click', (e) => { const b = e.target.closest('[data-sx]'); if (b) showSort(b.dataset.sx); });
-  document.querySelectorAll('.qi[data-ic]').forEach((el) => (el.innerHTML = YTB.icon(el.dataset.ic)));
+  document.querySelectorAll('.ai[data-ic]').forEach((el) => (el.innerHTML = YTB.icon(el.dataset.ic)));
   showSort('bubble-sort');
 
-  /* ================= 1:1 sessions (booked on Topmate; prices live there) ================= */
-  const SESSIONS = [
-    ['Mock interview: Low Level Design', 'Video call · 60 min'],
-    ['Mock interview: DSA', 'Video call · 60 min'],
-    ['Live resume review', 'Video call · 30 min'],
-    ['Career guidance', 'Video call · 30 min'],
-  ];
-  document.getElementById('tm-all').href = YTB.config.topmate;
-  document.getElementById('tm-grid').innerHTML = SESSIONS.map(([t, d]) => `<a class="panel tm" href="${esc(YTB.config.topmate)}" target="_blank" rel="noopener"><b>${esc(t)}</b><span>${esc(d)}</span><i>Book ↗</i></a>`).join('');
-
-  /* tabs class is shared; the explorer's own tablist uses .ptabs for its handlers */
+  /* ================= 1:1 sessions: one quiet strip at the end ================= */
+  document.getElementById('book').innerHTML = YTB.bookStrip({ title: 'Want feedback from a person?', text: 'Book a 1:1 mock interview, live resume review or career chat over video.' });
 
   /* ================= Dashboard data ================= */
   const $ = (id) => document.getElementById(id);
-  $('pg-ic').innerHTML = YTB.icon('code');
   const firstName = (YTB.user?.name || '').split(' ')[0];
 
   (async () => {
     let courses = [];
     try { courses = await YTB.getCourses(); } catch {}
     const withVideos = courses.filter((c) => (c.sections || []).some((s) => s.lessons.some((l) => l.youtube)));
-    const allLessons = withVideos.flatMap((c) => c.sections.flatMap((s) => s.lessons.filter((l) => l.youtube)));
-    $('st-lessons').textContent = allLessons.length || '–';
 
     // progress per course
     const prog = {};
     await Promise.all(withVideos.map(async (c) => { try { prog[c.slug] = await YTB.progress.load(c); } catch { prog[c.slug] = new Set(); } }));
-    const doneTotal = Object.values(prog).reduce((n, s) => n + s.size, 0);
 
     // course cards
     $('cgrid').innerHTML = courses.map((c) => {
@@ -369,42 +298,12 @@
       $('cta-start').href = `courses/watch.html?c=${encodeURIComponent(main.slug)}`;
     }
     if (YTB.user) {
-      $('hero-h').textContent = firstName ? `Welcome back, ${firstName}.` : 'Welcome back.';
+      const hr = new Date().getHours(), greet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+      $('hero-h').textContent = firstName ? `${greet}, ${firstName}!` : `${greet}!`;
       $('hero-p').textContent = done.size ? 'Pick up the next lesson, or put it to the test in a mock interview.' : 'Start with the first lesson, or jump straight into a mock interview.';
-      $('st-done').textContent = doneTotal;
-      $('st-done-l').textContent = 'lessons you watched';
     }
   })();
 
-  /* ================= Mock interview list ================= */
-  let probs = null, track = YTBTracks.KEYS[0];
-  $('ptrack').innerHTML = YTBTracks.KEYS.map((k, i) => `<button role="tab" data-track="${k}" aria-selected="${i === 0}">${esc(YTBTracks.get(k).label)}</button>`).join('');
-  async function drawProblems() {
-    const list = $('plist');
-    if (!YTB.apiOn) { list.innerHTML = '<div class="prow"><span></span><span class="note">Mock interviews need the API.</span></div>'; return; }
-    if (!probs) {
-      try { probs = (await YTB.api('/api/practice/problems')).problems; }
-      catch { list.innerHTML = '<div class="prow"><span></span><span class="note">Couldn\'t load problems right now.</span></div>'; return; }
-      $('st-probs').textContent = probs.length;
-    }
-    const rows = probs.filter((p) => (p.track || 'lld') === track).slice(0, 5);
-    list.innerHTML = rows.map((p) => `
-      <a class="prow" href="practice/session.html?p=${encodeURIComponent(p.slug)}">
-        <span class="ic">${YTB.icon(YTBTracks.get(track).icon)}</span>
-        <span><b>${esc(p.title)}</b><small>${esc(p.summary)}</small></span>
-        <span class="chip diff ${esc(p.difficulty)}">${esc(p.difficulty)}</span>
-        <span class="steps">${YTBTracks.get(track).steps.length} steps</span>
-        <span class="go">→</span>
-      </a>`).join('') || '<div class="prow"><span></span><span class="note">No problems yet.</span></div>';
-    $('p-more').href = `practice/?track=${track}`;
-  }
-  $('ptrack').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-track]'); if (!b) return;
-    track = b.dataset.track;
-    $('ptrack').querySelectorAll('button').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
-    drawProblems();
-  });
-  drawProblems();
 </script>
 </body>
 </html>

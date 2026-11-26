@@ -61,7 +61,6 @@
 
   window.LLDCode = {
     load, item, github, repo: REPO,
-    url: (id, v) => `${ROOT}code/?t=${encodeURIComponent(id)}${v ? '&v=' + encodeURIComponent(v) : ''}`,
     topic: async (id) => (await topics((t) => t.id === id))[0] || null,
     // a lesson that says "pattern" is about the pattern even if its example is a project ("Strategy pattern with a parking lot")
     forLesson: (title) => find(title, /pattern/i.test(title || '') ? { prefer: notProject } : {}),

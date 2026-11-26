@@ -337,11 +337,11 @@
     const kid = (href, label, on) => `<a class="sn-item sn-sub ${on ? 'on' : ''}" href="${ROOT}${href}">${label}</a>`;
     // Topic sections: each has its own learning resources and mock interviews. Add a topic here.
     const SECTIONS = [
-      { key: 'dsa', label: 'DSA', full: 'Data structures & algorithms', ic: 'bars', href: 'dsa/', course: 'dsa', on: () => isOn('dsa/'),
+      { key: 'dsa', label: 'DSA', short: 'DSA', full: 'Data structures & algorithms', ic: 'bars', href: 'dsa/', course: 'dsa', on: () => isOn('dsa/'),
         kids: () => kid('dsa/', 'Algorithms', isOn('dsa/')) },
-      { key: 'lld', label: 'LLD', full: 'Low level design', ic: 'layers', href: 'courses/watch.html?c=lld', course: 'lld',
+      { key: 'lld', label: 'Low level design', short: 'LLD', full: 'Low level design', ic: 'layers', href: 'courses/watch.html?c=lld', course: 'lld',
         kids: () => kid('patterns/', 'Design patterns', isOn('patterns/')) + sub('lld', 'Mock interviews') },
-      { key: 'hld', label: 'HLD', full: 'High level design', ic: 'server', href: 'practice/?track=hld', course: 'hld',
+      { key: 'hld', label: 'High level design', short: 'HLD', full: 'High level design', ic: 'server', href: 'practice/?track=hld', course: 'hld',
         kids: () => sub('hld', 'Mock interviews') },
     ];
     const secOpen = LS.get('ytb:sn-sec', {});
@@ -349,7 +349,7 @@
       const kids = `<span data-course-slot="${s.course}"></span>` + s.kids();
       const on = /class="[^"]*\bon\b/.test(kids) || courseOn(s.course) || (pr && trackParam === s.key) || (s.on && s.on());
       return `<div class="sn-sec ${secOpen[s.key] !== false ? 'open' : ''} ${on ? 'has-on' : ''}" data-sec="${s.key}">
-        <div class="sn-grp-row"><a class="sn-item sn-sec-a" href="${ROOT}${s.href}" title="${s.full}">${icon(s.ic)}<span>${s.label}<small>${s.full}</small></span></a>
+        <div class="sn-grp-row"><a class="sn-item sn-sec-a" href="${ROOT}${s.href}" title="${s.full}">${icon(s.ic)}<span>${s.label}</span></a>
           <button class="sn-grp-tog" data-sec-toggle="${s.key}" aria-label="Show ${s.label}" aria-expanded="${secOpen[s.key] !== false}">${icon('chev')}</button></div>
         <div class="sn-kids">${kids}</div></div>`;
     };
@@ -363,16 +363,14 @@
       ${item('', 'Home', 'home')}
       ${item('companies/', 'Prepare by company', 'building')}
       ${SECTIONS.map(section).join('')}
-      <div class="sn-label">More</div>
-      <a class="sn-item ${here === ROOT + 'courses/' ? 'on' : ''}" href="${ROOT}courses/" title="All courses">${icon('courses')}<span>All courses</span></a>
+      <div class="sn-div" role="separator"></div>
       ${item('playground/', 'Playground', 'code')}
       ${item('resume/', 'Resume review', 'doc')}
       <a class="sn-item" href="${esc(CFG.topmate)}" target="_blank" rel="noopener" title="Book a 1:1 session">${icon('plan')}<span>Book a 1:1 ↗</span></a>
       ${session ? item('me/', 'My learning', 'me') : ''}
       ${admin ? `<div class="sn-label">Studio</div>${item('planner/', 'Content planner', 'plan')}${item('ideas/', 'Ideas', 'idea')}${item('admin/problems.html', 'Interview problems', 'puzzle')}${item('admin/', 'Courses admin', 'admin')}` : ''}
       <div class="sn-foot">
-        <a class="sn-yt" href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener" title="Watch on YouTube"><i></i><span>Watch on YouTube</span></a>
-        <div class="sn-row"><span class="sn-slot"></span></div>
+        <div class="sn-row"><span class="sn-slot"></span><a class="sn-icon-btn" href="https://www.youtube.com/@yourtechbuddy101" target="_blank" rel="noopener" title="YouTube channel" aria-label="YouTube channel">${icon('play')}</a></div>
       </div>`;
     // the admin "problems" link would also match "admin/"; keep only the most specific one active
     const ons = sn.querySelectorAll('.sn-item.on:not(.sn-sub)');
@@ -394,7 +392,7 @@
     tb.className = 'tabbar';
     tb.setAttribute('aria-label', 'Main');
     const tab = (path, label, ic) => `<a class="${isOn(path) ? 'on' : ''}" href="${ROOT}${path}">${icon(ic)}${label}</a>`;
-    const secTab = (s) => `<a class="${sn.querySelector(`[data-sec="${s.key}"]`).classList.contains('has-on') ? 'on' : ''}" href="${ROOT}${s.href}">${icon(s.ic)}${s.label}</a>`;
+    const secTab = (s) => `<a class="${sn.querySelector(`[data-sec="${s.key}"]`).classList.contains('has-on') ? 'on' : ''}" href="${ROOT}${s.href}">${icon(s.ic)}${s.short}</a>`;
     tb.innerHTML = tab('', 'Home', 'home') + SECTIONS.map(secTab).join('')
       + `<button data-drawer aria-label="Menu" aria-expanded="false">${icon('menu')}Menu</button>`;
     // phones: the full sidebar slides out as a drawer from the Menu tab
@@ -435,14 +433,9 @@
     await loadScript(ROOT + 'assets/patterns.js').catch(() => {});
     (window.YTBPatterns?.list || []).forEach((p) => items.push({ g: 'Design patterns', t: p.name, s: p.cat, u: `${ROOT}patterns/?p=${p.key}`, ic: 'pattern' }));
     await loadScript(ROOT + 'assets/companies.js').catch(() => {});
-    (window.YTBCompanies?.list || []).forEach((c) => items.push({ g: 'Prepare by company', t: `${c.name} interview prep`, s: 'DSA · LLD · HLD', u: `${ROOT}companies/?c=${c.key}`, ic: 'building' }));
+    (window.YTBCompanies?.list || []).forEach((c) => items.push({ g: 'Prepare by company', t: `${c.name} checklist`, s: 'DSA · LLD · HLD', u: `${ROOT}companies/?c=${c.key}`, ic: 'building' }));
     await loadScript(ROOT + 'assets/dsa.js').catch(() => {});
     (window.YTBDSA?.list || []).forEach((t) => items.push({ g: 'DSA', t: t.name, s: t.cat, u: `${ROOT}dsa/?t=${t.key}`, ic: 'bars' }));
-    try {
-      await loadScript(ROOT + 'assets/lldcode.js');
-      const ci = window.LLDCode ? await window.LLDCode.load() : null;
-      (ci?.sections || []).forEach((s) => s.items.forEach((i) => items.push({ g: 'Course code', t: i.title + ' (Java)', s: s.title, u: `${ROOT}code/?t=${i.id}`, ic: 'folder' })));
-    } catch {}
     const [courses, probs] = await Promise.all([
       getCourses().catch(() => []),
       apiOn ? api('/api/practice/problems').then((r) => r.problems).catch(() => []) : Promise.resolve([]),
